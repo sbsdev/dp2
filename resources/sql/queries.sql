@@ -58,7 +58,7 @@ LIMIT :limit OFFSET :offset
 SELECT * FROM dictionary_globalword
 WHERE untranslated = :untranslated
 
--- :name search-global-words :? :*
+-- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for untranslated, an optional grade, an optional type, a limit and an offset
 SELECT * FROM dictionary_globalword
 WHERE untranslated LIKE :search
