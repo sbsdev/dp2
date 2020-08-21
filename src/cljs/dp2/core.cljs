@@ -71,6 +71,24 @@
                              :on-click #(fetch-document! id)} title]]
                    [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
 
+(defn horizontal-field [label value]
+  [:div.field.is-horizontal
+      [:div.field-label
+       [:label.label label]]
+      [:div.field-body
+       [:div.field
+        [:div.control
+         [:input.input {:type "text" :readOnly true :value value}]]]]])
+
+(defn document-page []
+  (let [{:keys [title author source_publisher state_id] :as document} (:document @session)
+        state (state-mapping state_id state_id)]
+    [:section.section>div.container>div.content
+     [horizontal-field "Title" title]
+     [horizontal-field "Author" author]
+     [horizontal-field "Source Publisher" source_publisher]
+     [horizontal-field "State" state]
+     ]))
 
 
 (defn home-page []
@@ -81,6 +99,7 @@
 (def pages
   {:home #'home-page
    :documents #'documents-page
+   :document #'document-page})
 
 (defn page []
   [(pages (:page @session))])
@@ -92,6 +111,7 @@
   (reitit/router
    [["/" :home]
     ["/documents" :documents]
+    ["/documents/:id" :document]]))
 
 (defn match-route [uri]
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
@@ -117,6 +137,9 @@
 (defn fetch-documents! [search-term]
   (GET "/api/documents" {:params {:search (str "%" search-term "%")}
                          :handler #(swap! session assoc :documents %)}))
+
+(defn fetch-document! [id]
+  (GET (str "/api/documents/" id) {:handler (fn [doc] (swap! session assoc :document doc))}))
 
 (defn mount-components []
   (rdom/render [#'navbar] (.getElementById js/document "navbar"))
