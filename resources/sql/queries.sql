@@ -35,12 +35,12 @@ WHERE title LIKE :search
 LIMIT :limit OFFSET :offset
 
 -- :name get-document :? :1
--- :doc retrieve a document record given the id
+-- :doc retrieve a document record given the `id`
 SELECT * FROM documents_document
 WHERE id = :id
 
 -- :name get-images :? :*
--- :doc retrieve the images for a given document id
+-- :doc retrieve the images for a given document `id`
 SELECT * FROM documents_image
 WHERE document_id = :id
 
@@ -49,7 +49,7 @@ WHERE document_id = :id
 -----------
 
 -- :name get-global-words :? :*
--- :doc retrieve global words given a limit and an offset
+-- :doc retrieve global words given a `limit` and an `offset`
 SELECT * FROM dictionary_globalword
 LIMIT :limit OFFSET :offset
 
