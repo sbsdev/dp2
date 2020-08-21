@@ -12,7 +12,8 @@
     [dp2.middleware.formats :as formats]
     [dp2.middleware.exception :as exception]
     [ring.util.http-response :refer :all]
-    [clojure.java.io :as io]))
+    [clojure.java.io :as io]
+    [clojure.string :refer [blank?]]))
 
 (defn service-routes []
   ["/api"
@@ -57,11 +58,15 @@
 
     [""
      {:get {:summary "Get all documents"
-            :description "Get all documents. Optionally limit the result set using `limit` and `offset`."
-            :parameters {:query {(spec/opt :limit) int?, (spec/opt :offset) int?}}
-            :handler (fn [{{{:keys [limit offset] :or {limit 200 offset 0}} :query} :parameters}]
+            :description "Get all documents. Optionally limit the result set using a `search` term, a `limit` and an `offset`."
+            :parameters {:query {(spec/opt :search) string?
+                                 (spec/opt :limit) int?
+                                 (spec/opt :offset) int?}}
+            :handler (fn [{{{:keys [limit offset search] :or {limit 200 offset 0}} :query} :parameters}]
                        {:status 200
-                        :body (db/get-documents {:limit limit :offset offset})})}}]
+                        :body (if (blank? search)
+                                (db/get-documents {:limit limit :offset offset})
+                                (db/find-documents {:limit limit :offset offset :search search}))})}}]
 
     ["/:id"
      {:get {:summary "Get a document by ID"

@@ -11,7 +11,14 @@
     [clojure.string :as string])
   (:import goog.History))
 
-(defonce session (r/atom {:page :home}))
+(defonce session (r/atom {:page :home
+                          :search ""}))
+
+(def search (r/cursor session [:search]))
+
+(def state-mapping {1 "New"
+                    4 "In Production"
+                    6 "Finished"})
 
 (defn nav-link [uri title page]
   [:a.navbar-item
@@ -33,11 +40,37 @@
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
        [nav-link "#/" "Home" :home]
-       [nav-link "#/about" "About" :about]]]]))
+       [nav-link "#/documents" "Documents" :documents]]]]))
 
-(defn about-page []
+(defn search-ui []
+  [:div.field.is-horizontal.is-pulled-right
+    [:div.field-label.is-normal
+     [:label.label "Search:"]]
+    [:div.field-body
+     [:div.control
+      [:input.input
+       {:type "text"
+        :placeholder "Title"
+        :value @search
+        :on-change (fn [e]
+                     (let [new-search-term (-> e .-target .-value)]
+                       (reset! search new-search-term)
+                       (fetch-documents! new-search-term)))}]]]])
+
+(defn documents-page []
   [:section.section>div.container>div.content
-   [:img {:src "/img/warning_clojure.png"}]])
+   [search-ui]
+   [:table.table.is-striped
+    [:thead
+     [:tr
+      [:th "Title"] [:th "Author"] [:th "Source Publisher"] [:th "State"]]]
+    [:tbody
+     (for [{:keys [id title author source_publisher state_id]} (:documents @session)]
+       ^{:key id} [:tr
+                   [:td [:a {:href (str "#/documents/" id)
+                             :on-click #(fetch-document! id)} title]]
+                   [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
+
 
 
 (defn home-page []
@@ -47,7 +80,7 @@
 
 (def pages
   {:home #'home-page
-   :about #'about-page})
+   :documents #'documents-page
 
 (defn page []
   [(pages (:page @session))])
@@ -57,8 +90,8 @@
 
 (def router
   (reitit/router
-    [["/" :home]
-     ["/about" :about]]))
+   [["/" :home]
+    ["/documents" :documents]
 
 (defn match-route [uri]
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
@@ -81,6 +114,10 @@
 (defn fetch-docs! []
   (GET "/docs" {:handler #(swap! session assoc :docs %)}))
 
+(defn fetch-documents! [search-term]
+  (GET "/api/documents" {:params {:search (str "%" search-term "%")}
+                         :handler #(swap! session assoc :documents %)}))
+
 (defn mount-components []
   (rdom/render [#'navbar] (.getElementById js/document "navbar"))
   (rdom/render [#'page] (.getElementById js/document "app")))
@@ -88,5 +125,6 @@
 (defn init! []
   (ajax/load-interceptors!)
   (fetch-docs!)
+  (fetch-documents! "")
   (hook-browser-navigation!)
   (mount-components))
