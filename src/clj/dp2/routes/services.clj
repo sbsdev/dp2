@@ -95,8 +95,10 @@
            :handler (fn [{{{:keys [search grade type limit offset]
                             :or {limit 200 offset 0}} :query} :parameters}]
                       {:status 200
-                       :body (db/find-global-words {:search search :grade grade :type type
-                                                    :limit limit :offset offset})})}}]
+                       :body (if (blank? search)
+                               (db/get-global-words {:limit limit :offset offset})
+                               (db/find-global-words {:search search :grade grade :type type
+                                                      :limit limit :offset offset}))})}}]
 
    ["/words/:untranslated"
     {:get {:summary "Get global words by untranslated"

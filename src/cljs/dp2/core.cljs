@@ -11,10 +11,12 @@
     [clojure.string :as string])
   (:import goog.History))
 
-(defonce session (r/atom {:page :home
-                          :search ""}))
+(defonce session (r/atom {:page :documents
+                          :document-search ""
+                          :word-search ""}))
 
-(def search (r/cursor session [:search]))
+(def document-search (r/cursor session [:document-search]))
+(def word-search (r/cursor session [:word-search]))
 
 (def state-mapping {1 "New"
                     4 "In Production"
@@ -39,10 +41,10 @@
      [:div#nav-menu.navbar-menu
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
-       [nav-link "#/" "Home" :home]
-       [nav-link "#/documents" "Documents" :documents]]]]))
+       [nav-link "#/" "Documents" :documents]
+       [nav-link "#/words" "Global Words" :global-words]]]]))
 
-(defn search-ui []
+(defn search-ui [search placeholder fetch-fn]
   [:div.field.is-horizontal.is-pulled-right
     [:div.field-label.is-normal
      [:label.label "Search:"]]
@@ -50,16 +52,16 @@
      [:div.control
       [:input.input
        {:type "text"
-        :placeholder "Title"
+        :placeholder placeholder
         :value @search
         :on-change (fn [e]
                      (let [new-search-term (-> e .-target .-value)]
                        (reset! search new-search-term)
-                       (fetch-documents! new-search-term)))}]]]])
+                       (fetch-fn new-search-term)))}]]]])
 
 (defn documents-page []
   [:section.section>div.container>div.content
-   [search-ui]
+   [search-ui document-search "Title" fetch-documents!]
    [:table.table.is-striped
     [:thead
      [:tr
@@ -68,7 +70,10 @@
      (for [{:keys [id title author source_publisher state_id]} (:documents @session)]
        ^{:key id} [:tr
                    [:td [:a {:href (str "#/documents/" id)
-                             :on-click #(fetch-document! id)} title]]
+                             :on-click (fn []
+                                         (fetch-document! id)
+                                         (fetch-local-words! id))}
+                         title]]
                    [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
 
 (defn horizontal-field [label value]
@@ -84,22 +89,35 @@
   (let [{:keys [title author source_publisher state_id] :as document} (:document @session)
         state (state-mapping state_id state_id)]
     [:section.section>div.container>div.content
-     [horizontal-field "Title" title]
-     [horizontal-field "Author" author]
-     [horizontal-field "Source Publisher" source_publisher]
-     [horizontal-field "State" state]
-     ]))
+     [:div
+      [horizontal-field "Title" title]
+      [horizontal-field "Author" author]
+      [horizontal-field "Source Publisher" source_publisher]
+      [horizontal-field "State" state]]
+     [:div
+      [:table.table.is-striped
+       [:thead
+        [:tr
+         [:th "Untranslated"] [:th "Braille"] [:th "Grade"] [:th "Local"] [:th "Ignore"]]]
+       [:tbody
+        (for [{:keys [id untranslated braille grade local ignore]} (:local-words @session)]
+          ^{:key id} [:tr [:td untranslated] [:td braille] [:td grade] [:td local] [:td ignore]])]]]]))
 
-
-(defn home-page []
+(defn words-page []
   [:section.section>div.container>div.content
-   (when-let [docs (:docs @session)]
-     [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
+   [search-ui word-search "Word" fetch-global-words!]
+   [:table.table.is-striped
+    [:thead
+     [:tr
+      [:th "Untranslated"] [:th "Braille"] [:th "Grade"] [:th "Markup"] [:th "Homograph Disambiguation"]]]
+    [:tbody
+     (for [{:keys [id untranslated braille grade type homograph_disambiguation]} (:global-words @session)]
+       ^{:key id} [:tr [:td untranslated] [:td braille] [:td grade] [:td type] [:td homograph_disambiguation]])]]])
 
 (def pages
-  {:home #'home-page
-   :documents #'documents-page
-   :document #'document-page})
+  {:documents #'documents-page
+   :document #'document-page
+   :global-words #'words-page})
 
 (defn page []
   [(pages (:page @session))])
@@ -109,9 +127,9 @@
 
 (def router
   (reitit/router
-   [["/" :home]
-    ["/documents" :documents]
-    ["/documents/:id" :document]]))
+   [["/" :documents]
+    ["/documents/:id" :document]
+    ["/words" :global-words]]))
 
 (defn match-route [uri]
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
@@ -131,9 +149,6 @@
 
 ;; -------------------------
 ;; Initialize app
-(defn fetch-docs! []
-  (GET "/docs" {:handler #(swap! session assoc :docs %)}))
-
 (defn fetch-documents! [search-term]
   (GET "/api/documents" {:params {:search (str "%" search-term "%")}
                          :handler #(swap! session assoc :documents %)}))
@@ -141,13 +156,20 @@
 (defn fetch-document! [id]
   (GET (str "/api/documents/" id) {:handler (fn [doc] (swap! session assoc :document doc))}))
 
+(defn fetch-global-words! [search-term]
+  (GET "/api/words" {:params {:search search-term}
+                         :handler #(swap! session assoc :global-words %)}))
+
+(defn fetch-local-words! [id]
+  (GET (str "/api/documents/" id "/words") {:handler #(swap! session assoc :local-words %)}))
+
 (defn mount-components []
   (rdom/render [#'navbar] (.getElementById js/document "navbar"))
   (rdom/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
   (ajax/load-interceptors!)
-  (fetch-docs!)
   (fetch-documents! "")
+  (fetch-global-words! "")
   (hook-browser-navigation!)
   (mount-components))
