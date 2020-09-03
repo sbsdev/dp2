@@ -63,26 +63,25 @@
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
             :handler (fn [{{{:keys [limit offset search] :or {limit 200 offset 0}} :query} :parameters}]
-                       {:status 200
-                        :body (if (blank? search)
-                                (db/get-documents {:limit limit :offset offset})
-                                (db/find-documents {:limit limit :offset offset :search search}))})}}]
+                       (ok (if (blank? search)
+                             (db/get-documents {:limit limit :offset offset})
+                             (db/find-documents {:limit limit :offset offset :search search}))))}}]
 
     ["/:id"
      {:get {:summary "Get a document by ID"
             :parameters {:path {:id int?}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
                        (if-let [doc (db/get-document {:id id})]
-                         {:status 200 :body doc}
-                         {:status 404}))}}]
+                         (ok doc)
+                         (not-found)))}}]
 
     ["/:id/images"
      {:get {:summary "Get all images for a given document"
             :parameters {:path {:id int?}}
             :handler (fn [{{{:keys [id]} :path} :parameters}]
                        (if-let [doc (db/get-images {:id id})]
-                         {:status 200 :body doc}
-                         {:status 404}))}}]]
+                         (ok doc)
+                         (not-found)))}}]]
 
    ["/words"
     {:get {:summary "Get global words. Optionally filter the results by using a search string, a grade, a type and a limit and an offset."
@@ -94,11 +93,10 @@
                                 (spec/opt :offset) int?}}
            :handler (fn [{{{:keys [search grade type limit offset]
                             :or {limit 200 offset 0}} :query} :parameters}]
-                      {:status 200
-                       :body (if (blank? search)
-                               (db/get-global-words {:limit limit :offset offset})
-                               (db/find-global-words {:search search :grade grade :type type
-                                                      :limit limit :offset offset}))})}}]
+                      (ok (if (blank? search)
+                            (db/get-global-words {:limit limit :offset offset})
+                            (db/find-global-words {:search search :grade grade :type type
+                                                   :limit limit :offset offset}))))}}]
 
    ["/words/:untranslated"
     {:get {:summary "Get global words by untranslated"
@@ -106,8 +104,8 @@
            :parameters {:path {:untranslated string?}}
            :handler (fn [{{{:keys [untranslated]} :path} :parameters}]
                       (if-let [doc (db/get-global-word {:untranslated untranslated})]
-                        {:status 200 :body doc}
-                        {:status 404}))}}]
+                        (ok doc)
+                        (not-found)))}}]
 
    ["/documents/:id/words"
     {:get {:summary "Get all local words for a given document"
@@ -115,6 +113,6 @@
            :parameters {:path {:id int?}}
            :handler (fn [{{{:keys [id]} :path} :parameters}]
                       (if-let [doc (db/get-local-words {:id id})]
-                        {:status 200 :body doc}
-                        {:status 404}))}}]
+                        (ok doc)
+                        (not-found)))}}]
    ])
