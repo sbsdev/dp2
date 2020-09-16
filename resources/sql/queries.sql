@@ -70,3 +70,68 @@ LIMIT :limit OFFSET :offset
 -- :doc retrieve local words for a given document id
 SELECT * FROM dictionary_localword
 WHERE document_id = :id
+
+-- :name get-all-known-homographs :? :*
+-- :doc given a list of `words` retrieve all (locally and globally) known homographs for a given `document_id`, `grade`
+(SELECT homograph_disambiguation
+FROM dictionary_globalword
+WHERE grade = :grade
+AND type = 5
+AND untranslated in (:v*:words))
+UNION
+(SELECT homograph_disambiguation
+FROM dictionary_localword
+WHERE grade = :grade
+AND type = 5
+AND document_id = :document_id
+AND untranslated in (:v*:words))
+
+-- :name get-all-known-names :? :*
+-- :doc given a list of `words` retrieve all (locally and globally) known names for a given `document_id`, `grade`
+(SELECT untranslated
+FROM dictionary_globalword
+WHERE grade = :grade
+AND type IN (1,2)
+AND untranslated in (:v*:words))
+UNION
+(SELECT untranslated
+FROM dictionary_localword
+WHERE grade = :grade
+AND type IN (1,2)
+AND document_id = :document_id
+AND untranslated in (:v*:words))
+
+-- :name get-all-known-places :? :*
+-- :doc given a list of `words` retrieve all (locally and globally) known places for a given `document_id`, `grade`
+(SELECT untranslated
+FROM dictionary_globalword
+WHERE grade = :grade
+AND type IN (3,4)
+AND untranslated in (:v*:words))
+UNION
+(SELECT untranslated
+FROM dictionary_localword
+WHERE grade = :grade
+AND type IN (3,4)
+AND document_id = :document_id
+AND untranslated in (:v*:words))
+
+-- :name get-all-known-words :? :*
+-- :doc given a list of `words` retrieve all (locally and globally) known words for a given `document_id`, `grade` 
+(SELECT untranslated
+FROM dictionary_globalword
+WHERE grade = :grade
+AND type NOT IN (2,4,5)
+AND untranslated in (:v*:words))
+UNION
+(SELECT untranslated
+FROM dictionary_localword
+WHERE grade = :grade
+-- exclude type 2,4 and 5 as these probably have a different
+-- translations, so we do need to show these words if they are not
+-- tagged even if they have an entry in the dictionary as a name or a
+-- place.
+AND type NOT IN (2,4,5)
+AND document_id = :document_id
+AND untranslated in (:v*:words))
+
