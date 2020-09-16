@@ -91,3 +91,20 @@
    (map string/lower-case)
    set))
 
+(comment
+  ;; extract words from an dtbook file
+  (require '[clojure.java.io :as io])
+  
+  (let [f (io/file "/home/eglic/tmp/6747.xml")
+        content (str (filter-braille-and-names f))]
+    (extract-plain-words content))
+  
+  ;; extract unknown words from an dtbook file
+  (let [f (io/file "/home/eglic/tmp/6747.xml")
+        content (str (filter-braille-and-names f))
+        words (extract-plain-words content)
+        document_id 644
+        grade 2]
+    (get-unknown-words words document_id grade))
+  
+  )
