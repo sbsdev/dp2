@@ -115,4 +115,23 @@
                       (if-let [doc (db/get-local-words {:id id})]
                         (ok doc)
                         (not-found)))}}]
+
+   ["/documents/:id/unknown-words"
+    {:get {:summary "Get all unknown words for a given document"
+           :tags ["words"]
+           :parameters {:path {:id int?}}
+           :handler (fn [{{{:keys [id]} :path} :parameters}]
+                      (if-let [doc (db/get-local-words {:id id})]
+                        (ok doc)
+                        (not-found)))}}]
+
+   ["/documents/:id/versions"
+    {:get {:summary "Get all versions of a given document"
+           :tags ["versions"]
+           :parameters {:path {:id int?}}
+           :handler (fn [{{{:keys [id]} :path} :parameters}]
+                      (if-let [doc (db/get-versions {:document_id id})]
+                        (ok doc)
+                        (not-found)))}}]
+
    ])

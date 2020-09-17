@@ -44,6 +44,15 @@ WHERE id = :id
 SELECT * FROM documents_image
 WHERE document_id = :id
 
+--------------
+-- Versions --
+--------------
+
+-- :name get-versions :? :*
+-- :doc retrieve all versions of a document given a `document_id`
+SELECT * FROM documents_version
+WHERE document_id = :document_id
+
 -----------
 -- Words --
 -----------
