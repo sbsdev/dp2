@@ -53,6 +53,12 @@ WHERE document_id = :id
 SELECT * FROM documents_version
 WHERE document_id = :document_id
 
+-- :name get-latest-version :? :1
+-- :doc retrieve the latest version of a document given a `document_id`
+SELECT * FROM documents_version
+WHERE document_id = :document_id
+AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_id = :document_id)
+
 -----------
 -- Words --
 -----------

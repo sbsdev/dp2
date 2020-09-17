@@ -134,4 +134,12 @@
                         (ok doc)
                         (not-found)))}}]
 
+   ["/documents/:id/latest"
+    {:get {:summary "Get the latest version of a given document"
+           :tags ["versions"]
+           :parameters {:path {:id int?}}
+           :handler (fn [{{{:keys [id]} :path} :parameters}]
+                      (if-let [doc (db/get-latest-version {:document_id id})]
+                        (ok doc)
+                        (not-found)))}}]
    ])
