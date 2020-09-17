@@ -42,7 +42,8 @@
                  [ring/ring-core "1.8.1"]
                  [ring/ring-defaults "0.3.2"]
                  [selmer "1.12.27"]
-                 [me.flowthing/sigel "1.0.1"]]
+                 [me.flowthing/sigel "1.0.1"]
+                 [org.liblouis/liblouis-java "4.3.0"]]
 
   :min-lein-version "2.0.0"
   
