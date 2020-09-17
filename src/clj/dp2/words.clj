@@ -4,12 +4,16 @@
    [clojure.set :refer [difference]]
    [clojure.string :as string]
    [sigel.xslt.core :as xslt]
-   [sigel.xpath.core :as xpath]))
+   [sigel.xpath.core :as xpath]
+   [dp2.louis :as louis]))
 
 (def compiler
   (-> (xpath/compiler)
       (xpath/set-default-namespace! "http://www.daisy.org/z3986/2005/dtbook/")
       (xpath/declare-namespace! "brl" "http://www.daisy.org/z3986/2009/braille/")))
+
+(defn name? [type] (#{1 2} type))
+(defn place? [type] (#{3 4} type))
 
 (defn get-unknown-words
   "Given a seq of `words` return the ones that are unknown."
@@ -90,6 +94,18 @@
    (remove (fn [word] (< (count word) 3)))
    (map string/lower-case)
    set))
+
+(defn embellish-words [words document_id grade type]
+  (let [template {:document_id document_id
+                  :type type
+                  :grade grade
+                  :islocal false :isconfirmed false :isdeferred false}]
+    (map (fn [untranslated word]
+           (let [tables (louis/get-tables grade {:name (name? type)
+                                                 :place (place? type)})
+                 braille (louis/translate untranslated tables)]
+             (assoc word :untranslated untranslated :braille braille)))
+         words (repeat template))))
 
 (comment
   ;; extract words from an dtbook file
