@@ -13,7 +13,9 @@
     [dp2.middleware.exception :as exception]
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]
-    [clojure.string :refer [blank?]]))
+    [clojure.string :refer [blank?]]
+    [dp2.documents :as docs]
+    [dp2.words :as words]))
 
 (defn service-routes []
   ["/api"
@@ -124,6 +126,19 @@
                       (if-let [doc (db/get-local-words {:id id})]
                         (ok doc)
                         (not-found)))}}]
+
+   ["/documents/:id/check-words"
+    {:get {:summary "Check a document for unknown words and return those"
+           :tags ["words"]
+           :parameters {:path {:id int?}}
+           :handler (fn [{{{:keys [id]} :path} :parameters}]
+                      (let [version (docs/get-latest-version id)
+                            content (str (words/filter-braille-and-names version))
+                            words (words/extract-plain-words content)
+                            grade 2
+                            unknown-words (words/get-unknown-words words id grade)
+                            embellished (words/embellish-words unknown-words id grade 0)]
+                        (ok embellished)))}}]
 
    ["/documents/:id/versions"
     {:get {:summary "Get all versions of a given document"
