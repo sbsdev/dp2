@@ -1,0 +1,28 @@
+# -*- mode: restclient; -*-
+
+# Ping
+GET http://localhost:3000/api/ping
+
+# Get many documents
+GET http://localhost:3000/api/documents
+
+# Search documents by name (starting with "wo")
+GET http://localhost:3000/api/documents?search=wo%25
+
+# Get documents with a limit
+GET http://localhost:3000/api/documents?limit=1
+
+# Get documents with an offset
+GET http://localhost:3000/api/documents?limit=1&offset=5
+
+# Get a document
+GET http://localhost:3000/api/documents/644
+
+# Get global words
+GET http://localhost:3000/api/words/foo
+
+# Get local words
+GET http://localhost:3000/api/documents/644/words
+
+# Check a document for unknown words
+GET http://localhost:3000/api/documents/644/check-words
