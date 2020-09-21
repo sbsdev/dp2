@@ -5,7 +5,8 @@
    [clojure.string :as string]
    [sigel.xslt.core :as xslt]
    [sigel.xpath.core :as xpath]
-   [dp2.louis :as louis]))
+   [dp2.louis :as louis]
+   [dp2.hyphenate :as hyphenate]))
 
 (def compiler
   (-> (xpath/compiler)
@@ -103,8 +104,11 @@
     (map (fn [untranslated word]
            (let [tables (louis/get-tables grade {:name (name? type)
                                                  :place (place? type)})
-                 braille (louis/translate untranslated tables)]
-             (assoc word :untranslated untranslated :braille braille)))
+                 braille (louis/translate untranslated tables)
+                 hyphenated (hyphenate/hyphenate untranslated)]
+             (assoc word
+                    :untranslated untranslated :braille braille
+                    :hyphenated hyphenated)))
          words (repeat template))))
 
 (comment
