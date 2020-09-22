@@ -87,6 +87,10 @@
         [:div.control
          [:input.input {:type "text" :readOnly true :value value}]]]]])
 
+(def type-mapping {0 "None" 1 "Name (Type Hoffmann)" 2 "Name"
+                   3 "Place (Type Langenthal)" 4 "Place"
+                   5 "Homograph"})
+
 (defn document-page []
   (let [{:keys [title author source_publisher state_id] :as document} (:document @session)
         state (state-mapping state_id state_id)]
@@ -100,10 +104,18 @@
       [:table.table.is-striped
        [:thead
         [:tr
-         [:th "Untranslated"] [:th "Braille"] [:th "Grade"] [:th "Local"] [:th "Ignore"]]]
+         [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th ""]]]
        [:tbody
-        (for [{:keys [id untranslated braille grade local ignore]} (:local-words @session)]
-          ^{:key id} [:tr [:td untranslated] [:td braille] [:td grade] [:td local] [:td ignore]])]]]]))
+        (for [{:keys [id untranslated braille type hyphenated]} (:local-words @session)]
+          ^{:key id} [:tr [:td untranslated]
+                      [:td [:input.input {:type "text" :value braille}]]
+                      [:td [:input.input {:type "text" :value hyphenated}]]
+                      [:td (get type-mapping type "Unknown")]
+                      [:td [:div.field.is-grouped
+                            [:p.control [:button.button.is-success [:span.icon.is-small [:i.mi.mi-done]] [:span "Save"]]]
+                            [:p.control [:button.button.is-warning [:span.icon.is-small [:i.mi.mi-description]] [:span "Local"]]]
+                            [:p.control [:button.button.is-danger.is-outlined [:span.icon.is-small [:i.mi.mi-clear]] [:span "Ignore"]]]
+                            ]]])]]]]))
 
 (defn words-page []
   [:section.section>div.container>div.content
@@ -163,7 +175,7 @@
                          :handler #(swap! session assoc :global-words %)}))
 
 (defn fetch-local-words! [id]
-  (GET (str "/api/documents/" id "/words") {:handler #(swap! session assoc :local-words %)}))
+  (GET (str "/api/documents/" id "/check-words") {:handler #(swap! session assoc :local-words %)}))
 
 (defn mount-components []
   (rdom/render [#'navbar] (.getElementById js/document "navbar"))
