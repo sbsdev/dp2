@@ -59,6 +59,8 @@
                        (reset! search new-search-term)
                        (fetch-fn new-search-term)))}]]]])
 
+(declare fetch-documents! fetch-document! fetch-local-words! fetch-global-words!)
+
 (defn documents-page []
   [:section.section>div.container>div.content
    [search-ui document-search "Title" fetch-documents!]
