@@ -116,7 +116,18 @@
            :handler (fn [{{{:keys [id]} :path} :parameters}]
                       (if-let [doc (db/get-local-words {:id id})]
                         (ok doc)
-                        (not-found)))}}]
+                        (not-found)))}
+
+     :put {:summary "Update or create a local word for a given document"
+           :tags ["words"]
+           :parameters {:body {:untranslated string? :braille string?
+                               :type int? :grade int? :homograph-disambiguation string?
+                               :document-id int? :islocal boolean?}}
+           :handler (fn [{{{:keys [untranslated braille type grade homograph-disambiguation document-id islocal]} :body} :parameters}]
+                      (db/insert-local-word {:untranslated untranslated :braille braille
+                                             :type type :grade grade :homograph_disambiguation homograph-disambiguation
+                                             :document_id document-id :islocal islocal})
+                      (no-content))}}]
 
    ["/documents/:id/unknown-words"
     {:get {:summary "Get all unknown words for a given document"
