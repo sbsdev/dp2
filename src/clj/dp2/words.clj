@@ -99,8 +99,7 @@
 (defn embellish-words [words document_id grade type]
   (let [template {:document_id document_id
                   :type type
-                  :grade grade
-                  :islocal false :isconfirmed false :isdeferred false}]
+                  :grade grade}]
     (map (fn [untranslated word]
            (let [tables (louis/get-tables grade {:name (name? type)
                                                  :place (place? type)})
