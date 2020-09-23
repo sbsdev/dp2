@@ -99,16 +99,16 @@
         [:tr
          [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th ""]]]
        [:tbody
-        (for [{:keys [id untranslated braille type hyphenated]} (:local-words @session)]
-          ^{:key id} [:tr [:td untranslated]
-                      [:td [:input.input {:type "text" :value braille}]]
-                      [:td [:input.input {:type "text" :value hyphenated}]]
-                      [:td (get type-mapping type "Unknown")]
-                      [:td [:div.field.is-grouped
-                            [:p.control [:button.button.is-success [:span.icon.is-small [:i.mi.mi-done]] [:span "Save"]]]
-                            [:p.control [:button.button.is-warning [:span.icon.is-small [:i.mi.mi-description]] [:span "Local"]]]
-                            [:p.control [:button.button.is-danger.is-outlined [:span.icon.is-small [:i.mi.mi-clear]] [:span "Ignore"]]]
-                            ]]])]]]]))
+        (for [{:keys [untranslated braille type hyphenated]} (:local-words @session)]
+          ^{:key untranslated}
+          [:tr [:td untranslated]
+           [:td [:input.input {:type "text" :value braille}]]
+           [:td [:input.input {:type "text" :value hyphenated}]]
+           [:td (get type-mapping type "Unknown")]
+           [:td [:div.field.is-grouped
+                 [:p.control [:button.button.is-success [:span.icon.is-small [:i.mi.mi-done]] [:span "Save"]]]
+                 [:p.control [:button.button.is-warning [:span.icon.is-small [:i.mi.mi-description]] [:span "Local"]]]
+                 [:p.control [:button.button.is-danger.is-outlined [:span.icon.is-small [:i.mi.mi-clear]] [:span "Ignore"]]]]]])]]]]))
 
 (defn words-page []
   [:section.section>div.container>div.content
