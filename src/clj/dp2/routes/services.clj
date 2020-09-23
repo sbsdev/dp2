@@ -41,7 +41,7 @@
 
    ;; swagger documentation
    ["" {:no-doc true
-        :swagger {:info {:title "my-api"
+        :swagger {:info {:title "Daisyproducer"
                          :description "https://cljdoc.org/d/metosin/reitit"}}}
 
     ["/swagger.json"
@@ -51,9 +51,6 @@
      {:get (swagger-ui/create-swagger-ui-handler
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]
-
-   ["/ping"
-    {:get (constantly (ok {:message "pong"}))}]
 
    ["/documents"
     {:swagger {:tags ["documents"]}}
