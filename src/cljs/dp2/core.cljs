@@ -78,15 +78,6 @@
                          title]]
                    [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
 
-(defn horizontal-field [label value]
-  [:div.field.is-horizontal
-      [:div.field-label
-       [:label.label label]]
-      [:div.field-body
-       [:div.field
-        [:div.control
-         [:input.input {:type "text" :readOnly true :value value}]]]]])
-
 (def type-mapping {0 "None" 1 "Name (Type Hoffmann)" 2 "Name"
                    3 "Place (Type Langenthal)" 4 "Place"
                    5 "Homograph"})
@@ -95,12 +86,14 @@
   (let [{:keys [title author source_publisher state_id] :as document} (:document @session)
         state (state-mapping state_id state_id)]
     [:section.section>div.container>div.content
-     [:div
-      [horizontal-field "Title" title]
-      [horizontal-field "Author" author]
-      [horizontal-field "Source Publisher" source_publisher]
-      [horizontal-field "State" state]]
-     [:div
+     [:div.block
+      [:table.table.is-narrow
+       [:tbody
+        [:tr [:th {:width 160} "Title:"] [:td title]]
+        [:tr [:th "Author:"] [:td author]]
+        [:tr [:th "Source Publisher:"] [:td source_publisher]]
+        [:tr [:th "State:"] [:td state]]]]]
+     [:div.block
       [:table.table.is-striped
        [:thead
         [:tr
