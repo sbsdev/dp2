@@ -86,6 +86,14 @@ LIMIT :limit OFFSET :offset
 SELECT * FROM dictionary_localword
 WHERE document_id = :id
 
+-- :name insert-local-word :! :n
+-- :doc Insert or update a word in the local dictionary.
+INSERT INTO dictionary_localword (untranslated, braille, type, grade, homograph_disambiguation, document_id, isLocal)
+VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal)
+ON DUPLICATE KEY UPDATE
+braille = VALUES(braille),
+isLocal = VALUES(isLocal);
+
 -- :name get-all-known-homographs :? :*
 -- :doc given a list of `words` retrieve all (locally and globally) known homographs for a given `document_id`, `grade`
 (SELECT homograph_disambiguation
