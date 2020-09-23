@@ -175,7 +175,7 @@
                          :handler #(swap! session assoc :global-words %)}))
 
 (defn fetch-local-words! [id]
-  (GET (str "/api/documents/" id "/check-words") {:handler #(swap! session assoc :local-words %)}))
+  (GET (str "/api/documents/" id "/unknown-words") {:handler #(swap! session assoc :local-words %)}))
 
 (defn mount-components []
   (rdom/render [#'navbar] (.getElementById js/document "navbar"))

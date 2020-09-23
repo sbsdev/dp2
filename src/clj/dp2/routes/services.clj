@@ -123,15 +123,6 @@
            :tags ["words"]
            :parameters {:path {:id int?}}
            :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [doc (db/get-local-words {:id id})]
-                        (ok doc)
-                        (not-found)))}}]
-
-   ["/documents/:id/check-words"
-    {:get {:summary "Check a document for unknown words and return those"
-           :tags ["words"]
-           :parameters {:path {:id int?}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
                       (let [version (docs/get-latest-version id)
                             content (str (words/filter-braille-and-names version))
                             words (words/extract-plain-words content)
