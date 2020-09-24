@@ -103,14 +103,14 @@ isLocal = VALUES(isLocal);
 FROM dictionary_globalword
 WHERE grade = :grade
 AND type = 5
-AND untranslated in (:v*:words))
+AND homograph_disambiguation in (:v*:words))
 UNION
 (SELECT homograph_disambiguation
 FROM dictionary_localword
 WHERE grade = :grade
 AND type = 5
 AND document_id = :document_id
-AND untranslated in (:v*:words))
+AND homograph_disambiguation in (:v*:words))
 
 -- :name get-all-known-names :? :*
 -- :doc given a list of `words` retrieve all (locally and globally) known names for a given `document_id`, `grade`

@@ -81,7 +81,7 @@
    set))
 
 (defn extract-homographs [xml]
-  (extract-xpath xml "//brl:homograph/text()"))
+  (extract-xpath xml "for $h in (//brl:homograph) return string-join($h/text(),'|')"))
 
 (defn extract-names [xml]
   (extract-xpath xml "//brl:name/text()"))
@@ -100,7 +100,8 @@
 (defn embellish-words [words document_id grade type]
   (let [template {:document_id document_id
                   :type type
-                  :grade grade}]
+                  :grade grade
+                  :homograph_disambiguation ""}]
     (map (fn [untranslated word]
            (let [tables (louis/get-tables grade {:name (name? type)
                                                  :place (place? type)})
@@ -109,6 +110,21 @@
              (assoc word
                     :untranslated untranslated :braille braille
                     :hyphenated hyphenated)))
+         words (repeat template))))
+
+(defn embellish-homograph [words document_id grade type]
+  (let [template {:document_id document_id
+                  :type type
+                  :grade grade}]
+    (map (fn [homograph word]
+           (let [untranslated (string/replace homograph "|" "")
+                 tables (louis/get-tables grade)
+                 braille (louis/translate (string/replace homograph "|" "┊") tables)
+                 hyphenated (hyphenate/hyphenate untranslated)]
+             (assoc word
+                    :untranslated untranslated :braille braille
+                    :hyphenated hyphenated
+                    :homograph_disambiguation homograph)))
          words (repeat template))))
 
 (defn get-unknown-names
@@ -130,7 +146,7 @@
   (-> (filter-braille xml)
       extract-homographs
       (compare-with-known-homographs document-id grade)
-      (embellish-words document-id grade 5)))
+      (embellish-homograph document-id grade 5)))
 
 (defn get-unknown-words
   [xml document-id grade]
@@ -142,11 +158,13 @@
 
 (defn get-unknown
   [xml document-id grade]
-  (concat
-   (get-unknown-names xml document-id grade)
-   (get-unknown-places xml document-id grade)
-   ;; TODO: add homographs
-   (get-unknown-words xml document-id grade)))
+  (sort-by
+   :untranslated
+   (concat
+    (get-unknown-names xml document-id grade)
+    (get-unknown-places xml document-id grade)
+    (get-unknown-homographs xml document-id grade)
+    (get-unknown-words xml document-id grade))))
 
 (comment
   ;; extract words from an dtbook file
