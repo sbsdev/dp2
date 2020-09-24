@@ -132,12 +132,9 @@
            :parameters {:path {:id int?}}
            :handler (fn [{{{:keys [id]} :path} :parameters}]
                       (let [version (docs/get-latest-version id)
-                            content (str (words/filter-braille-and-names version))
-                            words (words/extract-plain-words content)
                             grade 2
-                            unknown-words (words/get-unknown-words words id grade)
-                            embellished (words/embellish-words unknown-words id grade 0)]
-                        (ok embellished)))}}]
+                            unknown (words/get-unknown version id grade)]
+                        (ok unknown)))}}]
 
    ["/documents/:id/versions"
     {:get {:summary "Get all versions of a given document"

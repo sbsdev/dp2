@@ -111,6 +111,43 @@
                     :hyphenated hyphenated)))
          words (repeat template))))
 
+(defn get-unknown-names
+  [xml document-id grade]
+  (-> (filter-braille xml)
+      extract-names
+      (compare-with-known-names document-id grade)
+      (embellish-words document-id grade 1)))
+
+(defn get-unknown-places
+  [xml document-id grade]
+  (-> (filter-braille xml)
+      extract-places
+      (compare-with-known-places document-id grade)
+      (embellish-words document-id grade 3)))
+
+(defn get-unknown-homographs
+  [xml document-id grade]
+  (-> (filter-braille xml)
+      extract-homographs
+      (compare-with-known-homographs document-id grade)
+      (embellish-words document-id grade 5)))
+
+(defn get-unknown-words
+  [xml document-id grade]
+  (-> (filter-braille-and-names xml)
+      str
+      extract-words
+      (compare-with-known-words document-id grade)
+      (embellish-words document-id grade 0)))
+
+(defn get-unknown
+  [xml document-id grade]
+  (concat
+   (get-unknown-names xml document-id grade)
+   (get-unknown-places xml document-id grade)
+   ;; TODO: add homographs
+   (get-unknown-words xml document-id grade)))
+
 (comment
   ;; extract words from an dtbook file
   (require '[clojure.java.io :as io])
