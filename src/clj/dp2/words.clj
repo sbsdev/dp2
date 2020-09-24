@@ -48,18 +48,15 @@
   (compare-with-known-words places document_id grade db/get-all-known-places))
 
 (defn filter-braille
-  [content]
-  (xslt/transform
-   (xslt/compile-xslt "resources/xslt/filter.xsl")
-   content))
+  [xml]
+  (xslt/transform (xslt/compile-xslt "resources/xslt/filter.xsl") xml))
 
 (defn filter-braille-and-names
-  [content]
-  (xslt/transform
-   [(xslt/compile-xslt "resources/xslt/filter.xsl")
-    (xslt/compile-xslt "resources/xslt/filter_names.xsl")
-    (xslt/compile-xslt "resources/xslt/to_string.xsl")]
-   content))
+  [xml]
+  (let [xslt [(xslt/compile-xslt "resources/xslt/filter.xsl")
+              (xslt/compile-xslt "resources/xslt/filter_names.xsl")
+              (xslt/compile-xslt "resources/xslt/to_string.xsl")]]
+    (xslt/transform xslt xml)))
 
 (def valid-character-types
   #{Character/LOWERCASE_LETTER Character/UPPERCASE_LETTER
