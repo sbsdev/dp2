@@ -16,10 +16,10 @@
 (defn name? [type] (#{1 2} type))
 (defn place? [type] (#{3 4} type))
 
-(defn get-unknown-words
-  "Given a seq of `words` return the ones that are unknown."
+(defn compare-with-known-words
+  "Given a set of `words` return the ones that are unknown."
   ([words document_id grade]
-   (get-unknown-words words document_id grade db/get-all-known-words))
+   (compare-with-known-words words document_id grade db/get-all-known-words))
   ([words document_id grade query-fn]
    (let [known-words
          (->>
@@ -28,20 +28,20 @@
           set)]
      (difference words known-words))))
 
-(defn get-unknown-homographs
-  "Given a seq of `homographs` return the ones that are unknown."
+(defn compare-with-known-homographs
+  "Given a set of `homographs` return the ones that are unknown."
   [homographs document_id grade]
-  (get-unknown-words homographs document_id grade db/get-all-known-homographs))
+  (compare-with-known-words homographs document_id grade db/get-all-known-homographs))
 
-(defn get-unknown-names
-  "Given a seq of `names` return the ones that are unknown."
+(defn compare-with-known-names
+  "Given a set of `names` return the ones that are unknown."
   [names document_id grade]
-  (get-unknown-words names document_id grade db/get-all-known-names))
+  (compare-with-known-words names document_id grade db/get-all-known-names))
 
-(defn get-unknown-places
-  "Given a seq of `places` return the ones that are unknown."
+(defn compare-with-known-places
+  "Given a set of `places` return the ones that are unknown."
   [places document_id grade]
-  (get-unknown-words places document_id grade db/get-all-known-places))
+  (compare-with-known-words places document_id grade db/get-all-known-places))
 
 (defn filter-braille
   [content]
@@ -73,24 +73,24 @@
    (filter valid-char?)
    (string/join)))
 
-(defn extract-words [content xpath]
+(defn- extract-xpath [xml xpath]
   (->>
-   (xpath/select compiler content xpath {})
+   (xpath/select compiler xml xpath {})
    (map (comp str string/lower-case))
    set))
 
-(defn extract-homographs [content]
-  (extract-words content "//brl:homograph/text()"))
+(defn extract-homographs [xml]
+  (extract-xpath xml "//brl:homograph/text()"))
 
-(defn extract-names [content]
-  (extract-words content "//brl:names/text()"))
+(defn extract-names [xml]
+  (extract-xpath xml "//brl:name/text()"))
 
-(defn extract-places [content]
-  (extract-words content "//brl:places/text()"))
+(defn extract-places [xml]
+  (extract-xpath xml "//brl:place/text()"))
 
-(defn extract-plain-words [content]
+(defn extract-words [text]
   (->>
-   (string/split (filter-text content) #"(?U)\W")
+   (string/split (filter-text text) #"(?U)\W")
    ;; drop words shorter than 3 chars
    (remove (fn [word] (< (count word) 3)))
    (map string/lower-case)
@@ -116,14 +116,14 @@
   
   (let [f (io/file "/home/eglic/tmp/6747.xml")
         content (str (filter-braille-and-names f))]
-    (extract-plain-words content))
+    (extract-words content))
   
   ;; extract unknown words from an dtbook file
   (let [f (io/file "/home/eglic/tmp/6747.xml")
         content (str (filter-braille-and-names f))
-        words (extract-plain-words content)
+        words (extract-words content)
         document_id 644
         grade 2]
-    (get-unknown-words words document_id grade))
+    (compare-with-known-words words document_id grade))
   
   )
