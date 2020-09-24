@@ -69,12 +69,14 @@ SELECT * FROM dictionary_globalword
 LIMIT :limit OFFSET :offset
 
 -- :name get-global-word :? :*
--- :doc retrieve global words for a given untranslated
+-- :doc retrieve global words for a given `untranslated`, an optional `grade` and an optional `type`
 SELECT * FROM dictionary_globalword
 WHERE untranslated = :untranslated
+--~ (when (:grade params) "AND grade = :grade")
+--~ (when (:type params) "AND type = :type")
 
 -- :name find-global-words :? :*
--- :doc retrieve all global words given a simple pattern for untranslated, an optional grade, an optional type, a limit and an offset
+-- :doc retrieve all global words given a simple pattern for `untranslated`, an optional `grade`, an optional `type`, a `limit` and an `offset`
 SELECT * FROM dictionary_globalword
 WHERE untranslated LIKE :search
 --~ (when (:grade params) "AND grade = :grade")
@@ -85,6 +87,7 @@ LIMIT :limit OFFSET :offset
 -- :doc retrieve local words for a given document id
 SELECT * FROM dictionary_localword
 WHERE document_id = :id
+--~ (when (:grade params) "AND grade = :grade")
 
 -- :name insert-local-word :! :n
 -- :doc Insert or update a word in the local dictionary.

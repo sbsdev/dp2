@@ -100,18 +100,21 @@
    ["/words/:untranslated"
     {:get {:summary "Get global words by untranslated"
            :tags ["words"]
-           :parameters {:path {:untranslated string?}}
-           :handler (fn [{{{:keys [untranslated]} :path} :parameters}]
-                      (if-let [doc (db/get-global-word {:untranslated untranslated})]
+           :parameters {:path {:untranslated string?}
+                        :query {(spec/opt :grade) int?
+                                (spec/opt :type) int?}}
+           :handler (fn [{{{:keys [untranslated]} :path {:keys [grade type]} :query} :parameters}]
+                      (if-let [doc (db/get-global-word {:untranslated untranslated :grade grade :type type})]
                         (ok doc)
                         (not-found)))}}]
 
    ["/documents/:id/words"
     {:get {:summary "Get all local words for a given document"
            :tags ["words"]
-           :parameters {:path {:id int?}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
-                      (if-let [doc (db/get-local-words {:id id})]
+           :parameters {:path {:id int?}
+                        :query {(spec/opt :grade) int?}}
+           :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
+                      (if-let [doc (db/get-local-words {:id id :grade grade})]
                         (ok doc)
                         (not-found)))}
 
@@ -129,10 +132,10 @@
    ["/documents/:id/unknown-words"
     {:get {:summary "Get all unknown words for a given document"
            :tags ["words"]
-           :parameters {:path {:id int?}}
-           :handler (fn [{{{:keys [id]} :path} :parameters}]
+           :parameters {:path {:id int?}
+                        :query {(spec/opt :grade) int?}}
+           :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
                       (let [version (docs/get-latest-version id)
-                            grade 2
                             unknown (words/get-unknown version id grade)]
                         (ok unknown)))}}]
 
