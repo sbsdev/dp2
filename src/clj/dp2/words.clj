@@ -21,12 +21,16 @@
   ([words document_id grade]
    (compare-with-known-words words document_id grade db/get-all-known-words))
   ([words document_id grade query-fn]
-   (let [known-words
-         (->>
-          (query-fn {:document_id document_id :grade grade :words words})
-          (map :untranslated)
-          set)]
-     (difference words known-words))))
+   (if (empty? words)
+     ;; if there are no words then none of them can be unknown.
+     ; The db query doesn't like an empty word list
+     #{}
+     (let [known-words
+           (->>
+            (query-fn {:document_id document_id :grade grade :words words})
+            (map :untranslated)
+            set)]
+       (difference words known-words)))))
 
 (defn compare-with-known-homographs
   "Given a set of `homographs` return the ones that are unknown."
