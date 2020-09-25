@@ -97,18 +97,17 @@
       [:table.table.is-striped
        [:thead
         [:tr
-         [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th ""]]]
+         [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Ignore"]]]
        [:tbody
-        (for [{:keys [untranslated braille type hyphenated]} (:local-words @session)]
+        (for [{:keys [untranslated braille type hyphenated homograph_disambiguation]} (:local-words @session)]
           ^{:key untranslated}
           [:tr [:td untranslated]
            [:td [:input.input {:type "text" :value braille}]]
            [:td [:input.input {:type "text" :value hyphenated}]]
            [:td (get type-mapping type "Unknown")]
-           [:td [:div.field.is-grouped
-                 [:p.control [:button.button.is-success [:span.icon.is-small [:i.mi.mi-done]] [:span "Save"]]]
-                 [:p.control [:button.button.is-warning [:span.icon.is-small [:i.mi.mi-description]] [:span "Local"]]]
-                 [:p.control [:button.button.is-danger.is-outlined [:span.icon.is-small [:i.mi.mi-clear]] [:span "Ignore"]]]]]])]]]]))
+           [:td homograph_disambiguation]
+           [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]
+           [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]])]]]]))
 
 (defn words-page []
   [:section.section>div.container>div.content
