@@ -133,7 +133,7 @@
     {:get {:summary "Get all unknown words for a given document"
            :tags ["words"]
            :parameters {:path {:id int?}
-                        :query {(spec/opt :grade) int?}}
+                        :query {:grade int?}}
            :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
                       (let [version (docs/get-latest-version id)
                             unknown (words/get-unknown version id grade)]
