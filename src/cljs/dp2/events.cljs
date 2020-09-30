@@ -3,7 +3,8 @@
     [re-frame.core :as rf]
     [ajax.core :as ajax]
     [reitit.frontend.easy :as rfe]
-    [reitit.frontend.controllers :as rfc]))
+    [reitit.frontend.controllers :as rfc]
+    [clojure.string :as string]))
 
 ;;;;;;;;;;;;;;;;;
 ;; Dispatchers ;;
@@ -41,16 +42,26 @@
 
 (rf/reg-event-fx
   :fetch-documents
-  (fn [_ _]
-    {:http-xhrio {:method          :get
-                  :uri             "/api/documents"
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:set-documents]}}))
+  (fn [_ [_ search]]
+    (let [request {:method          :get
+                   :uri             "/api/documents"
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success      [:set-documents]}]
+      (if (string/blank? search)
+        {:http-xhrio request}
+        {:http-xhrio (assoc request :params {:search (str "%" search "%")})}))))
 
 (rf/reg-event-fx
   :init-documents
-  (fn [_ _]
-    {:dispatch [:fetch-documents]}))
+  (fn [{:keys [db]} _]
+    (let [search (:documents-search db)]
+      {:dispatch [:fetch-documents search]})))
+
+(rf/reg-event-fx
+   :documents-search-change
+   (fn [{:keys [db]} [_ new-search-value]]
+     {:dispatch [:fetch-documents new-search-value]
+      :db   (assoc db :documents-search new-search-value)}))
 
 ;; Global words
 
@@ -61,16 +72,26 @@
 
 (rf/reg-event-fx
   :fetch-global-words
-  (fn [_ _]
-    {:http-xhrio {:method          :get
-                  :uri             "/api/words"
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success       [:set-global-words]}}))
+  (fn [_ [_ search]]
+    (let [request {:method          :get
+                   :uri             "/api/words"
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :on-success       [:set-global-words]}]
+      (if (string/blank? search)
+        {:http-xhrio request}
+        {:http-xhrio (assoc request :params {:search (str search "%")})}))))
 
 (rf/reg-event-fx
   :init-global-words
-  (fn [_ _]
-    {:dispatch [:fetch-global-words]}))
+  (fn [{:keys [db]} _]
+    (let [search (:words-search db)]
+      {:dispatch [:fetch-global-words search]})))
+
+(rf/reg-event-fx
+   :words-search-change
+   (fn [{:keys [db]} [_ new-search-value]]
+     {:dispatch [:fetch-global-words new-search-value]
+      :db   (assoc db :words-search new-search-value)}))
 
 ;;;;;;;;;;;;;;;;;;;
 ;; Subscriptions ;;
@@ -109,6 +130,16 @@
     (-> db :words :global)))
 
 (rf/reg-sub
+  :words-search
+  (fn [db _]
+    (-> db :words-search)))
+
+(rf/reg-sub
   :documents
   (fn [db _]
     (-> db :documents)))
+
+(rf/reg-sub
+  :documents-search
+  (fn [db _]
+    (-> db :documents-search)))

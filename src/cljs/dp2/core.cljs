@@ -36,8 +36,34 @@
                  [nav-link "#/" "Documents" :documents]
                  [nav-link "#/words" "Words" :words]]]]))
 
+(defn words-grade []
+  [:div.field
+   [:div.control
+    [:div.select.is-fullwidth
+     [:select
+      [:option "Grade 1"]
+      [:option "Grade 2"]
+      [:option "Any"]]]]])
+
+(defn words-search []
+  (let [gettext (fn [e] (-> e .-target .-value))
+        emit    (fn [e] (rf/dispatch [:words-search-change (gettext e)]))]
+    [:div.field
+     [:div.control
+      [:input.input {:type "text"
+                     :placeholder "Search"
+                     :value @(rf/subscribe [:words-search])
+                     :on-change emit}]]]))
+
+(defn words-filter []
+  [:div.field.is-horizontal
+   [:div.field-body
+    [words-search]
+    [words-grade]]])
+
 (defn words-page []
   [:section.section>div.container>div.content
+   [words-filter]
    [:table.table.is-striped
     [:thead
      [:tr
@@ -48,8 +74,19 @@
 
 (def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
 
+(defn document-search []
+  (let [gettext (fn [e] (-> e .-target .-value))
+        emit    (fn [e] (rf/dispatch [:documents-search-change (gettext e)]))]
+    [:div.field
+     [:div.control
+      [:input.input {:type "text"
+                     :placeholder "Search"
+                     :value @(rf/subscribe [:documents-search])
+                     :on-change emit}]]]))
+
 (defn documents-page []
   [:section.section>div.container>div.content
+   [document-search]
    [:table.table.is-striped
     [:thead
      [:tr
