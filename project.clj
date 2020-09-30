@@ -11,24 +11,25 @@
                  [cljs-ajax "0.8.0"]
                  [clojure.java-time "0.3.2"]
                  [com.cognitect/transit-clj "1.0.324"]
-                 [com.fasterxml.jackson.core/jackson-core "2.11.1"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.11.1"]
+                 [com.fasterxml.jackson.core/jackson-core "2.11.2"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.11.2"]
                  [com.google.protobuf/protobuf-java "3.8.0"]
                  [conman "0.9.0"]
                  [cprop "0.1.17"]
+                 [day8.re-frame/http-fx "0.2.1"]
                  [expound "0.8.5"]
                  [funcool/struct "1.4.0"]
                  [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.6.7"]
                  [luminus-transit "0.1.2"]
                  [markdown-clj "1.10.4"]
-                 [metosin/jsonista "0.2.6"]
+                 [metosin/jsonista "0.2.7"]
                  [metosin/muuntaja "0.6.7"]
-                 [metosin/reitit "0.5.2"]
+                 [metosin/reitit "0.5.5"]
                  [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
                  [mysql/mysql-connector-java "8.0.18"]
-                 [nrepl "0.7.0"]
+                 [nrepl "0.8.2"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.773" :scope "provided"]
                  [org.clojure/tools.cli "1.0.194"]
@@ -37,6 +38,7 @@
                  [org.webjars.npm/material-icons "0.3.1"]
                  [org.webjars/webjars-locator "0.40"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
+                 [re-frame "1.1.1"]
                  [reagent "0.10.0"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.8.1"]
@@ -109,12 +111,14 @@
                     {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
                      :figwheel {:on-jsload "dp2.core/mount-components"}
                      :compiler
-                     {:main "dp2.app"
-                      :asset-path "/js/out"
-                      :output-to "target/cljsbuild/public/js/app.js"
-                      :output-dir "target/cljsbuild/public/js/out"
-                      :source-map true
+                     {:output-dir "target/cljsbuild/public/js/out"
+                      :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}
                       :optimizations :none
+                      :preloads [re-frisk.preload]
+                      :output-to "target/cljsbuild/public/js/app.js"
+                      :asset-path "/js/out"
+                      :source-map true
+                      :main "dp2.app"
                       :pretty-print true}}}}
                   
                   

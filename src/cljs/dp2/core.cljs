@@ -1,181 +1,96 @@
 (ns dp2.core
   (:require
-    [reagent.core :as r]
+    [day8.re-frame.http-fx]
     [reagent.dom :as rdom]
+    [reagent.core :as r]
+    [re-frame.core :as rf]
     [goog.events :as events]
     [goog.history.EventType :as HistoryEventType]
     [markdown.core :refer [md->html]]
     [dp2.ajax :as ajax]
-    [ajax.core :refer [GET POST]]
+    [dp2.events]
     [reitit.core :as reitit]
+    [reitit.frontend.easy :as rfe]
     [clojure.string :as string])
   (:import goog.History))
-
-(defonce session (r/atom {:page :documents
-                          :document-search ""
-                          :word-search ""}))
-
-(def document-search (r/cursor session [:document-search]))
-(def word-search (r/cursor session [:word-search]))
-
-(def state-mapping {1 "New"
-                    4 "In Production"
-                    6 "Finished"})
 
 (defn nav-link [uri title page]
   [:a.navbar-item
    {:href   uri
-    :class (when (= page (:page @session)) "is-active")}
+    :class (when (= page @(rf/subscribe [:common/page])) :is-active)}
    title])
 
 (defn navbar [] 
   (r/with-let [expanded? (r/atom false)]
-    [:nav.navbar.is-info>div.container
-     [:div.navbar-brand
-      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "dp2"]
-      [:span.navbar-burger.burger
-       {:data-target :nav-menu
-        :on-click #(swap! expanded? not)
-        :class (when @expanded? :is-active)}
-       [:span][:span][:span]]]
-     [:div#nav-menu.navbar-menu
-      {:class (when @expanded? :is-active)}
-      [:div.navbar-start
-       [nav-link "#/" "Documents" :documents]
-       [nav-link "#/words" "Global Words" :global-words]]]]))
-
-(defn search-ui [search placeholder fetch-fn]
-  [:div.field.is-horizontal.is-pulled-right
-    [:div.field-label.is-normal
-     [:label.label "Search:"]]
-    [:div.field-body
-     [:div.control
-      [:input.input
-       {:type "text"
-        :placeholder placeholder
-        :value @search
-        :on-change (fn [e]
-                     (let [new-search-term (-> e .-target .-value)]
-                       (reset! search new-search-term)
-                       (fetch-fn new-search-term)))}]]]])
-
-(declare fetch-documents! fetch-document! fetch-local-words! fetch-global-words!)
-
-(defn documents-page []
-  [:section.section>div.container>div.content
-   [search-ui document-search "Title" fetch-documents!]
-   [:table.table.is-striped
-    [:thead
-     [:tr
-      [:th "Title"] [:th "Author"] [:th "Source Publisher"] [:th "State"]]]
-    [:tbody
-     (for [{:keys [id title author source_publisher state_id]} (:documents @session)]
-       ^{:key id} [:tr
-                   [:td [:a {:href (str "#/documents/" id)
-                             :on-click (fn []
-                                         (fetch-document! id)
-                                         (fetch-local-words! id))}
-                         title]]
-                   [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
-
-(def type-mapping {0 "None" 1 "Name (Type Hoffmann)" 2 "Name"
-                   3 "Place (Type Langenthal)" 4 "Place"
-                   5 "Homograph"})
-
-(defn document-page []
-  (let [{:keys [title author source_publisher state_id] :as document} (:document @session)
-        state (state-mapping state_id state_id)]
-    [:section.section>div.container>div.content
-     [:div.block
-      [:table.table.is-narrow
-       [:tbody
-        [:tr [:th {:width 160} "Title:"] [:td title]]
-        [:tr [:th "Author:"] [:td author]]
-        [:tr [:th "Source Publisher:"] [:td source_publisher]]
-        [:tr [:th "State:"] [:td state]]]]]
-     [:div.block
-      [:table.table.is-striped
-       [:thead
-        [:tr
-         [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Ignore"]]]
-       [:tbody
-        (for [{:keys [untranslated braille type hyphenated homograph_disambiguation]} (:local-words @session)]
-          ^{:key untranslated}
-          [:tr [:td untranslated]
-           [:td [:input.input {:type "text" :value braille}]]
-           [:td [:input.input {:type "text" :value hyphenated}]]
-           [:td (get type-mapping type "Unknown")]
-           [:td homograph_disambiguation]
-           [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]
-           [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]])]]]]))
+              [:nav.navbar.is-info>div.container
+               [:div.navbar-brand
+                [:a.navbar-item {:href "/" :style {:font-weight :bold}} "dp2"]
+                [:span.navbar-burger.burger
+                 {:data-target :nav-menu
+                  :on-click #(swap! expanded? not)
+                  :class (when @expanded? :is-active)}
+                 [:span][:span][:span]]]
+               [:div#nav-menu.navbar-menu
+                {:class (when @expanded? :is-active)}
+                [:div.navbar-start
+                 [nav-link "#/" "Documents" :documents]
+                 [nav-link "#/words" "Words" :words]]]]))
 
 (defn words-page []
   [:section.section>div.container>div.content
-   [search-ui word-search "Word" fetch-global-words!]
    [:table.table.is-striped
     [:thead
      [:tr
       [:th "Untranslated"] [:th "Braille"] [:th "Grade"] [:th "Markup"] [:th "Homograph Disambiguation"]]]
     [:tbody
-     (for [{:keys [id untranslated braille grade type homograph_disambiguation]} (:global-words @session)]
+     (for [{:keys [id untranslated braille grade type homograph_disambiguation]} @(rf/subscribe [:words/global])]
        ^{:key id} [:tr [:td untranslated] [:td braille] [:td grade] [:td type] [:td homograph_disambiguation]])]]])
 
-(def pages
-  {:documents #'documents-page
-   :document #'document-page
-   :global-words #'words-page})
+(def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
+
+(defn documents-page []
+  [:section.section>div.container>div.content
+   [:table.table.is-striped
+    [:thead
+     [:tr
+      [:th "Title"] [:th "Author"] [:th "Source Publisher"] [:th "State"]]]
+    [:tbody
+     (for [{:keys [id title author source_publisher state_id]} @(rf/subscribe [:documents])]
+       ^{:key id} [:tr
+                   [:td [:a title]]
+                   [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
 
 (defn page []
-  [(pages (:page @session))])
+  (if-let [page @(rf/subscribe [:common/page])]
+    [:div
+     [navbar]
+     [page]]))
 
-;; -------------------------
-;; Routes
+(defn navigate! [match _]
+  (rf/dispatch [:common/navigate match]))
 
 (def router
   (reitit/router
-   [["/" :documents]
-    ["/documents/:id" :document]
-    ["/words" :global-words]]))
+    [["/" {:name        :documents
+           :view        #'documents-page
+           :controllers [{:start (fn [_] (rf/dispatch [:init-documents]))}]}]
+     ["/words" {:name :words
+                :view #'words-page
+                :controllers [{:start (fn [_] (rf/dispatch [:init-global-words]))}]}]]))
 
-(defn match-route [uri]
-  (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
-       (reitit/match-by-path router)
-       :data
-       :name))
-;; -------------------------
-;; History
-;; must be called after routes have been defined
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-      HistoryEventType/NAVIGATE
-      (fn [event]
-        (swap! session assoc :page (match-route (.-token event)))))
-    (.setEnabled true)))
+(defn start-router! []
+  (rfe/start!
+    router
+    navigate!
+    {}))
 
 ;; -------------------------
 ;; Initialize app
-(defn fetch-documents! [search-term]
-  (GET "/api/documents" {:params {:search (str "%" search-term "%")}
-                         :handler #(swap! session assoc :documents %)}))
-
-(defn fetch-document! [id]
-  (GET (str "/api/documents/" id) {:handler (fn [doc] (swap! session assoc :document doc))}))
-
-(defn fetch-global-words! [search-term]
-  (GET "/api/words" {:params {:search search-term}
-                         :handler #(swap! session assoc :global-words %)}))
-
-(defn fetch-local-words! [id]
-  (GET (str "/api/documents/" id "/unknown-words") {:handler #(swap! session assoc :local-words %)}))
-
 (defn mount-components []
-  (rdom/render [#'navbar] (.getElementById js/document "navbar"))
+  (rf/clear-subscription-cache!)
   (rdom/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []
+  (start-router!)
   (ajax/load-interceptors!)
-  (fetch-documents! "")
-  (fetch-global-words! "")
-  (hook-browser-navigation!)
   (mount-components))
