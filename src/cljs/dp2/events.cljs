@@ -63,6 +63,26 @@
      {:dispatch [:fetch-documents new-search-value]
       :db   (assoc db :documents-search new-search-value)}))
 
+;; Single Document
+
+(rf/reg-event-db
+  :set-current-document
+  (fn [db [_ document]]
+    (assoc db :current-document document)))
+
+(rf/reg-event-fx
+  :fetch-current-document
+  (fn [_ [_ id]]
+    {:http-xhrio {:method          :get
+                  :uri             (str "/api/documents/" id)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:set-current-document]}}))
+
+(rf/reg-event-fx
+  :init-current-document
+  (fn [{:keys [db]} [_ id]]
+    {:dispatch [:fetch-current-document id]}))
+
 ;; Global words
 
 (rf/reg-event-db
@@ -143,3 +163,8 @@
   :documents-search
   (fn [db _]
     (-> db :documents-search)))
+
+(rf/reg-sub
+ :current-document
+ (fn [db _]
+   (-> db :current-document)))

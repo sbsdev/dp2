@@ -74,7 +74,46 @@
 
 (def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
 
-(defn document-search []
+(defn document-summary [{:keys [title author source_publisher state_id]}]
+  (let [state (state-mapping state_id state_id)]
+    [:div.block
+     [:table.table
+      [:tbody
+       [:tr [:th {:width 200} "Title:"] [:td title]]
+       [:tr [:th "Author:"] [:td author]]
+       [:tr [:th "Source Publisher:"] [:td source_publisher]]
+       [:tr [:th "State:"] [:td state]]]]]))
+
+(defn document-tab-link [uri title page]
+  (let [is-active (= page @(rf/subscribe [:common/page-id]))]
+    [:li
+     {:class (when is-active :is-active)}
+     [:a {:href (when-not is-active uri)} title]]))
+
+(defn document-tabs [{:keys [id]}]
+  [:div.block
+   [:div.tabs.is-boxed
+    [:ul
+     [document-tab-link (str "#/documents/" id) "Details" :document]
+     [document-tab-link (str "#/documents/" id "/unknown") "Unknown Words" :document-unknown]
+     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local]
+     ]]])
+
+(defn document-details [document]
+  [:table.table.is-striped
+   [:tbody
+    (for [[k v] document]
+      ^{:key k}
+      [:tr [:th k] [:td v]])]])
+
+(defn document-page []
+  (let [document @(rf/subscribe [:current-document])]
+    [:section.section>div.container>div.content
+     [document-summary document]
+     [document-tabs document]
+     [document-details document]]))
+
+(defn documents-search []
   (let [gettext (fn [e] (-> e .-target .-value))
         emit    (fn [e] (rf/dispatch [:documents-search-change (gettext e)]))]
     [:div.field
@@ -84,17 +123,22 @@
                      :value @(rf/subscribe [:documents-search])
                      :on-change emit}]]]))
 
+(defn document-link [{:keys [id title] :as document}]
+  [:a {:href (str "#/documents/" id)
+       :on-click (fn [_] (rf/dispatch [:set-current-document document]))}
+   title])
+
 (defn documents-page []
   [:section.section>div.container>div.content
-   [document-search]
+   [documents-search]
    [:table.table.is-striped
     [:thead
      [:tr
       [:th "Title"] [:th "Author"] [:th "Source Publisher"] [:th "State"]]]
     [:tbody
-     (for [{:keys [id title author source_publisher state_id]} @(rf/subscribe [:documents])]
+     (for [{:keys [id author source_publisher state_id] :as document} @(rf/subscribe [:documents])]
        ^{:key id} [:tr
-                   [:td [:a title]]
+                   [:td [document-link document]]
                    [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
 
 (defn page []
@@ -111,6 +155,12 @@
     [["/" {:name        :documents
            :view        #'documents-page
            :controllers [{:start (fn [_] (rf/dispatch [:init-documents]))}]}]
+     ["/documents/:id"
+      {:name :document
+       :view #'document-page
+       :controllers
+       [{:parameters {:path [:id]}
+         :start (fn [params] (rf/dispatch [:init-current-document (-> params :path :id)]))}]}]
      ["/words" {:name :words
                 :view #'words-page
                 :controllers [{:start (fn [_] (rf/dispatch [:init-global-words]))}]}]]))
