@@ -84,19 +84,18 @@
        [:tr [:th "Source Publisher:"] [:td source_publisher]]
        [:tr [:th "State:"] [:td state]]]]]))
 
-(defn document-tab-link [uri title page]
-  (let [is-active (= page @(rf/subscribe [:common/page-id]))]
-    [:li
-     {:class (when is-active :is-active)}
-     [:a {:href (when-not is-active uri)} title]]))
+(defn document-tab-link [uri title page on-click]
+  (if-let [is-active (= page @(rf/subscribe [:common/page-id]))]
+    [:li.is-active [:a title]]
+    [:li [:a {:href uri :on-click on-click} title]]))
 
 (defn document-tabs [{:keys [id]}]
   [:div.block
    [:div.tabs.is-boxed
     [:ul
      [document-tab-link (str "#/documents/" id) "Details" :document]
-     [document-tab-link (str "#/documents/" id "/unknown") "Unknown Words" :document-unknown]
-     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local]
+     [document-tab-link (str "#/documents/" id "/unknown") "Unknown Words" :document-unknown (fn [_] (rf/dispatch [:init-unknown-words id]))]
+     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local (fn [_] (rf/dispatch [:init-local-words id]))]
      ]]])
 
 (defn document-details [document]
@@ -112,6 +111,60 @@
      [document-summary document]
      [document-tabs document]
      [document-details document]]))
+
+(def type-mapping {0 "None" 1 "Name (Type Hoffmann)" 2 "Name"
+                   3 "Place (Type Langenthal)" 4 "Place"
+                   5 "Homograph"})
+
+(defn document-unknown-words [document]
+  (let [words @(rf/subscribe [:unknown-words])]
+    [:div.block
+     [:table.table.is-striped
+      [:thead
+       [:tr
+        [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Ignore"]]]
+      [:tbody
+       (for [{:keys [untranslated braille hyphenated type homograph_disambiguation]} words]
+         ^{:key untranslated}
+         [:tr [:td untranslated]
+          [:td [:input.input {:type "text" :value braille}]]
+          [:td [:input.input {:type "text" :value hyphenated}]]
+          [:td (get type-mapping type "Unknown")]
+          [:td homograph_disambiguation]
+          [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]
+          [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]])]]]))
+
+
+(defn document-unknown []
+  (let [document @(rf/subscribe [:current-document])]
+    [:section.section>div.container>div.content
+     [document-summary document]
+     [document-tabs document]
+     [document-unknown-words document]]))
+
+(defn document-local-words [document]
+  (let [words @(rf/subscribe [:local-words])]
+    [:div.block
+     [:table.table.is-striped
+      [:thead
+       [:tr
+        [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Ignore"]]]
+      [:tbody
+       (for [{:keys [untranslated braille type homograph_disambiguation]} words]
+         ^{:key untranslated}
+         [:tr [:td untranslated]
+          [:td [:input.input {:type "text" :value braille}]]
+          [:td (get type-mapping type "Unknown")]
+          [:td homograph_disambiguation]
+          [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]
+          [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]])]]]))
+
+(defn document-local []
+  (let [document @(rf/subscribe [:current-document])]
+    [:section.section>div.container>div.content
+     [document-summary document]
+     [document-tabs document]
+     [document-local-words document]]))
 
 (defn documents-search []
   (let [gettext (fn [e] (-> e .-target .-value))
@@ -155,12 +208,14 @@
     [["/" {:name        :documents
            :view        #'documents-page
            :controllers [{:start (fn [_] (rf/dispatch [:init-documents]))}]}]
-     ["/documents/:id"
-      {:name :document
-       :view #'document-page
-       :controllers
-       [{:parameters {:path [:id]}
-         :start (fn [params] (rf/dispatch [:init-current-document (-> params :path :id)]))}]}]
+     ["/documents/:id" {:name :document
+                        :view #'document-page
+                        :controllers [{:parameters {:path [:id]}
+                                       :start (fn [params] (rf/dispatch [:init-current-document (-> params :path :id)]))}]}]
+     ["/documents/:id/unknown" {:name :document-unknown
+                                :view #'document-unknown}]
+     ["/documents/:id/local" {:name :document-local
+                              :view #'document-local}]
      ["/words" {:name :words
                 :view #'words-page
                 :controllers [{:start (fn [_] (rf/dispatch [:init-global-words]))}]}]]))
