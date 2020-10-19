@@ -39,13 +39,16 @@
                  [nav-link "#/words" "Words" :words]]]]))
 
 (defn words-grade []
-  [:div.field
-   [:div.control
-    [:div.select.is-fullwidth
-     [:select
-      [:option "Grade 1"]
-      [:option "Grade 2"]
-      [:option "Any"]]]]])
+  (let [getvalue (fn [e] (-> e .-target .-value))
+        emit     (fn [e] (rf/dispatch [:words-grade-change (getvalue e)]))] ; FIXME: implement this event
+    [:div.field
+     [:div.control
+      [:div.select.is-fullwidth
+       [:select
+        {:on-change emit}
+        [:option {:value 1} "Grade 1"]
+        [:option {:value 2} "Grade 2"]
+        [:option {:value 0} "Any"]]]]]))
 
 (defn words-search []
   (let [gettext (fn [e] (-> e .-target .-value))
@@ -114,13 +117,25 @@
      [document-tabs document]
      [document-details document]]))
 
+(defn current-words-grade []
+  (let [getvalue (fn [e] (-> e .-target .-value))
+        emit     (fn [e] (rf/dispatch [:current-words-grade-change (getvalue e)]))] ; FIXME: implement this event
     [:div.block
+     [:div.field
+      [:div.control
+       [:div.select.is-fullwidth
+        [:select
+         {:on-change emit}
+         [:option {:value 1} "Grade 1"]
+         [:option {:value 2} "Grade 2"]
+         [:option {:value 0} "Any"]]]]]]))
 
 (defn document-unknown []
   (let [document @(rf/subscribe [:current-document])]
     [:section.section>div.container>div.content
      [document-summary document]
      [document-tabs document]
+     [current-words-grade]
      [unknown/document-unknown-words document]]))
 
 (defn document-local-words [document]
@@ -150,6 +165,7 @@
     [:section.section>div.container>div.content
      [document-summary document]
      [document-tabs document]
+     [current-words-grade]
      [document-local-words document]]))
 
 (defn documents-search []
