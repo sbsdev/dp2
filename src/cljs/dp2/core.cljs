@@ -74,19 +74,19 @@
      [:tr
       [:th "Untranslated"] [:th "Braille"] [:th "Grade"] [:th "Markup"] [:th "Homograph Disambiguation"]]]
     [:tbody
-     (for [{:keys [id untranslated braille grade type homograph_disambiguation]} @(rf/subscribe [:words/global])]
-       ^{:key id} [:tr [:td untranslated] [:td braille] [:td grade] [:td type] [:td homograph_disambiguation]])]]])
+     (for [{:keys [id untranslated braille grade type homograph-disambiguation]} @(rf/subscribe [:words/global])]
+       ^{:key id} [:tr [:td untranslated] [:td braille] [:td grade] [:td type] [:td homograph-disambiguation]])]]])
 
 (def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
 
-(defn document-summary [{:keys [title author source_publisher state_id]}]
-  (let [state (state-mapping state_id state_id)]
+(defn document-summary [{:keys [title author source-publisher state-id]}]
+  (let [state (state-mapping state-id state-id)]
     [:div.block
      [:table.table
       [:tbody
        [:tr [:th {:width 200} "Title:"] [:td title]]
        [:tr [:th "Author:"] [:td author]]
-       [:tr [:th "Source Publisher:"] [:td source_publisher]]
+       [:tr [:th "Source Publisher:"] [:td source-publisher]]
        [:tr [:th "State:"] [:td state]]]]]))
 
 (defn document-tab-link [uri title page on-click]
@@ -146,13 +146,13 @@
        [:tr
         [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [untranslated braille type homograph_disambiguation]} words]
+       (for [{:keys [untranslated braille type homograph-disambiguation]} words]
          ^{:key untranslated}
          [:tr
           [:td untranslated]
           [:td [:input.input {:type "text" :value braille}]]
           [:td (get words/type-mapping type "Unknown")]
-          [:td homograph_disambiguation]
+          [:td homograph-disambiguation]
           [:td [:div.buttons.has-addons
                 [:button.button.is-warning
                  [:span.icon [:i.mi.mi-book]] #_[:span "Local"]]
@@ -191,10 +191,10 @@
      [:tr
       [:th "Title"] [:th "Author"] [:th "Source Publisher"] [:th "State"]]]
     [:tbody
-     (for [{:keys [id author source_publisher state_id] :as document} @(rf/subscribe [:documents])]
+     (for [{:keys [id author source-publisher state-id] :as document} @(rf/subscribe [:documents])]
        ^{:key id} [:tr
                    [:td [document-link document]]
-                   [:td author] [:td source_publisher] [:td (state-mapping state_id state_id)]])]]])
+                   [:td author] [:td source-publisher] [:td (state-mapping state-id state-id)]])]]])
 
 (defn page []
   (if-let [page @(rf/subscribe [:common/page])]

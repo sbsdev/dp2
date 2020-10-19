@@ -38,6 +38,7 @@
                  [org.webjars.npm/material-icons "0.3.1"]
                  [org.webjars/webjars-locator "0.40"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
+                 [camel-snake-kebab "0.4.2"]
                  [re-frame "1.1.1"]
                  [reagent "0.10.0"]
                  [ring-webjars "0.2.0"]

@@ -18,34 +18,34 @@
 
 (defn compare-with-known-words
   "Given a set of `words` return the ones that are unknown."
-  ([words document_id grade]
-   (compare-with-known-words words document_id grade db/get-all-known-words))
-  ([words document_id grade query-fn]
+  ([words document-id grade]
+   (compare-with-known-words words document-id grade db/get-all-known-words))
+  ([words document-id grade query-fn]
    (if (empty? words)
      ;; if there are no words then none of them can be unknown.
      ; The db query doesn't like an empty word list
      #{}
      (let [known-words
            (->>
-            (query-fn {:document_id document_id :grade grade :words words})
+            (query-fn {:document_id document-id :grade grade :words words})
             (map :untranslated)
             set)]
        (difference words known-words)))))
 
 (defn compare-with-known-homographs
   "Given a set of `homographs` return the ones that are unknown."
-  [homographs document_id grade]
-  (compare-with-known-words homographs document_id grade db/get-all-known-homographs))
+  [homographs document-id grade]
+  (compare-with-known-words homographs document-id grade db/get-all-known-homographs))
 
 (defn compare-with-known-names
   "Given a set of `names` return the ones that are unknown."
-  [names document_id grade]
-  (compare-with-known-words names document_id grade db/get-all-known-names))
+  [names document-id grade]
+  (compare-with-known-words names document-id grade db/get-all-known-names))
 
 (defn compare-with-known-places
   "Given a set of `places` return the ones that are unknown."
-  [places document_id grade]
-  (compare-with-known-words places document_id grade db/get-all-known-places))
+  [places document-id grade]
+  (compare-with-known-words places document-id grade db/get-all-known-places))
 
 (defn filter-braille
   [xml]
@@ -97,11 +97,11 @@
    (map string/lower-case)
    set))
 
-(defn embellish-words [words document_id grade type]
-  (let [template {:document_id document_id
+(defn embellish-words [words document-id grade type]
+  (let [template {:document-id document-id
                   :type type
                   :grade grade
-                  :homograph_disambiguation ""}]
+                  :homograph-disambiguation ""}]
     (map (fn [untranslated word]
            (let [tables (louis/get-tables grade {:name (name? type)
                                                  :place (place? type)})
@@ -112,8 +112,8 @@
                     :hyphenated hyphenated)))
          words (repeat template))))
 
-(defn embellish-homograph [words document_id grade type]
-  (let [template {:document_id document_id
+(defn embellish-homograph [words document-id grade type]
+  (let [template {:document-id document-id
                   :type type
                   :grade grade}]
     (map (fn [homograph word]
@@ -124,7 +124,7 @@
              (assoc word
                     :untranslated untranslated :braille braille
                     :hyphenated hyphenated
-                    :homograph_disambiguation homograph)))
+                    :homograph-disambiguation homograph)))
          words (repeat template))))
 
 (defn get-unknown-names
@@ -178,8 +178,8 @@
   (let [f (io/file "/home/eglic/tmp/6747.xml")
         content (str (filter-braille-and-names f))
         words (extract-words content)
-        document_id 644
+        document-id 644
         grade 2]
-    (compare-with-known-words words document_id grade))
+    (compare-with-known-words words document-id grade))
   
   )

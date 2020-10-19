@@ -4,6 +4,8 @@
     [next.jdbc.result-set]
     [clojure.tools.logging :as log]
     [conman.core :as conman]
+    [camel-snake-kebab.extras :refer [transform-keys]]
+    [camel-snake-kebab.core :refer [->kebab-case-keyword]]
     [dp2.config :refer [env]]
     [mount.core :refer [defstate]]))
 
@@ -33,3 +35,26 @@
     (.toLocalTime v))
   (read-column-by-index [^java.sql.Time v _2 _3]
     (.toLocalTime v)))
+
+(defn result-one-snake->kebab
+  [this result options]
+  (->> (hugsql.adapter/result-one this result options)
+       (transform-keys ->kebab-case-keyword)))
+
+(defn result-many-snake->kebab
+  [this result options]
+  (->> (hugsql.adapter/result-many this result options)
+       (map #(transform-keys ->kebab-case-keyword %))))
+
+(defmethod hugsql.core/hugsql-result-fn :1 [sym]
+  'dp2.db.core/result-one-snake->kebab)
+
+(defmethod hugsql.core/hugsql-result-fn :one [sym]
+  'dp2.db.core/result-one-snake->kebab)
+
+(defmethod hugsql.core/hugsql-result-fn :* [sym]
+  'dp2.db.core/result-many-snake->kebab)
+
+(defmethod hugsql.core/hugsql-result-fn :many [sym]
+  'dp2.db.core/result-many-snake->kebab)
+

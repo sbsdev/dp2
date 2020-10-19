@@ -26,8 +26,6 @@
   (fn [_ [_ word]]
     (let [uuid (:uuid word)
           word (-> word
-                   (rename-keys {:document_id :document-id
-                                 :homograph_disambiguation :homograph-disambiguation})
                    (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
                                  :document-id])
                    (assoc :islocal false))
@@ -68,13 +66,13 @@
        [:tr
         [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [uuid untranslated braille hyphenated type homograph_disambiguation] :as word} (sort-by :untranslated (vals words))]
+       (for [{:keys [uuid untranslated braille hyphenated type homograph-disambiguation] :as word} (sort-by :untranslated (vals words))]
          ^{:key uuid}
          [:tr [:td untranslated]
           [:td [:input.input {:type "text" :value braille}]]
           [:td [:input.input {:type "text" :value hyphenated}]]
           [:td (get words/type-mapping type "Unknown")]
-          [:td homograph_disambiguation]
+          [:td homograph-disambiguation]
           [:td
            [:div.buttons.has-addons
             [:button.button.is-success
