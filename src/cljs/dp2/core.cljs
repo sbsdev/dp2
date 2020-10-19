@@ -129,16 +129,21 @@
      [:table.table.is-striped
       [:thead
        [:tr
-        [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Ignore"]]]
+        [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
       [:tbody
        (for [{:keys [untranslated braille type homograph_disambiguation]} words]
          ^{:key untranslated}
-         [:tr [:td untranslated]
+         [:tr
+          [:td untranslated]
           [:td [:input.input {:type "text" :value braille}]]
-          [:td (get type-mapping type "Unknown")]
+          [:td (get words/type-mapping type "Unknown")]
           [:td homograph_disambiguation]
-          [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]
-          [:td [:div.field [:div.control [:input {:type "checkbox"}]]]]])]]]))
+          [:td [:div.buttons.has-addons
+                [:button.button.is-warning
+                 [:span.icon [:i.mi.mi-book]] #_[:span "Local"]]
+                [:button.button.is-danger.is-outlined
+                 [:span.icon [:i.mi.mi-cancel]] #_[:span "Delete"]]]]
+          ])]]]))
 
 (defn document-local []
   (let [document @(rf/subscribe [:current-document])]
