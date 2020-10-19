@@ -134,27 +134,6 @@
   (fn [{:keys [db]} [_ id]]
     {:dispatch [:fetch-local-words id]}))
 
-;; Unknown words
-
-(rf/reg-event-db
-  :set-unknown-words
-  (fn [db [_ words]]
-    (assoc-in db [:words :unknown] words)))
-
-(rf/reg-event-fx
-  :fetch-unknown-words
-  (fn [_ [_ id]]
-    {:http-xhrio {:method          :get
-                  :uri             (str "/api/documents/" id "/unknown-words")
-                  :params          {:grade 2}
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:set-unknown-words]}}))
-
-(rf/reg-event-fx
-  :init-unknown-words
-  (fn [{:keys [db]} [_ id]]
-    {:dispatch [:fetch-unknown-words id]}))
-
 ;;;;;;;;;;;;;;;;;;;
 ;; Subscriptions ;;
 ;;;;;;;;;;;;;;;;;;;
@@ -210,11 +189,6 @@
  :current-document
  (fn [db _]
    (-> db :current-document)))
-
-(rf/reg-sub
- :unknown-words
- (fn [db _]
-   (-> db :words :unknown)))
 
 (rf/reg-sub
  :local-words
