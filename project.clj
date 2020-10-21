@@ -34,7 +34,7 @@
                  [org.clojure/clojurescript "1.10.773" :scope "provided"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
-                 [org.webjars.npm/bulma "0.8.2"]
+                 [org.webjars.npm/bulma "0.9.0"]
                  [org.webjars.npm/material-icons "0.3.1"]
                  [org.webjars/webjars-locator "0.40"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
