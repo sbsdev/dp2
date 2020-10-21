@@ -11,6 +11,7 @@
     [dp2.events]
     [dp2.words :as words]
     [dp2.words.unknown :as unknown]
+    [dp2.words.local :as local]
     [reitit.core :as reitit]
     [reitit.frontend.easy :as rfe]
     [clojure.string :as string])
@@ -100,7 +101,7 @@
     [:ul
      [document-tab-link (str "#/documents/" id) "Details" :document]
      [document-tab-link (str "#/documents/" id "/unknown") "Unknown Words" :document-unknown (fn [_] (rf/dispatch [::unknown/init-words id]))]
-     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local (fn [_] (rf/dispatch [:init-local-words id]))]
+     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local (fn [_] (rf/dispatch [::local/init-words id]))]
      ]]])
 
 (defn document-details [document]
@@ -138,35 +139,13 @@
      [current-words-grade]
      [unknown/document-unknown-words document]]))
 
-(defn document-local-words [document]
-  (let [words @(rf/subscribe [:local-words])]
-    [:div.block
-     [:table.table.is-striped
-      [:thead
-       [:tr
-        [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
-      [:tbody
-       (for [{:keys [untranslated braille type homograph-disambiguation]} words]
-         ^{:key untranslated}
-         [:tr
-          [:td untranslated]
-          [:td [:input.input {:type "text" :value braille}]]
-          [:td (get words/type-mapping type "Unknown")]
-          [:td homograph-disambiguation]
-          [:td [:div.buttons.has-addons
-                [:button.button.is-warning
-                 [:span.icon [:i.mi.mi-book]] #_[:span "Local"]]
-                [:button.button.is-danger.is-outlined
-                 [:span.icon [:i.mi.mi-cancel]] #_[:span "Delete"]]]]
-          ])]]]))
-
 (defn document-local []
   (let [document @(rf/subscribe [:current-document])]
     [:section.section>div.container>div.content
      [document-summary document]
      [document-tabs document]
      [current-words-grade]
-     [document-local-words document]]))
+     [local/local-words]]))
 
 (defn documents-search []
   (let [gettext (fn [e] (-> e .-target .-value))

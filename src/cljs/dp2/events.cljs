@@ -113,27 +113,6 @@
      {:dispatch [:fetch-global-words new-search-value]
       :db   (assoc db :words-search new-search-value)}))
 
-;; Local words
-
-(rf/reg-event-db
-  :set-local-words
-  (fn [db [_ words]]
-    (assoc-in db [:words :local] words)))
-
-(rf/reg-event-fx
-  :fetch-local-words
-  (fn [_ [_ id]]
-    {:http-xhrio {:method          :get
-                  :uri             (str "/api/documents/" id "/words")
-                  :params          {:grade 2}
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [:set-local-words]}}))
-
-(rf/reg-event-fx
-  :init-local-words
-  (fn [{:keys [db]} [_ id]]
-    {:dispatch [:fetch-local-words id]}))
-
 ;;;;;;;;;;;;;;;;;;;
 ;; Subscriptions ;;
 ;;;;;;;;;;;;;;;;;;;
@@ -189,8 +168,3 @@
  :current-document
  (fn [db _]
    (-> db :current-document)))
-
-(rf/reg-sub
- :local-words
- (fn [db _]
-   (-> db :words :local)))
