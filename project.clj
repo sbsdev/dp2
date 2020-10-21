@@ -101,6 +101,7 @@
                                  [figwheel-sidecar "0.5.20"]
                                  [pjstadig/humane-test-output "0.10.0"]
                                  [prone "2020-01-17"]
+                                 [re-frisk "1.3.4"]
                                  [ring/ring-devel "1.8.1"]
                                  [ring/ring-mock "0.4.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
