@@ -1,7 +1,6 @@
 (ns dp2.words.unknown
   (:require
    [re-frame.core :as rf]
-   [clojure.set :refer [rename-keys]]
    [clojure.string :as string]
    [ajax.core :as ajax]
    [dp2.words :as words]))
