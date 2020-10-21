@@ -18,4 +18,6 @@ To start a web server for the application, run:
 
 ## License
 
-Copyright © 2020 FIXME
+[GNU Affero General Public License v3.0][2]
+
+[2]: https://www.gnu.org/licenses/agpl-3.0.en.html
