@@ -66,7 +66,7 @@
     (update-in db [:words :unknown] dissoc uuid)))
 
 (rf/reg-sub
- ::unknown-words
+ ::words
  (fn [db _]
    (-> db :words :unknown)))
 
@@ -223,7 +223,7 @@
        #_[:span "Ignore"]]]])  )
 
 (defn document-unknown-words [document]
-  (let [words @(rf/subscribe [::unknown-words])]
+  (let [words @(rf/subscribe [::words])]
     [:div.block
      [:table.table.is-striped
       [:thead
