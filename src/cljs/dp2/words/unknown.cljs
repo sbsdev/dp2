@@ -41,8 +41,7 @@
     (let [uuid (:uuid word)
           word (-> word
                    (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
-                                 :document-id])
-                   (assoc :islocal false))
+                                 :document-id :islocal]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
@@ -198,6 +197,32 @@
      (when (not valid?)
        [:p.help.is-danger "Braille not valid"])]))
 
+(rf/reg-sub
+ ::valid
+ (fn [[_ id]]
+   [(rf/subscribe [::valid-braille id]) (rf/subscribe [::valid-hyphenation id])])
+ (fn [[valid-braille valid-hyphenation] _]
+   (and valid-braille valid-hyphenation)))
+
+(defn buttons [id word]
+  (let [valid @(rf/subscribe [::valid id])]
+    [:td
+     [:div.buttons.has-addons
+      [:button.button.is-success
+       {:disabled (not valid)
+        :on-click (fn [e] (rf/dispatch [::save-word (assoc word :islocal false)]))}
+       [:span.icon [:i.mi.mi-done]]
+       #_[:span "Approve"]]
+      [:button.button.is-warning
+       {:disabled (not valid)
+        :on-click (fn [e] (rf/dispatch [::save-word (assoc word :islocal true)]))}
+       [:span.icon [:i.mi.mi-book]]
+       #_[:span "Local"]]
+      [:button.button.is-danger
+       {:on-click (fn [e] (rf/dispatch [::ignore-word id]))}
+       [:span.icon [:i.mi.mi-cancel]]
+       #_[:span "Ignore"]]]])  )
+
 (defn document-unknown-words [document]
   (let [words @(rf/subscribe [::unknown-words])]
     [:div.block
@@ -213,14 +238,5 @@
           [:td [hyphenation-field uuid]]
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
-          [:td
-           [:div.buttons.has-addons
-            [:button.button.is-success
-             {:on-click (fn [e] (rf/dispatch [::save-word word]))}
-             [:span.icon [:i.mi.mi-done]] #_[:span "Approve"]]
-            [:button.button.is-warning.is-outlined
-             [:span.icon [:i.mi.mi-book]] #_[:span "Local"]]
-            [:button.button.is-danger.is-outlined
-             {:on-click (fn [e] (rf/dispatch [::ignore-word uuid]))}
-             [:span.icon [:i.mi.mi-cancel]] #_[:span "Ignore"]]]]
+          [buttons uuid word]
           ])]]]))
