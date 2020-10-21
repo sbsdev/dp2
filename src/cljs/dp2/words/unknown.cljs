@@ -2,8 +2,22 @@
   (:require
    [re-frame.core :as rf]
    [clojure.set :refer [rename-keys]]
+   [clojure.string :as string]
    [ajax.core :as ajax]
    [dp2.words :as words]))
+
+(defn hyphenation-valid?
+  "Return true if the `hyphenation` is not blank, is equal to
+  `word` (modulo the hyphenation marks) and contains at least one of
+  the letters 'a-z', '\u00DF-\u00FF' or '-'. Also each '-' in the
+  hyphenation should be surrounded by letters."
+  [hyphenation word]
+  (and (not (string/blank? hyphenation))
+       (= word (string/replace hyphenation "-" ""))
+       (not (string/starts-with? hyphenation "-"))
+       (not (string/ends-with? hyphenation "-"))
+       (not (string/includes? hyphenation "--"))
+       (some? (re-matches #"[a-z\xC0-\xFF\u0100-\u017F-]+" hyphenation))))
 
 (rf/reg-event-db
   ::set-words
@@ -58,6 +72,67 @@
  (fn [db _]
    (-> db :words :unknown)))
 
+(rf/reg-event-db
+  ::set-new-hyphenation
+  (fn [db [_ uuid hyphenation]]
+    (let [suggested (get-in db [:words :unknown uuid :hyphenated])]
+      (if (= suggested hyphenation)
+        (update-in db [:words :unknown uuid] dissoc :new-hyphenation)
+        (update-in db [:words :unknown uuid] assoc :new-hyphenation hyphenation)))))
+
+(rf/reg-event-db
+  ::reset-new-hyphenation
+  (fn [db [_ uuid]]
+    (update-in db [:words :unknown uuid] dissoc :new-hyphenation)))
+
+(rf/reg-sub
+ ::suggested-hyphenation
+ (fn [db [_ uuid]]
+   (get-in db [:words :unknown uuid :hyphenated])))
+
+(rf/reg-sub
+ ::new-hyphenation
+ (fn [db [_ uuid]]
+   (get-in db [:words :unknown uuid :new-hyphenation])))
+
+(rf/reg-sub
+ ::hyphenation
+ (fn [[_ id]]
+   [(rf/subscribe [::suggested-hyphenation id]) (rf/subscribe [::new-hyphenation id])])
+ (fn [[suggested new] _]
+   (or new suggested)))
+
+(rf/reg-sub
+ ::untranslated
+ (fn [db [_ uuid]]
+   (get-in db [:words :unknown uuid :untranslated])))
+
+(rf/reg-sub
+ ::valid-hyphenation
+ (fn [[_ id]]
+   [(rf/subscribe [::hyphenation id]) (rf/subscribe [::untranslated id])])
+ (fn [[hyphenation word] qv]
+   (hyphenation-valid? hyphenation word)))
+
+(defn hyphenation-field [id]
+  (let [value @(rf/subscribe [::hyphenation id])
+        changed? @(rf/subscribe [::new-hyphenation id])
+        valid? @(rf/subscribe [::valid-hyphenation id])
+        klass (cond
+                (not valid?) "is-danger"
+                changed? "is-success")
+        gettext (fn [e] (-> e .-target .-value))
+        emit    (fn [e] (rf/dispatch [::set-new-hyphenation id (gettext e)]))
+        reset   (fn [] (rf/dispatch [::reset-new-hyphenation id]))]
+    [:div.field
+     [:input.input {:type "text"
+                    :class klass
+                    :value value
+                    :on-change emit
+                    :on-key-down #(when (= (.-which %) 27) (reset))}]
+     (when (not valid?)
+       [:p.help.is-danger "Hyphenation not valid"])]))
+
 (defn document-unknown-words [document]
   (let [words @(rf/subscribe [::unknown-words])]
     [:div.block
@@ -66,11 +141,11 @@
        [:tr
         [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [uuid untranslated braille hyphenated type homograph-disambiguation] :as word} (sort-by :untranslated (vals words))]
+       (for [{:keys [uuid untranslated braille type homograph-disambiguation] :as word} (sort-by :untranslated (vals words))]
          ^{:key uuid}
          [:tr [:td untranslated]
           [:td [:input.input {:type "text" :value braille}]]
-          [:td [:input.input {:type "text" :value hyphenated}]]
+          [:td [hyphenation-field uuid]]
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
           [:td
