@@ -111,7 +111,7 @@
  ::valid-hyphenation
  (fn [[_ id]]
    [(rf/subscribe [::hyphenation id]) (rf/subscribe [::untranslated id])])
- (fn [[hyphenation word] qv]
+ (fn [[hyphenation word] _]
    (hyphenation-valid? hyphenation word)))
 
 (defn hyphenation-field [id]
@@ -133,6 +133,71 @@
      (when (not valid?)
        [:p.help.is-danger "Hyphenation not valid"])]))
 
+(rf/reg-sub
+ ::suggested-braille
+ (fn [db [_ uuid]]
+   (get-in db [:words :unknown uuid :braille])))
+
+(rf/reg-sub
+ ::new-braille
+ (fn [db [_ uuid]]
+   (get-in db [:words :unknown uuid :new-braille])))
+
+(rf/reg-sub
+ ::braille
+ (fn [[_ id]]
+   [(rf/subscribe [::suggested-braille id]) (rf/subscribe [::new-braille id])])
+ (fn [[suggested new] _]
+   (or new suggested)))
+
+(rf/reg-event-db
+  ::set-new-braille
+  (fn [db [_ uuid braille]]
+    (let [suggested (get-in db [:words :unknown uuid :braille])]
+      (if (= suggested braille)
+        (update-in db [:words :unknown uuid] dissoc :new-braille)
+        (update-in db [:words :unknown uuid] assoc :new-braille braille)))))
+
+(rf/reg-event-db
+  ::reset-new-braille
+  (fn [db [_ uuid]]
+    (update-in db [:words :unknown uuid] dissoc :new-braille)))
+
+(def valid-braille-re
+  #"-?[A-Z0-9&%\[^\],;:/?+=\(*\).\\@#\"!>$_<\'àáâãåæçèéêëìíîïðñòóôõøùúûýþÿœāăąćĉċčďđēėęğģĥħĩīįıĳĵķĺļľŀłńņňŋōŏőŕŗřśŝşšţťŧũūŭůűųŵŷźżžǎẁẃẅỳ┊]+")
+
+(defn braille-valid?
+  "Return true if `s` is valid ascii braille."
+  [s]
+  (and (not (string/blank? s))
+       (some? (re-matches valid-braille-re s))))
+
+(rf/reg-sub
+ ::valid-braille
+ (fn [[_ id]]
+   [(rf/subscribe [::braille id])])
+ (fn [[braille] _]
+   (braille-valid? braille)))
+
+(defn braille-field [id]
+  (let [value @(rf/subscribe [::braille id])
+        changed? @(rf/subscribe [::new-braille id])
+        valid? @(rf/subscribe [::valid-braille id])
+        klass (cond
+                (not valid?) "is-danger"
+                changed? "is-success")
+        gettext (fn [e] (-> e .-target .-value))
+        emit    (fn [e] (rf/dispatch [::set-new-braille id (gettext e)]))
+        reset   (fn [] (rf/dispatch [::reset-new-braille id]))]
+    [:div.field
+     [:input.input {:type "text"
+                    :class klass
+                    :value value
+                    :on-change emit
+                    :on-key-down #(when (= (.-which %) 27) (reset))}]
+     (when (not valid?)
+       [:p.help.is-danger "Braille not valid"])]))
+
 (defn document-unknown-words [document]
   (let [words @(rf/subscribe [::unknown-words])]
     [:div.block
@@ -144,7 +209,7 @@
        (for [{:keys [uuid untranslated braille type homograph-disambiguation] :as word} (sort-by :untranslated (vals words))]
          ^{:key uuid}
          [:tr [:td untranslated]
-          [:td [:input.input {:type "text" :value braille}]]
+          [:td [braille-field uuid]]
           [:td [hyphenation-field uuid]]
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
