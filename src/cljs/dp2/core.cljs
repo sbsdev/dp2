@@ -137,7 +137,7 @@
      [document-summary document]
      [document-tabs document]
      [current-words-grade]
-     [unknown/document-unknown-words document]]))
+     [unknown/unknown-words]]))
 
 (defn document-local []
   (let [document @(rf/subscribe [:current-document])]

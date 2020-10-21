@@ -222,7 +222,7 @@
        [:span.icon [:i.mi.mi-cancel]]
        #_[:span "Ignore"]]]])  )
 
-(defn document-unknown-words [document]
+(defn unknown-words []
   (let [words @(rf/subscribe [::words])]
     [:div.block
      [:table.table.is-striped
