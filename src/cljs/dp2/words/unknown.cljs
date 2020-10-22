@@ -36,8 +36,8 @@
 
 (rf/reg-event-fx
   ::save-word
-  (fn [_ [_ word]]
-    (let [uuid (:uuid word)
+  (fn [{:keys [db]} [_ id]]
+    (let [word (get-in db [:words :unknown id])
           word (-> word
                    (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
                                  :document-id :islocal]))
@@ -203,13 +203,13 @@
  (fn [[valid-braille valid-hyphenation] _]
    (and valid-braille valid-hyphenation)))
 
-(defn buttons [id word]
+(defn buttons [id]
   (let [valid @(rf/subscribe [::valid id])]
     [:td
      [:div.buttons.has-addons
       [:button.button.is-success
        {:disabled (not valid)
-        :on-click (fn [e] (rf/dispatch [::save-word (assoc word :islocal false)]))}
+        :on-click (fn [e] (rf/dispatch [::save-word id]))}
        [:span.icon [:i.mi.mi-done]]
        #_[:span "Approve"]]
       [:button.button.is-danger
@@ -232,6 +232,6 @@
           [:td [hyphenation-field uuid]]
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
-          [buttons uuid word]
           [:td [:input {:type "checkbox"}]]
+          [buttons uuid]
           ])]]]))

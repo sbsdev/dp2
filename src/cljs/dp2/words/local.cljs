@@ -23,14 +23,13 @@
 
 (rf/reg-event-fx
   ::save-word
-  (fn [{:keys [db]} [_ word]]
-    (let [uuid (:uuid word)
+  (fn [{:keys [db]} [_ id]]
+    (let [word (get-in db [:words :local id])
           cleaned (-> word
                       (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
                                  :document-id :islocal]))
           document-id (:document-id word)]
-      {:db (assoc-in db [:words :local uuid] word)
-       :http-xhrio {:method          :put
+      {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :uri             (str "/api/documents/" document-id "/words")
                     :params          cleaned
@@ -112,14 +111,19 @@
      (when (not valid?)
        [:p.help.is-danger "Braille not valid"])]))
 
-(defn buttons [id word]
+(rf/reg-sub
+ ::local
+ (fn [db [_ uuid]]
+   (get-in db [:words :local uuid :islocal])))
+
+(defn buttons [id]
   (let [valid @(rf/subscribe [::valid-braille id])
         changed? @(rf/subscribe [::new-braille id])
-        islocal (:islocal word)]
+        islocal @(rf/subscribe [::local id])]
     [:div.buttons.has-addons
      [:button.button.is-success
       {:disabled (or (not changed?) (not valid))
-       :on-click (fn [e] (rf/dispatch [::save-word word]))}
+       :on-click (fn [e] (rf/dispatch [::save-word id]))}
        [:span.icon [:i.mi.mi-done]]
       #_[:span "Approve"]]
      [:button.button.is-danger
@@ -143,6 +147,6 @@
           [:td [braille-field uuid]]
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
-          [:td [buttons uuid word]]
           [:td [:input {:type "checkbox"}]]
+          [:td [buttons uuid]]
           ])]]]))
