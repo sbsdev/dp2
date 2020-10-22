@@ -132,15 +132,9 @@
      (when (not valid?)
        [:p.help.is-danger "Braille not valid"])]))
 
-(rf/reg-sub
- ::local
- (fn [db [_ uuid]]
-   (get-in db [:words :local uuid :islocal])))
-
 (defn buttons [id]
   (let [valid @(rf/subscribe [::valid-braille id])
-        changed? @(rf/subscribe [::new-braille id])
-        islocal @(rf/subscribe [::local id])]
+        changed? @(rf/subscribe [::new-braille id])]
     [:div.buttons.has-addons
      [:button.button.is-success
       {:disabled (or (not changed?) (not valid))
@@ -152,7 +146,6 @@
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Ignore"]]]))
 
-
 (defn local-words []
   (let [words @(rf/subscribe [::words])]
     [:div.block
@@ -161,13 +154,13 @@
        [:tr
         [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [uuid untranslated braille type homograph-disambiguation]} words]
+       (for [{:keys [uuid untranslated braille type homograph-disambiguation islocal]} words]
          ^{:key untranslated}
          [:tr
           [:td untranslated]
           [:td [braille-field uuid]]
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
-          [:td [:input {:type "checkbox"}]]
+          [:td [:input {:type "checkbox" :checked islocal}]]
           [:td [buttons uuid]]
           ])]]]))
