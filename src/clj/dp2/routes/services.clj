@@ -127,7 +127,20 @@
                       (db/insert-local-word {:untranslated untranslated :braille braille
                                              :type type :grade grade :homograph_disambiguation homograph-disambiguation
                                              :document_id document-id :islocal islocal})
-                      (no-content))}}]
+                      (no-content))}
+
+     :delete {:summary "Delete a local word for a given document"
+              :tags ["words"]
+              :parameters {:body {:untranslated string? :braille string?
+                                  :type int? :grade int? :homograph-disambiguation string?
+                                  :document-id int? :islocal boolean?}}
+              :handler (fn [{{{:keys [untranslated type grade homograph-disambiguation document-id]} :body} :parameters}]
+                         (let [deleted
+                               (db/delete-local-word {:untranslated untranslated :type type :grade grade
+                                                      :homograph_disambiguation homograph-disambiguation :document_id document-id})]
+                           (if (> deleted 0)
+                             (no-content) ; we found something and deleted it
+                             (not-found))))}}] ; couldn't find and delete the requested resource
 
    ["/documents/:id/unknown-words"
     {:get {:summary "Get all unknown words for a given document"

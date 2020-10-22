@@ -27,7 +27,7 @@
     (let [word (get-in db [:words :local id])
           cleaned (-> word
                       (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
-                                 :document-id :islocal]))
+                                    :document-id :islocal]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
@@ -35,6 +35,27 @@
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
                     }})))
+
+(rf/reg-event-fx
+  ::delete-word
+  (fn [{:keys [db]} [_ id]]
+    (let [word (get-in db [:words :local id])
+          cleaned (-> word
+                      (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
+                                    :document-id :islocal]))
+          document-id (:document-id word)]
+      {:http-xhrio {:method          :delete
+                    :format          (ajax/json-request-format)
+                    :uri             (str "/api/documents/" document-id "/words")
+                    :params          cleaned
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::ack-delete id]
+                    }})))
+
+(rf/reg-event-db
+  ::ack-delete
+  (fn [db [_ uuid]]
+    (update-in db [:words :local] dissoc uuid)))
 
 (rf/reg-event-fx
   ::init-words
@@ -127,7 +148,7 @@
        [:span.icon [:i.mi.mi-done]]
       #_[:span "Approve"]]
      [:button.button.is-danger
-      {:on-click (fn [e] (rf/dispatch [::ignore-word id]))}
+      {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Ignore"]]]))
 

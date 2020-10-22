@@ -95,7 +95,16 @@ INSERT INTO dictionary_localword (untranslated, braille, type, grade, homograph_
 VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal)
 ON DUPLICATE KEY UPDATE
 braille = VALUES(braille),
-isLocal = VALUES(isLocal);
+isLocal = VALUES(isLocal)
+
+-- :name delete-local-word :! :n
+-- :doc Delete a word in the local dictionary.
+DELETE FROM dictionary_localword
+WHERE untranslated = :untranslated
+AND type = :type
+AND grade = :grade
+AND homograph_disambiguation = :homograph_disambiguation
+AND document_id = :document_id
 
 -- :name get-all-known-homographs :? :*
 -- :doc given a list of `words` retrieve all (locally and globally) known homographs for a given `document_id`, `grade`
