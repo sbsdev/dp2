@@ -57,7 +57,7 @@
 
 (rf/reg-event-fx
   ::init-words
-  (fn [{:keys [db]} [_ id]]
+  (fn [_ [_ id]]
     {:dispatch [::fetch-words id]}))
 
 (rf/reg-event-db
