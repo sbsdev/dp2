@@ -47,7 +47,7 @@
                     :uri             (str "/api/documents/" document-id "/words")
                     :params          word
                     :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::ack-word uuid]
+                    :on-success      [::ack-word id]
                     }})))
 
 (rf/reg-event-db
@@ -212,11 +212,6 @@
         :on-click (fn [e] (rf/dispatch [::save-word (assoc word :islocal false)]))}
        [:span.icon [:i.mi.mi-done]]
        #_[:span "Approve"]]
-      [:button.button.is-warning
-       {:disabled (not valid)
-        :on-click (fn [e] (rf/dispatch [::save-word (assoc word :islocal true)]))}
-       [:span.icon [:i.mi.mi-book]]
-       #_[:span "Local"]]
       [:button.button.is-danger
        {:on-click (fn [e] (rf/dispatch [::ignore-word id]))}
        [:span.icon [:i.mi.mi-cancel]]
@@ -228,7 +223,7 @@
      [:table.table.is-striped
       [:thead
        [:tr
-        [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
+        [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
       [:tbody
        (for [{:keys [uuid untranslated braille type homograph-disambiguation]} words]
          ^{:key uuid}
@@ -238,4 +233,5 @@
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
           [buttons uuid word]
+          [:td [:input {:type "checkbox"}]]
           ])]]]))
