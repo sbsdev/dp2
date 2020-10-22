@@ -68,7 +68,7 @@
 (rf/reg-sub
  ::words
  (fn [db _]
-   (-> db :words :unknown)))
+   (->> db :words :unknown vals (sort-by :untranslated))))
 
 (rf/reg-event-db
   ::set-new-hyphenation
@@ -230,7 +230,7 @@
        [:tr
         [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [uuid untranslated braille type homograph-disambiguation] :as word} (sort-by :untranslated (vals words))]
+       (for [{:keys [uuid untranslated braille type homograph-disambiguation]} words]
          ^{:key uuid}
          [:tr [:td untranslated]
           [:td [braille-field uuid]]

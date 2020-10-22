@@ -45,7 +45,7 @@
 (rf/reg-sub
  ::words
  (fn [db _]
-   (-> db :words :local)))
+   (->> db :words :local vals (sort-by :untranslated))))
 
 (rf/reg-sub
  ::suggested-braille
@@ -142,7 +142,7 @@
        [:tr
         [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [uuid untranslated braille type homograph-disambiguation] :as word} (sort-by :untranslated (vals words))]
+       (for [{:keys [uuid untranslated braille type homograph-disambiguation]} words]
          ^{:key untranslated}
          [:tr
           [:td untranslated]
