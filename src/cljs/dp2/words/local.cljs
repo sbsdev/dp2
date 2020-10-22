@@ -144,7 +144,7 @@
      [:button.button.is-danger
       {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
-      #_[:span "Ignore"]]]))
+      #_[:span "Delete"]]]))
 
 (defn local-words []
   (let [words @(rf/subscribe [::words])]
