@@ -169,4 +169,32 @@
                       (if-let [doc (db/get-latest-version {:document_id id})]
                         (ok doc)
                         (not-found)))}}]
+
+   ["/hyphenations"
+    {:swagger {:tags ["Hyphenations"]}}
+
+    [""
+     {:get {:summary "Get hyphenations by spelling. Optionally filter the results by using a search string, a limit and an offset."
+            :parameters {:query {:spelling int?
+                                 (spec/opt :search) string?
+                                 (spec/opt :limit) int?
+                                 (spec/opt :offset) int?}}
+            :handler (fn [{{{:keys [spelling search limit offset]
+                             :or {limit 200 offset 0}} :query} :parameters}]
+                       (ok (db/get-hyphenation {:spelling spelling :search search
+                                                :limit limit :offset offset})))}
+
+      :put {:summary "Update or create a hyphenation"
+            :parameters {:body {:word string? :hyphenation string? :spelling int?}}
+            :handler (fn [{{{:keys [word hyphenation spelling]} :body} :parameters}]
+                       (db/insert-hyphenation {:word word :hyphenation hyphenation :spelling spelling})
+                       (no-content))}
+
+      :delete {:summary "Delete a hyphenation"
+               :parameters {:body {:word string? :spelling int? :hyphenation string?}}
+               :handler (fn [{{{:keys [word spelling]} :body} :parameters}]
+                          (let [deleted (db/delete-hyphenation {:word word :spelling spelling})]
+                            (if (> deleted 0)
+                              (no-content) ; we found something and deleted it
+                              (not-found))))}}]] ; couldn't find and delete the requested resource
    ])

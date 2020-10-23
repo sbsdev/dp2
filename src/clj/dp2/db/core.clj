@@ -19,6 +19,16 @@
 
 (conman/bind-connection *db* "sql/queries.sql")
 
+(defstate ^:dynamic *hyphenation-db*
+  :start (if-let [jdbc-url (env :hyphenation-db-url)]
+           (conman/connect! {:jdbc-url jdbc-url})
+           (do
+             (log/warn "hyphenation database connection URL was not found, please set :hyphenation-db-url in your config, e.g: dev-config.edn")
+             *hyphenation-db*))
+  :stop (conman/disconnect! *hyphenation-db*))
+
+(conman/bind-connection *hyphenation-db* "sql/hyphenation-queries.sql")
+
 (extend-protocol next.jdbc.result-set/ReadableColumn
   java.sql.Timestamp
   (read-column-by-label [^java.sql.Timestamp v _]
