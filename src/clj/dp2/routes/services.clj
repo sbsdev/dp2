@@ -105,8 +105,8 @@
                          :query {(spec/opt :grade) int?
                                  (spec/opt :type) int?}}
             :handler (fn [{{{:keys [untranslated]} :path {:keys [grade type]} :query} :parameters}]
-                       (if-let [doc (db/get-global-word {:untranslated untranslated :grade grade :type type})]
-                         (ok doc)
+                       (if-let [words (db/get-global-word {:untranslated untranslated :grade grade :type type})]
+                         (ok words)
                          (not-found)))}}]]
 
    ["/documents/:id"
@@ -117,8 +117,8 @@
             :parameters {:path {:id int?}
                          :query {(spec/opt :grade) int?}}
             :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
-                       (if-let [doc (db/get-local-words {:id id :grade grade})]
-                         (ok doc)
+                       (if-let [words (db/get-local-words {:id id :grade grade})]
+                         (ok words)
                          (not-found)))}
 
       :put {:summary "Update or create a local word for a given document"
