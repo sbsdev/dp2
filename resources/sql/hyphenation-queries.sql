@@ -6,7 +6,7 @@
 -- :doc retrieve hyphenations given a `spelling` and optionally s `search` term, a `limit` and an `offset`
 SELECT * FROM words
 WHERE spelling = :spelling
---~ (when (:search params) "AND word REGEXP :search")
+--~ (when (:search params) "AND word LIKE :search")
 --~ (when (:limit params) "LIMIT :limit")
 --~ (when (:offset params) "OFFSET :offset")
 
