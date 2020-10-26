@@ -10,6 +10,12 @@ WHERE spelling = :spelling
 --~ (when (:limit params) "LIMIT :limit")
 --~ (when (:offset params) "OFFSET :offset")
 
+-- :name get-hyphenations-in :? :*
+-- :doc retrieve hyphenations given a `spelling` for all given `words`
+SELECT * FROM words
+WHERE spelling = :spelling
+AND word IN (:v*:words)
+
 -- :name insert-hyphenation :! :n
 -- :doc Insert or update a hyphenation.
 INSERT INTO words (word, hyphenation, spelling)
