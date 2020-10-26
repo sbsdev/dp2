@@ -106,8 +106,7 @@
   (and (not (string/blank? s))
        (some? (re-matches valid-braille-re s))))
 
-(rf/reg-sub
- ::valid-braille
+(rf/reg-sub ::valid-braille
  (fn [[_ id]]
    [(rf/subscribe [::braille id])])
  (fn [[braille] _]
@@ -132,6 +131,20 @@
      (when (not valid?)
        [:p.help.is-danger "Braille not valid"])]))
 
+(rf/reg-event-db ::toggle-islocal
+ (fn [db [_ uuid]]
+   (let [islocal (get-in db [:words :local uuid :islocal])]
+     (assoc-in db [:words :local uuid :islocal] (not islocal)))))
+
+(rf/reg-sub ::islocal
+ (fn [db [_ uuid]] (get-in db [:words :local uuid :islocal])))
+
+(defn local-field [id]
+  (let [value @(rf/subscribe [::islocal id])]
+    [:input {:type "checkbox"
+             :checked value
+             :on-change (fn [e] (rf/dispatch [::toggle-islocal id]))}]))
+
 (defn buttons [id]
   (let [valid @(rf/subscribe [::valid-braille id])
         changed? @(rf/subscribe [::new-braille id])]
@@ -146,21 +159,29 @@
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Delete"]]]))
 
+(rf/reg-sub ::word
+ (fn [db [_ uuid]] (get-in db [:words :local uuid])))
+
+(defn word [id]
+  (let [{:keys [uuid untranslated braille type homograph-disambiguation islocal]} @(rf/subscribe [::word id])]
+    [:tr
+     [:td untranslated]
+     [:td [braille-field uuid]]
+     [:td ]
+     [:td (get words/type-mapping type "Unknown")]
+     [:td homograph-disambiguation]
+     [:td [local-field uuid]]
+     [:td [buttons uuid]]
+     ]))
+
 (defn local-words []
   (let [words @(rf/subscribe [::words])]
     [:div.block
      [:table.table.is-striped
       [:thead
        [:tr
-        [:th "Untranslated"] [:th "Braille"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
+        [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [uuid untranslated braille type homograph-disambiguation islocal]} words]
-         ^{:key untranslated}
-         [:tr
-          [:td untranslated]
-          [:td [braille-field uuid]]
-          [:td (get words/type-mapping type "Unknown")]
-          [:td homograph-disambiguation]
-          [:td [:input {:type "checkbox" :checked islocal}]]
-          [:td [buttons uuid]]
-          ])]]]))
+       (for [{:keys [uuid]} words]
+         ^{:key uuid}
+         [word uuid])]]]))
