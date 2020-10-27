@@ -5,19 +5,6 @@
    [ajax.core :as ajax]
    [dp2.words :as words]))
 
-(defn hyphenation-valid?
-  "Return true if the `hyphenation` is not blank, is equal to
-  `word` (modulo the hyphenation marks) and contains at least one of
-  the letters 'a-z', '\u00DF-\u00FF' or '-'. Also each '-' in the
-  hyphenation should be surrounded by letters."
-  [hyphenation word]
-  (and (not (string/blank? hyphenation))
-       (= word (string/replace hyphenation "-" ""))
-       (not (string/starts-with? hyphenation "-"))
-       (not (string/ends-with? hyphenation "-"))
-       (not (string/includes? hyphenation "--"))
-       (some? (re-matches #"[a-z\xC0-\xFF\u0100-\u017F-]+" hyphenation))))
-
 (rf/reg-event-db
   ::set-words
   (fn [db [_ words]]
@@ -110,7 +97,7 @@
  (fn [[_ id]]
    [(rf/subscribe [::hyphenation id]) (rf/subscribe [::untranslated id])])
  (fn [[hyphenation word] _]
-   (hyphenation-valid? hyphenation word)))
+   (words/hyphenation-valid? hyphenation word)))
 
 (defn hyphenation-field [id]
   (let [value @(rf/subscribe [::hyphenation id])
@@ -161,21 +148,12 @@
   (fn [db [_ uuid]]
     (update-in db [:words :unknown uuid] dissoc :new-braille)))
 
-(def valid-braille-re
-  #"-?[A-Z0-9&%\[^\],;:/?+=\(*\).\\@#\"!>$_<\'àáâãåæçèéêëìíîïðñòóôõøùúûýþÿœāăąćĉċčďđēėęğģĥħĩīįıĳĵķĺļľŀłńņňŋōŏőŕŗřśŝşšţťŧũūŭůűųŵŷźżžǎẁẃẅỳ┊]+")
-
-(defn braille-valid?
-  "Return true if `s` is valid ascii braille."
-  [s]
-  (and (not (string/blank? s))
-       (some? (re-matches valid-braille-re s))))
-
 (rf/reg-sub
  ::valid-braille
  (fn [[_ id]]
    [(rf/subscribe [::braille id])])
  (fn [[braille] _]
-   (braille-valid? braille)))
+   (words/braille-valid? braille)))
 
 (defn braille-field [id]
   (let [value @(rf/subscribe [::braille id])

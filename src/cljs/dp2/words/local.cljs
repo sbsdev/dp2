@@ -1,7 +1,6 @@
 (ns dp2.words.local
   (:require
    [re-frame.core :as rf]
-   [clojure.string :as string]
    [ajax.core :as ajax]
    [dp2.words :as words]))
 
@@ -97,20 +96,11 @@
   (fn [db [_ uuid]]
     (update-in db [:words :local uuid] dissoc :new-braille)))
 
-(def valid-braille-re
-  #"-?[A-Z0-9&%\[^\],;:/?+=\(*\).\\@#\"!>$_<\'àáâãåæçèéêëìíîïðñòóôõøùúûýþÿœāăąćĉċčďđēėęğģĥħĩīįıĳĵķĺļľŀłńņňŋōŏőŕŗřśŝşšţťŧũūŭůűųŵŷźżžǎẁẃẅỳ┊]+")
-
-(defn braille-valid?
-  "Return true if `s` is valid ascii braille."
-  [s]
-  (and (not (string/blank? s))
-       (some? (re-matches valid-braille-re s))))
-
 (rf/reg-sub ::valid-braille
  (fn [[_ id]]
    [(rf/subscribe [::braille id])])
  (fn [[braille] _]
-   (braille-valid? braille)))
+   (words/braille-valid? braille)))
 
 (defn braille-field [id]
   (let [value @(rf/subscribe [::braille id])
