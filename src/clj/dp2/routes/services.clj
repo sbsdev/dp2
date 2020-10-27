@@ -16,6 +16,7 @@
     [clojure.string :refer [blank?]]
     [dp2.documents :as docs]
     [dp2.words :as words]
+    [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]))
 
 (defn service-routes []
