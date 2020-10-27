@@ -8,9 +8,9 @@
             [clojure.string :as string])
   (:import ch.sbs.jhyphen.Hyphenator))
 
-
 (def hyphen-dictionaries
-  {:default "/usr/share/hyphen/hyph_de_DE.dic"})
+  {0 "/usr/share/hyphen/hyph_de_DE_OLDSPELL_base.dic"
+   1 "/usr/share/hyphen/hyph_de_DE_base.dic"})
 
 (defn- load-hyphenators
   "Given a map of keys for spelling and paths to hyphenation
@@ -34,11 +34,8 @@
     (.hyphenate hyphenator text \- nil)))
 
 (defn hyphenate
-  "Hyphenate the given `text` for given `spelling`. If no `spelling` is
-  specified the default dictionary is used."
-  ([text]
-   (hyphenate text :default))
-  ([text spelling]
-   (let [default (get hyphenators :default) 
-         hyphenator (get hyphenators spelling default)]
-     (hyphenate* text hyphenator))))
+  "Hyphenate the given `text` for given `spelling`."
+  [text spelling]
+  (let [default (get hyphenators 1)
+        hyphenator (get hyphenators spelling default)]
+    (hyphenate* text hyphenator)))
