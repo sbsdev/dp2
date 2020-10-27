@@ -102,31 +102,33 @@
   (let [template {:document-id document-id
                   :type type
                   :grade grade
-                  :homograph-disambiguation ""}]
-    (map (fn [untranslated word]
-           (let [tables (louis/get-tables grade {:name (name? type)
-                                                 :place (place? type)})
-                 braille (louis/translate untranslated tables)
-                 hyphenated (hyphenate/hyphenate untranslated spelling)]
-             (assoc word
-                    :untranslated untranslated :braille braille
-                    :hyphenated hyphenated)))
-         words (repeat template))))
+                  :homograph-disambiguation ""}
+        tables (louis/get-tables grade {:name (name? type) :place (place? type)})
+        brailles (map #(louis/translate % tables) words)
+        hyphenations (map #(hyphenate/hyphenate % spelling) words)]
+    (map (fn [untranslated braille hyphenated]
+           (assoc template
+                  :untranslated untranslated
+                  :braille braille
+                  :hyphenated hyphenated))
+         words brailles hyphenations)))
 
 (defn embellish-homograph [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
-                  :grade grade}]
-    (map (fn [homograph word]
-           (let [untranslated (string/replace homograph "|" "")
-                 tables (louis/get-tables grade)
-                 braille (louis/translate (string/replace homograph "|" "┊") tables)
-                 hyphenated (hyphenate/hyphenate untranslated spelling)]
-             (assoc word
-                    :untranslated untranslated :braille braille
-                    :hyphenated hyphenated
-                    :homograph-disambiguation homograph)))
-         words (repeat template))))
+                  :grade grade}
+        untranslated (map #(string/replace % "|" "") words)
+        hyphenations (map #(hyphenate/hyphenate % spelling) untranslated)
+        tables (louis/get-tables grade)
+        brailles (map #(louis/translate (string/replace % "|" "┊") tables) words)]
+
+    (map (fn [untranslated braille hyphenated homograph]
+           (assoc template
+                  :untranslated untranslated
+                  :braille braille
+                  :hyphenated hyphenated
+                  :homograph-disambiguation homograph))
+         untranslated brailles hyphenations words)))
 
 (defn get-names
   [xml document-id grade spelling]
