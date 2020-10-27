@@ -6,6 +6,7 @@
    [sigel.xslt.core :as xslt]
    [sigel.xpath.core :as xpath]
    [dp2.louis :as louis]
+   [dp2.words :as words]
    [dp2.hyphenate :as hyphenate]))
 
 (def compiler
@@ -157,14 +158,17 @@
       (embellish-words document-id grade 0 spelling)))
 
 (defn get-words
-  [xml document-id grade spelling]
-  (sort-by
-   :untranslated
-   (concat
-    (get-names xml document-id grade spelling)
-    (get-places xml document-id grade spelling)
-    (get-homographs xml document-id grade spelling)
-    (get-plain xml document-id grade spelling))))
+  [xml document-id grade]
+  (let [document (db/get-document {:id document-id})
+        language (:language document)
+        spelling (words/spelling language)]
+    (sort-by
+     :untranslated
+     (concat
+      (get-names xml document-id grade spelling)
+      (get-places xml document-id grade spelling)
+      (get-homographs xml document-id grade spelling)
+      (get-plain xml document-id grade spelling)))))
 
 (comment
   ;; extract words from an dtbook file

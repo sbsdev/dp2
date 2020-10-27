@@ -15,7 +15,6 @@
     [clojure.java.io :as io]
     [clojure.string :refer [blank?]]
     [dp2.documents :as docs]
-    [dp2.words :as words]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]))
 
@@ -151,11 +150,8 @@
             :parameters {:path {:id int?}
                          :query {:grade int?}}
             :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
-                       (let [document (db/get-document {:id id})
-                             language (:language document)
-                             version (docs/get-latest-version id)
-                             spelling (words/spelling language)
-                             unknown (unknown/get-words version id grade spelling)]
+                       (let [version (docs/get-latest-version id)
+                             unknown (unknown/get-words version id grade)]
                          (ok unknown)))}}]
 
     ["/versions"
