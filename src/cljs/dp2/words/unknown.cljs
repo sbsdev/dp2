@@ -205,17 +205,16 @@
 
 (defn buttons [id]
   (let [valid @(rf/subscribe [::valid id])]
-    [:td
-     [:div.buttons.has-addons
-      [:button.button.is-success
-       {:disabled (not valid)
-        :on-click (fn [e] (rf/dispatch [::save-word id]))}
-       [:span.icon [:i.mi.mi-done]]
-       #_[:span "Approve"]]
-      [:button.button.is-danger
-       {:on-click (fn [e] (rf/dispatch [::ignore-word id]))}
-       [:span.icon [:i.mi.mi-cancel]]
-       #_[:span "Ignore"]]]])  )
+    [:div.buttons.has-addons
+     [:button.button.is-success
+      {:disabled (not valid)
+       :on-click (fn [e] (rf/dispatch [::save-word id]))}
+      [:span.icon [:i.mi.mi-done]]
+      #_[:span "Approve"]]
+     [:button.button.is-danger
+      {:on-click (fn [e] (rf/dispatch [::ignore-word id]))}
+      [:span.icon [:i.mi.mi-cancel]]
+      #_[:span "Ignore"]]]))
 
 (defn unknown-words []
   (let [words @(rf/subscribe [::words])]
@@ -233,5 +232,5 @@
           [:td (get words/type-mapping type "Unknown")]
           [:td homograph-disambiguation]
           [:td [:input {:type "checkbox"}]]
-          [buttons uuid]
+          [:td [buttons uuid]]
           ])]]]))
