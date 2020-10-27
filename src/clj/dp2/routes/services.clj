@@ -15,7 +15,8 @@
     [clojure.java.io :as io]
     [clojure.string :refer [blank?]]
     [dp2.documents :as docs]
-    [dp2.words :as words]))
+    [dp2.words :as words]
+    [dp2.words.local :as local]))
 
 (defn service-routes []
   ["/api"
@@ -117,7 +118,7 @@
             :parameters {:path {:id int?}
                          :query {(spec/opt :grade) int?}}
             :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
-                       (if-let [words (db/get-local-words {:id id :grade grade})]
+                       (if-let [words (local/get-words id grade)]
                          (ok words)
                          (not-found)))}
 
