@@ -153,15 +153,15 @@
  (fn [db [_ uuid]] (get-in db [:words :local uuid])))
 
 (defn word [id]
-  (let [{:keys [uuid untranslated braille type homograph-disambiguation islocal]} @(rf/subscribe [::word id])]
+  (let [{:keys [uuid untranslated braille type homograph-disambiguation islocal hyphenated]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
      [:td [braille-field uuid]]
-     [:td ]
+     [:td [:input.input {:type "text" :value hyphenated}]]
      [:td (get words/type-mapping type "Unknown")]
      [:td homograph-disambiguation]
      [:td [local-field uuid]]
-     [:td [buttons uuid]]
+     [:td {:width "8%"} [buttons uuid]]
      ]))
 
 (defn local-words []
