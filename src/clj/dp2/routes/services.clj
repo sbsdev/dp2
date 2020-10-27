@@ -149,8 +149,11 @@
             :parameters {:path {:id int?}
                          :query {:grade int?}}
             :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
-                       (let [version (docs/get-latest-version id)
-                             unknown (words/get-unknown version id grade)]
+                       (let [document (db/get-document {:id id})
+                             language (:language document)
+                             version (docs/get-latest-version id)
+                             spelling (words/spelling language)
+                             unknown (unknown/get-words version id grade spelling)]
                          (ok unknown)))}}]
 
     ["/versions"

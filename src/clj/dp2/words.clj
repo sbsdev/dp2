@@ -97,7 +97,7 @@
    (map string/lower-case)
    set))
 
-(defn embellish-words [words document-id grade type]
+(defn embellish-words [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
                   :grade grade
@@ -106,13 +106,13 @@
            (let [tables (louis/get-tables grade {:name (name? type)
                                                  :place (place? type)})
                  braille (louis/translate untranslated tables)
-                 hyphenated (hyphenate/hyphenate untranslated)]
+                 hyphenated (hyphenate/hyphenate untranslated spelling)]
              (assoc word
                     :untranslated untranslated :braille braille
                     :hyphenated hyphenated)))
          words (repeat template))))
 
-(defn embellish-homograph [words document-id grade type]
+(defn embellish-homograph [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
                   :grade grade}]
@@ -120,7 +120,7 @@
            (let [untranslated (string/replace homograph "|" "")
                  tables (louis/get-tables grade)
                  braille (louis/translate (string/replace homograph "|" "┊") tables)
-                 hyphenated (hyphenate/hyphenate untranslated)]
+                 hyphenated (hyphenate/hyphenate untranslated spelling)]
              (assoc word
                     :untranslated untranslated :braille braille
                     :hyphenated hyphenated
@@ -128,43 +128,43 @@
          words (repeat template))))
 
 (defn get-unknown-names
-  [xml document-id grade]
+  [xml document-id grade spelling]
   (-> (filter-braille xml)
       extract-names
       (compare-with-known-names document-id grade)
-      (embellish-words document-id grade 1)))
+      (embellish-words document-id grade 1 spelling)))
 
 (defn get-unknown-places
-  [xml document-id grade]
+  [xml document-id grade spelling]
   (-> (filter-braille xml)
       extract-places
       (compare-with-known-places document-id grade)
-      (embellish-words document-id grade 3)))
+      (embellish-words document-id grade 3 spelling)))
 
 (defn get-unknown-homographs
-  [xml document-id grade]
+  [xml document-id grade spelling]
   (-> (filter-braille xml)
       extract-homographs
       (compare-with-known-homographs document-id grade)
-      (embellish-homograph document-id grade 5)))
+      (embellish-homograph document-id grade 5 spelling)))
 
 (defn get-unknown-words
-  [xml document-id grade]
+  [xml document-id grade spelling]
   (-> (filter-braille-and-names xml)
       str
       extract-words
       (compare-with-known-words document-id grade)
-      (embellish-words document-id grade 0)))
+      (embellish-words document-id grade 0 spelling)))
 
 (defn get-unknown
-  [xml document-id grade]
+  [xml document-id grade spelling]
   (sort-by
    :untranslated
    (concat
-    (get-unknown-names xml document-id grade)
-    (get-unknown-places xml document-id grade)
-    (get-unknown-homographs xml document-id grade)
-    (get-unknown-words xml document-id grade))))
+    (get-unknown-names xml document-id grade spelling)
+    (get-unknown-places xml document-id grade spelling)
+    (get-unknown-homographs xml document-id grade spelling)
+    (get-unknown-words xml document-id grade spelling))))
 
 (comment
   ;; extract words from an dtbook file
