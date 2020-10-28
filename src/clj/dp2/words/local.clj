@@ -10,11 +10,12 @@
         spelling (words/spelling (:language document))
         words (db/get-local-words {:id id :grade grade})
         untranslated (map :untranslated words)
-        approved-hyphenations (->>
-                               (db/get-hyphenations-in
-                                {:spelling spelling :words untranslated})
-                               (map (juxt :word :hyphenation))
-                               (into {}))
+        approved-hyphenations (when (seq untranslated)
+                                (->>
+                                 (db/get-hyphenations-in
+                                  {:spelling spelling :words untranslated})
+                                 (map (juxt :word :hyphenation))
+                                 (into {})))
         suggested-hyphenations (map (fn [word] (hyphenate/hyphenate word spelling)) untranslated)]
     (map (fn [word suggested]
            ;; add the hyphenation to the word. If no hyphenation is
