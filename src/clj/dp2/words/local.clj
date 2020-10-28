@@ -1,5 +1,6 @@
 (ns dp2.words.local
   (:require
+   [clojure.set :refer [rename-keys]]
    [dp2.db.core :as db]
    [dp2.hyphenate :as hyphenate]
    [dp2.words :as words]))
@@ -24,3 +25,22 @@
                   :hyphenated (or (get approved-hyphenations word) suggested)
                   :spelling spelling))
          words suggested-hyphenations)))
+
+(def to-dictionary-db
+  {:homograph-disambiguation :homograph_disambiguation
+   :document-id :document_id})
+
+(def to-hyphenation-db
+  {:untranslated :word
+   :hyphenated :hyphenation})
+
+(defn put-word [word]
+  (db/insert-local-word
+   (-> word
+       (select-keys [:untranslated :braille :type :grade
+                     :homograph-disambiguation :document-id :islocal])
+       (rename-keys to-dictionary-db)))
+  (db/insert-hyphenation
+   (-> word
+       (select-keys [:untranslated :hyphenated :spelling])
+       (rename-keys to-hyphenation-db))))

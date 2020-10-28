@@ -27,7 +27,8 @@
     (let [word (get-in db [:words :unknown id])
           word (-> word
                    (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
-                                 :document-id :islocal]))
+                                 :document-id :islocal
+                                 :hyphenated :spelling]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
@@ -181,6 +182,20 @@
  (fn [[valid-braille valid-hyphenation] _]
    (and valid-braille valid-hyphenation)))
 
+(rf/reg-event-db ::toggle-islocal
+ (fn [db [_ uuid]]
+   (let [islocal (get-in db [:words :unknown uuid :islocal])]
+     (assoc-in db [:words :unknown uuid :islocal] (not islocal)))))
+
+(rf/reg-sub ::islocal
+ (fn [db [_ uuid]] (get-in db [:words :unknown uuid :islocal])))
+
+(defn local-field [id]
+  (let [value @(rf/subscribe [::islocal id])]
+    [:input {:type "checkbox"
+             :checked value
+             :on-change (fn [e] (rf/dispatch [::toggle-islocal id]))}]))
+
 (defn buttons [id]
   (let [valid @(rf/subscribe [::valid id])]
     [:div.buttons.has-addons
@@ -194,6 +209,21 @@
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Ignore"]]]))
 
+(rf/reg-sub ::word
+ (fn [db [_ uuid]] (get-in db [:words :unknown uuid])))
+
+(defn word [id]
+  (let [{:keys [uuid untranslated braille type homograph-disambiguation islocal hyphenated]} @(rf/subscribe [::word id])]
+    [:tr
+     [:td untranslated]
+     [:td [braille-field uuid]]
+     [:td [:input.input {:type "text" :value hyphenated}]]
+     [:td (get words/type-mapping type "Unknown")]
+     [:td homograph-disambiguation]
+     [:td [local-field uuid]]
+     [:td [buttons uuid]]
+     ]))
+
 (defn unknown-words []
   (let [words @(rf/subscribe [::words])
         spelling (:spelling (first words))]
@@ -205,13 +235,6 @@
         [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
         [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
       [:tbody
-       (for [{:keys [uuid untranslated braille type homograph-disambiguation]} words]
+       (for [{:keys [uuid]} words]
          ^{:key uuid}
-         [:tr [:td untranslated]
-          [:td [braille-field uuid]]
-          [:td [hyphenation-field uuid]]
-          [:td (get words/type-mapping type "Unknown")]
-          [:td homograph-disambiguation]
-          [:td [:input {:type "checkbox"}]]
-          [:td [buttons uuid]]
-          ])]]]))
+         [word uuid])]]]))

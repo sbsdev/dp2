@@ -125,11 +125,10 @@
       :put {:summary "Update or create a local word for a given document"
             :parameters {:body {:untranslated string? :braille string?
                                 :type int? :grade int? :homograph-disambiguation string?
-                                :document-id int? :islocal boolean?}}
-            :handler (fn [{{{:keys [untranslated braille type grade homograph-disambiguation document-id islocal]} :body} :parameters}]
-                       (db/insert-local-word {:untranslated untranslated :braille braille
-                                              :type type :grade grade :homograph_disambiguation homograph-disambiguation
-                                              :document_id document-id :islocal islocal})
+                                :document-id int? :islocal boolean?
+                                :hyphenated string? :spelling int?}}
+            :handler (fn [{{word :body} :parameters}]
+                       (local/put-word word)
                        (no-content))}
 
       :delete {:summary "Delete a local word for a given document"

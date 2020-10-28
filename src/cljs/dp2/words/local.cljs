@@ -26,7 +26,8 @@
     (let [word (get-in db [:words :local id])
           cleaned (-> word
                       (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
-                                    :document-id :islocal]))
+                                    :document-id :islocal
+                                    :hyphenated :spelling]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
