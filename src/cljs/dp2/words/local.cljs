@@ -13,12 +13,13 @@
 
 (rf/reg-event-fx
   ::fetch-words
-  (fn [_ [_ id]]
-    {:http-xhrio {:method          :get
-                  :uri             (str "/api/documents/" id "/words")
-                  :params          {:grade 2}
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::set-words]}}))
+  (fn [{:keys [db]} [_ id]]
+    (let [grade (-> db :current-grade)]
+      {:http-xhrio {:method          :get
+                    :uri             (str "/api/documents/" id "/words")
+                    :params          {:grade grade}
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::set-words]}})))
 
 (rf/reg-event-fx
   ::save-word

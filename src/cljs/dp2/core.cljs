@@ -12,6 +12,7 @@
     [dp2.words :as words]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]
+    [dp2.words.grade :as grade]
     [reitit.core :as reitit]
     [reitit.frontend.easy :as rfe]
     [clojure.string :as string])
@@ -39,18 +40,6 @@
                  [nav-link "#/" "Documents" :documents]
                  [nav-link "#/words" "Words" :words]]]]))
 
-(defn words-grade []
-  (let [getvalue (fn [e] (-> e .-target .-value))
-        emit     (fn [e] (rf/dispatch [:words-grade-change (getvalue e)]))] ; FIXME: implement this event
-    [:div.field
-     [:div.control
-      [:div.select.is-fullwidth
-       [:select
-        {:on-change emit}
-        [:option {:value 1} "Grade 1"]
-        [:option {:value 2} "Grade 2"]
-        [:option {:value 0} "Any"]]]]]))
-
 (defn words-search []
   (let [gettext (fn [e] (-> e .-target .-value))
         emit    (fn [e] (rf/dispatch [:words-search-change (gettext e)]))]
@@ -65,7 +54,7 @@
   [:div.field.is-horizontal
    [:div.field-body
     [words-search]
-    [words-grade]]])
+    [grade/selector :fixme #_"Add the event that updates the global words"]]])
 
 (defn words-page []
   [:section.section>div.container>div.content
@@ -118,25 +107,12 @@
      [document-tabs document]
      [document-details document]]))
 
-(defn current-words-grade []
-  (let [getvalue (fn [e] (-> e .-target .-value))
-        emit     (fn [e] (rf/dispatch [:current-words-grade-change (getvalue e)]))] ; FIXME: implement this event
-    [:div.block
-     [:div.field
-      [:div.control
-       [:div.select.is-fullwidth
-        [:select
-         {:on-change emit}
-         [:option {:value 1} "Grade 1"]
-         [:option {:value 2} "Grade 2"]
-         [:option {:value 0} "Any"]]]]]]))
-
 (defn document-unknown []
   (let [document @(rf/subscribe [:current-document])]
     [:section.section>div.container>div.content
      [document-summary document]
      [document-tabs document]
-     [current-words-grade]
+     [grade/selector ::unknown/fetch-words]
      [unknown/unknown-words]]))
 
 (defn document-local []
@@ -144,7 +120,7 @@
     [:section.section>div.container>div.content
      [document-summary document]
      [document-tabs document]
-     [current-words-grade]
+     [grade/selector ::local/fetch-words]
      [local/local-words]]))
 
 (defn documents-search []
