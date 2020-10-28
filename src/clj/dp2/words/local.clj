@@ -20,5 +20,7 @@
            ;; given in the hyphenation database, i.e. in the approved
            ;; hyphenations then just use the suggestion given by
            ;; libhyphen
-           (assoc word :hyphenated (or (get approved-hyphenations word) suggested)))
+           (assoc word
+                  :hyphenated (or (get approved-hyphenations word) suggested)
+                  :spelling spelling))
          words suggested-hyphenations)))

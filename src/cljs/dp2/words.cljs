@@ -27,3 +27,10 @@
        (not (string/ends-with? hyphenation "-"))
        (not (string/includes? hyphenation "--"))
        (some? (re-matches #"[a-z\xC0-\xFF\u0100-\u017F-]+" hyphenation))))
+
+(defn spelling-string [spelling]
+  (case spelling
+    0 "Old spelling"
+    1 "New spelling"
+    "Unknown spelling"))
+

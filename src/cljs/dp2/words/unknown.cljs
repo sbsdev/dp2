@@ -195,12 +195,15 @@
       #_[:span "Ignore"]]]))
 
 (defn unknown-words []
-  (let [words @(rf/subscribe [::words])]
+  (let [words @(rf/subscribe [::words])
+        spelling (:spelling (first words))]
     [:div.block
      [:table.table.is-striped
       [:thead
        [:tr
-        [:th "Untranslated"] [:th "Braille"] [:th "Hyphenated"] [:th "Type"] [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
+        [:th "Untranslated"] [:th "Braille"]
+        [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
+        [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
       [:tbody
        (for [{:keys [uuid untranslated braille type homograph-disambiguation]} words]
          ^{:key uuid}

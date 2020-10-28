@@ -102,7 +102,8 @@
   (let [template {:document-id document-id
                   :type type
                   :grade grade
-                  :homograph-disambiguation ""}
+                  :homograph-disambiguation ""
+                  :spelling spelling}
         tables (louis/get-tables grade {:name (name? type) :place (place? type)})
         brailles (map #(louis/translate % tables) words)
         hyphenations (map #(hyphenate/hyphenate % spelling) words)]
