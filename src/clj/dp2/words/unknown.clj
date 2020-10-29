@@ -90,9 +90,9 @@
 (defn extract-places [xml]
   (extract-xpath xml "//brl:place/text()"))
 
-(defn extract-words [text]
+(defn extract-words [xml]
   (->>
-   (string/split (filter-text text) #"(?U)\W")
+   (string/split (filter-text (str xml)) #"(?U)\W")
    ;; drop words shorter than 3 chars
    (remove (fn [word] (< (count word) 3)))
    (map string/lower-case)
