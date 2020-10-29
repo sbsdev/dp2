@@ -178,23 +178,6 @@
     (sort-by
      :untranslated
      (concat
-(comment
-  ;; extract words from an dtbook file
-  (require '[clojure.java.io :as io])
-  
-  (let [f (io/file "/home/eglic/tmp/6747.xml")
-        content (str (filter-braille-and-names f))]
-    (extract-words content))
-  
-  ;; extract unknown words from an dtbook file
-  (let [f (io/file "/home/eglic/tmp/6747.xml")
-        content (str (filter-braille-and-names f))
-        words (extract-words content)
-        document-id 644
-        grade 2]
-    (compare-with-known-words words document-id grade))
-  
-  )
       (get-names xml document-id grades spelling)
       (get-places xml document-id grades spelling)
       (get-homographs xml document-id grades spelling)
