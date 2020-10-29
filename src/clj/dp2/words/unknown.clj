@@ -132,47 +132,52 @@
          untranslated brailles hyphenations words)))
 
 (defn get-names
-  [xml document-id grade spelling]
-  (-> (filter-braille xml)
-      extract-names
-      (compare-with-known-names document-id grade)
-      (embellish-words document-id grade 1 spelling)))
+  [xml document-id grades spelling]
+  (let [words (-> xml filter-braille extract-names)]
+    (mapcat (fn [grade]
+              (-> words
+                  (compare-with-known-names document-id grade)
+                  (embellish-words document-id grade 1 spelling)))
+            grades)))
 
 (defn get-places
-  [xml document-id grade spelling]
-  (-> (filter-braille xml)
-      extract-places
-      (compare-with-known-places document-id grade)
-      (embellish-words document-id grade 3 spelling)))
+  [xml document-id grades spelling]
+  (let [words (-> xml filter-braille extract-places)]
+    (mapcat (fn [grade]
+              (-> words
+                  (compare-with-known-places document-id grade)
+                  (embellish-words document-id grade 3 spelling)))
+            grades)))
 
 (defn get-homographs
-  [xml document-id grade spelling]
-  (-> (filter-braille xml)
-      extract-homographs
-      (compare-with-known-homographs document-id grade)
-      (embellish-homograph document-id grade 5 spelling)))
+  [xml document-id grades spelling]
+  (let [words (-> xml filter-braille extract-homographs)]
+    (mapcat (fn [grade]
+              (-> words
+                  (compare-with-known-homographs document-id grade)
+                  (embellish-homograph document-id grade 5 spelling)))
+            grades)))
 
 (defn get-plain
-  [xml document-id grade spelling]
-  (-> (filter-braille-and-names xml)
-      str
-      extract-words
-      (compare-with-known-words document-id grade)
-      (embellish-words document-id grade 0 spelling)))
+  [xml document-id grades spelling]
+  (let [words (-> xml filter-braille-and-names extract-words)]
+    (mapcat (fn [grade]
+              (-> words
+                  (compare-with-known-words document-id grade)
+                  (embellish-words document-id grade 0 spelling)))
+            grades)))
 
 (defn get-words
   [xml document-id grade]
   (let [document (db/get-document {:id document-id})
         language (:language document)
-        spelling (words/spelling language)]
+        spelling (words/spelling language)
+        grades (case grade ; convert grade into a list of grades
+                 (1 2) [grade] ; for grade 1 and 2 the list contains just that grade
+                 0 [1 2])] ; grade 0 really means both grades
     (sort-by
      :untranslated
      (concat
-      (get-names xml document-id grade spelling)
-      (get-places xml document-id grade spelling)
-      (get-homographs xml document-id grade spelling)
-      (get-plain xml document-id grade spelling)))))
-
 (comment
   ;; extract words from an dtbook file
   (require '[clojure.java.io :as io])
@@ -190,3 +195,8 @@
     (compare-with-known-words words document-id grade))
   
   )
+      (get-names xml document-id grades spelling)
+      (get-places xml document-id grades spelling)
+      (get-homographs xml document-id grades spelling)
+      (get-plain xml document-id grades spelling)))))
+
