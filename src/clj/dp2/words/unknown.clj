@@ -172,9 +172,7 @@
   (let [document (db/get-document {:id document-id})
         language (:language document)
         spelling (words/spelling language)
-        grades (case grade ; convert grade into a list of grades
-                 (1 2) [grade] ; for grade 1 and 2 the list contains just that grade
-                 0 [1 2])] ; grade 0 really means both grades
+        grades (words/grades grade)]
     (sort-by
      :untranslated
      (concat

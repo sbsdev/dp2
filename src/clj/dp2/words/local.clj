@@ -8,7 +8,8 @@
 (defn get-words [id grade]
   (let [document (db/get-document {:id id})
         spelling (words/spelling (:language document))
-        words (db/get-local-words {:id id :grade grade})
+        grades (words/grades grade)
+        words (mapcat #(db/get-local-words {:id id :grade %}) grades)
         untranslated (map :untranslated words)
         approved-hyphenations (->>
                                (db/get-hyphenations-in
