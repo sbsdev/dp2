@@ -27,21 +27,35 @@
                   :spelling spelling))
          words suggested-hyphenations)))
 
-(def to-dictionary-db
-  {:homograph-disambiguation :homograph_disambiguation
-   :document-id :document_id})
+(defn- to-db [word keys mapping]
+  (-> word
+      (select-keys keys)
+      (rename-keys mapping)))
 
-(def to-hyphenation-db
-  {:untranslated :word
-   :hyphenated :hyphenation})
+(def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation
+                      :document-id :islocal])
+(def dictionary-mapping {:homograph-disambiguation :homograph_disambiguation
+                         :document-id :document_id})
+(def hyphenation-keys [:untranslated :hyphenated :spelling])
+(def hyphenation-mapping {:untranslated :word
+                          :hyphenated :hyphenation})
 
 (defn put-word [word]
   (db/insert-local-word
-   (-> word
-       (select-keys [:untranslated :braille :type :grade
-                     :homograph-disambiguation :document-id :islocal])
-       (rename-keys to-dictionary-db)))
+   (to-db word dictionary-keys dictionary-mapping))
   (db/insert-hyphenation
-   (-> word
-       (select-keys [:untranslated :hyphenated :spelling])
-       (rename-keys to-hyphenation-db))))
+   (to-db word hyphenation-keys hyphenation-mapping)))
+
+(defn delete-word [word]
+  ;; delete the hyphenation for this word only if there is no other
+  ;; braille entry for it (we can have multiple entries for a word in
+  ;; the braille db (for the two grades, for names etc) but we only
+  ;; have one entry, per spelling in the hyphenation db)
+  (let [{id :document-id untranslated :untranslated} word
+        ref-count (-> {:id id :untranslated untranslated}
+                      db/get-local-word-count
+                      vals first)]
+    (when (= ref-count 0)
+      (db/delete-hyphenation (to-db word hyphenation-keys hyphenation-mapping))))
+  (db/delete-local-word
+   (to-db word dictionary-keys dictionary-mapping)))

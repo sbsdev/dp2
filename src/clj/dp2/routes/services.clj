@@ -134,12 +134,11 @@
       :delete {:summary "Delete a local word for a given document"
                :parameters {:body {:untranslated string? :braille string?
                                    :type int? :grade int? :homograph-disambiguation string?
-                                   :document-id int? :islocal boolean?}}
-               :handler (fn [{{{:keys [untranslated type grade homograph-disambiguation document-id]} :body} :parameters}]
-                          (let [deleted
-                                (db/delete-local-word {:untranslated untranslated :type type :grade grade
-                                                       :homograph_disambiguation homograph-disambiguation :document_id document-id})]
-                            (if (> deleted 0)
+                                   :document-id int? :islocal boolean?
+                                   :hyphenated string? :spelling int?}}
+               :handler (fn [{{word :body} :parameters}]
+                          (let [deleted (local/delete-word word)]
+                            (if (>= deleted 1)
                               (no-content) ; we found something and deleted it
                               (not-found))))}}] ; couldn't find and delete the requested resource
 

@@ -84,10 +84,16 @@ WHERE untranslated LIKE :search
 LIMIT :limit OFFSET :offset
 
 -- :name get-local-words :? :*
--- :doc retrieve local words for a given document id
+-- :doc retrieve local words for a given document `id` and an optional `grade`
 SELECT * FROM dictionary_localword
 WHERE document_id = :id
 --~ (when (:grade params) "AND grade = :grade")
+
+-- :name get-local-word-count :? :1
+-- :doc retrieve the number of local words for a given document `id` and `untranslated`
+SELECT COUNT(*) FROM dictionary_localword
+WHERE document_id = :id
+AND untranslated = :untranslated
 
 -- :name insert-local-word :! :n
 -- :doc Insert or update a word in the local dictionary.
