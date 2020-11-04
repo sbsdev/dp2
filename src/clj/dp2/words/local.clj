@@ -10,6 +10,7 @@
         spelling (words/spelling (:language document))
         grades (words/grades grade)
         words (mapcat #(db/get-local-words {:id id :grade %}) grades)
+        words (words/aggregate words)
         untranslated (map :untranslated words)
         approved-hyphenations (->>
                                (db/get-hyphenations-in

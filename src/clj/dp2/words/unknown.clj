@@ -173,11 +173,12 @@
         language (:language document)
         spelling (words/spelling language)
         grades (words/grades grade)]
-    (sort-by
-     :untranslated
+    (->>
      (concat
       (get-names xml document-id grades spelling)
       (get-places xml document-id grades spelling)
       (get-homographs xml document-id grades spelling)
-      (get-plain xml document-id grades spelling)))))
+      (get-plain xml document-id grades spelling))
+     words/aggregate
+     (sort-by :untranslated))))
 
