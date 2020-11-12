@@ -5,21 +5,32 @@
    [ajax.core :as ajax]
    [dp2.words :as words]))
 
-(rf/reg-event-db
-  ::set-words
-  (fn [db [_ words]]
-    (let [words (->> words
-                     (map #(assoc % :uuid (str (random-uuid)))))]
-      (assoc-in db [:words :unknown] (zipmap (map :uuid words) words)))))
-
 (rf/reg-event-fx
   ::fetch-words
-  (fn [_ [_ id]]
-    {:http-xhrio {:method          :get
+  (fn [{:keys [db]} [_ id]]
+    {:db (assoc-in db [:loading :words] true)
+     :http-xhrio {:method          :get
                   :uri             (str "/api/documents/" id "/unknown-words")
                   :params          {:grade 2}
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::set-words]}}))
+                  :on-success      [::fetch-words-success]
+                  :on-failure      [::fetch-words-failure :fetch-words]}}))
+
+(rf/reg-event-db
+ ::fetch-words-success
+ (fn [db [_ words]]
+   (let [words (->> words
+                    (map #(assoc % :uuid (str (random-uuid)))))]
+     (-> db
+         (assoc-in [:words :unknown] (zipmap (map :uuid words) words))
+         (assoc-in [:loading :words] false)))))
+
+(rf/reg-event-db
+ ::fetch-words-failure
+ (fn [db [_ request-type response]]
+   (-> db
+       (assoc-in [:errors request-type] (get response :status-text))
+       (assoc-in [:loading :words] false))))
 
 (rf/reg-event-fx
   ::save-word
