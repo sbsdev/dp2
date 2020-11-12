@@ -42,7 +42,7 @@
 
    ;; swagger documentation
    ["" {:no-doc true
-        :swagger {:info {:title "Daisyproducer"
+        :swagger {:info {:title "Daisyproducer API Reference"
                          :description "https://cljdoc.org/d/metosin/reitit"}}}
 
     ["/swagger.json"
