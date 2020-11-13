@@ -1,9 +1,10 @@
 (ns dp2.words.local
   (:require
    [re-frame.core :as rf]
+   [reagent.core :as r]
    [ajax.core :as ajax]
-   [dp2.words :as words]))
-
+   [dp2.words :as words]
+   [dp2.words.grade :as grade]))
 
 (rf/reg-event-fx
   ::fetch-words
@@ -75,59 +76,35 @@
    (->> db :words :local vals (sort-by :untranslated))))
 
 (rf/reg-sub
- ::suggested-braille
+ ::word
  (fn [db [_ uuid]]
-   (get-in db [:words :local uuid :braille])))
+   (get-in db [:words :local uuid])))
 
 (rf/reg-sub
- ::new-braille
+ ::valid?
  (fn [db [_ uuid]]
-   (get-in db [:words :local uuid :new-braille])))
+   (words/valid? (get-in db [:words :local uuid]))))
 
-(rf/reg-sub
- ::braille
- (fn [[_ id]]
-   [(rf/subscribe [::suggested-braille id]) (rf/subscribe [::new-braille id])])
- (fn [[suggested new] _]
-   (or new suggested)))
-
-(rf/reg-event-db
-  ::set-new-braille
-  (fn [db [_ uuid braille]]
-    (let [suggested (get-in db [:words :local uuid :braille])]
-      (if (= suggested braille)
-        (update-in db [:words :local uuid] dissoc :new-braille)
-        (update-in db [:words :local uuid] assoc :new-braille braille)))))
-
-(rf/reg-event-db
-  ::reset-new-braille
-  (fn [db [_ uuid]]
-    (update-in db [:words :local uuid] dissoc :new-braille)))
-
-(rf/reg-sub ::valid-braille
- (fn [[_ id]]
-   [(rf/subscribe [::braille id])])
- (fn [[braille] _]
-   (words/braille-valid? braille)))
-
-(defn braille-field [id]
-  (let [value @(rf/subscribe [::braille id])
-        changed? @(rf/subscribe [::new-braille id])
-        valid? @(rf/subscribe [::valid-braille id])
-        klass (cond
-                (not valid?) "is-danger"
-                changed? "is-success")
-        gettext (fn [e] (-> e .-target .-value))
-        emit    (fn [e] (rf/dispatch [::set-new-braille id (gettext e)]))
-        reset   (fn [] (rf/dispatch [::reset-new-braille id]))]
-    [:div.field
-     [:input.input {:type "text"
-                    :class klass
-                    :value value
-                    :on-change emit
-                    :on-key-down #(when (= (.-which %) 27) (reset))}]
-     (when (not valid?)
-       [:p.help.is-danger "Braille not valid"])]))
+(defn input-field [id k word validator]
+  (let [initial-value (get word k)
+        value (r/atom initial-value)
+        reset (fn [] (reset! value initial-value))
+        get-value (fn [e] (-> e .-target .-value))
+        ;save (fn [e] (rf/dispatch [::set-word id (assoc word k @value)]))
+        ]
+    (fn []
+      (let [valid? (validator @value)
+            changed? (not= initial-value @value)]
+        [:div.field
+         [:input.input {:type "text"
+                        :class (cond (not valid?) "is-danger"
+                                     changed? "is-warning")
+                        :value @value
+                        :on-blur #(js/console.log (str "blured " @value))
+                        :on-change #(reset! value (get-value %))
+                        :on-key-down #(when (= (.-which %) 27) (reset))}]
+         (when-not valid?
+           [:p.help.is-danger "Input not valid"])]))))
 
 (rf/reg-event-db ::toggle-islocal
  (fn [db [_ uuid]]
@@ -144,8 +121,8 @@
              :on-change (fn [e] (rf/dispatch [::toggle-islocal id]))}]))
 
 (defn buttons [id]
-  (let [valid @(rf/subscribe [::valid-braille id])
-        changed? @(rf/subscribe [::new-braille id])]
+  (let [valid true ; FIXME
+        changed? false] ; FIXME
     [:div.buttons.has-addons
      [:button.button.is-success
       {:disabled (or (not changed?) (not valid))
@@ -157,29 +134,37 @@
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Delete"]]]))
 
-(rf/reg-sub ::word
- (fn [db [_ uuid]] (get-in db [:words :local uuid])))
-
 (defn word [id]
-  (let [{:keys [uuid untranslated braille type homograph-disambiguation islocal hyphenated]} @(rf/subscribe [::word id])]
+  (let [grade @(rf/subscribe [::grade/grade])
+        {:keys [uuid untranslated type homograph-disambiguation hyphenated] :as word} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [braille-field uuid]]
-     [:td [:input.input {:type "text" :value hyphenated}]]
+     (when (#{0 1} grade)
+       [:td
+        (when (:grade1 word)
+          [input-field uuid :grade1 word words/braille-valid?])])
+     (when (#{0 2} grade)
+       [:td
+        (when (:grade2 word)
+          [input-field uuid :grade2 word words/braille-valid?])])
+     [:td [input-field uuid :hyphenated word #(words/hyphenation-valid? % untranslated)]]
      [:td (get words/type-mapping type "Unknown")]
      [:td homograph-disambiguation]
      [:td [local-field uuid]]
-     [:td {:width "8%"} [buttons uuid]]
+     [:td [buttons uuid]]
      ]))
 
 (defn local-words []
   (let [words @(rf/subscribe [::words])
-        spelling (:spelling (first words))]
+        spelling (:spelling (first words))
+        grade @(rf/subscribe [::grade/grade])]
     [:div.block
      [:table.table.is-striped
       [:thead
        [:tr
-        [:th "Untranslated"] [:th "Braille"]
+        [:th "Untranslated"]
+        (when (#{0 1} grade) [:th "Grade 1"])
+        (when (#{0 2} grade) [:th "Grade 2"])
         [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
         [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
       [:tbody
