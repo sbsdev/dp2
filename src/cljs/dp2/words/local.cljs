@@ -85,10 +85,8 @@
  (fn [db [_ uuid]]
    (words/valid? (get-in db [:words :local uuid]))))
 
-(defn input-field [id k word validator]
-  (let [initial-value (get word k)
-        value (r/atom initial-value)
-        reset (fn [] (reset! value initial-value))
+(defn input-field [value initial-value validator]
+  (let [reset (fn [] (reset! value initial-value))
         get-value (fn [e] (-> e .-target .-value))
         ;save (fn [e] (rf/dispatch [::set-word id (assoc word k @value)]))
         ]
@@ -120,39 +118,40 @@
              :checked value
              :on-change (fn [e] (rf/dispatch [::toggle-islocal id]))}]))
 
-(defn buttons [id]
-  (let [valid true ; FIXME
-        changed? false] ; FIXME
-    [:div.buttons.has-addons
-     [:button.button.is-success
-      {:disabled (or (not changed?) (not valid))
-       :on-click (fn [e] (rf/dispatch [::save-word id]))}
-       [:span.icon [:i.mi.mi-done]]
-      #_[:span "Approve"]]
-     [:button.button.is-danger
-      {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
-      [:span.icon [:i.mi.mi-cancel]]
-      #_[:span "Delete"]]]))
+(defn buttons [id valid?]
+  [:div.buttons.has-addons
+   [:button.button.is-success
+    {:disabled (not valid?)
+     :on-click (fn [e] (rf/dispatch [::save-word id]))}
+    [:span.icon [:i.mi.mi-done]]
+    #_[:span "Approve"]]
+   [:button.button.is-danger
+    {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
+    [:span.icon [:i.mi.mi-cancel]]
+    #_[:span "Delete"]]])
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])
-        {:keys [uuid untranslated type homograph-disambiguation hyphenated] :as word} @(rf/subscribe [::word id])]
-    [:tr
-     [:td untranslated]
-     (when (#{0 1} grade)
-       [:td
-        (when (:grade1 word)
-          [input-field uuid :grade1 word words/braille-valid?])])
-     (when (#{0 2} grade)
-       [:td
-        (when (:grade2 word)
-          [input-field uuid :grade2 word words/braille-valid?])])
-     [:td [input-field uuid :hyphenated word #(words/hyphenation-valid? % untranslated)]]
-     [:td (get words/type-mapping type "Unknown")]
-     [:td homograph-disambiguation]
-     [:td [local-field uuid]]
-     [:td [buttons uuid]]
-     ]))
+        {:keys [uuid untranslated grade1 grade2 type homograph-disambiguation hyphenated] :as word} @(rf/subscribe [::word id])
+        value (r/atom word)
+        ]
+    (fn []
+      [:tr
+       [:td untranslated]
+       (when (#{0 1} grade)
+         (if grade1
+           [:td [input-field (r/cursor value [:grade1]) grade1 words/braille-valid?]]
+           [:td]))
+       (when (#{0 2} grade)
+         (if grade2
+           [:td [input-field (r/cursor value [:grade2]) grade2 words/braille-valid?]]
+           [:td]))
+       [:td [input-field (r/cursor value [:hyphenated]) hyphenated #(words/hyphenation-valid? % untranslated)]]
+       [:td (get words/type-mapping type "Unknown")]
+       [:td homograph-disambiguation]
+       [:td [local-field uuid]]
+       [:td [buttons uuid (words/valid? @value)]]
+       ])))
 
 (defn local-words []
   (let [words @(rf/subscribe [::words])
