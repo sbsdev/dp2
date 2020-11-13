@@ -28,6 +28,12 @@
        (not (string/includes? hyphenation "--"))
        (some? (re-matches #"[a-z\xC0-\xFF\u0100-\u017F-]+" hyphenation))))
 
+(defn valid?
+  [{:keys [grade1 grade2 hyphenated untranslated]}]
+  (and (braille-valid? grade1)
+       (braille-valid? grade2)
+       (hyphenation-valid? hyphenated untranslated)))
+
 (defn spelling-string [spelling]
   (case spelling
     0 "Old spelling"
