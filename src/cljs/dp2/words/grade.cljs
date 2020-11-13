@@ -6,7 +6,7 @@
   ::set-grade
   (fn [{:keys [db]} [_ grade dispatch]]
     (let [id (-> db :current-document :id)]
-      {:db (assoc db :current-grade grade)
+      {:db (assoc db :current-grade (js/parseInt grade))
        :dispatch [dispatch id]})))
 
 (rf/reg-sub
@@ -22,7 +22,8 @@
       [:div.select.is-fullwidth
        [:select
         {:on-change emit}
-        (for [[v s] [["1" "Grade 1"]
-                     ["2" "Grade 2"]
-                     ["0" "Any"]]]
+        (for [[v s] [[1 "Grade 1"]
+                     [2 "Grade 2"]
+                     [0 "Both"]]]
+          ^{:key v}
           [:option (if (not= current v) {:value v} {:selected "selected" :value v}) s])]]]]))
