@@ -89,8 +89,8 @@
    [:div.tabs.is-boxed
     [:ul
      [document-tab-link (str "#/documents/" id) "Details" :document]
-     [document-tab-link (str "#/documents/" id "/unknown") "Unknown Words" :document-unknown (fn [_] (rf/dispatch [::unknown/init-words id]))]
-     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local (fn [_] (rf/dispatch [::local/init-words id]))]
+     [document-tab-link (str "#/documents/" id "/unknown") "Unknown Words" :document-unknown (fn [_] (rf/dispatch [::unknown/fetch-words id]))]
+     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local (fn [_] (rf/dispatch [::local/fetch-words id]))]
      ]]])
 
 (defn document-details [document]

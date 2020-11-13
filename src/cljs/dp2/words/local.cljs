@@ -57,11 +57,6 @@
   (fn [db [_ uuid]]
     (update-in db [:words :local] dissoc uuid)))
 
-(rf/reg-event-fx
-  ::init-words
-  (fn [_ [_ id]]
-    {:dispatch [::fetch-words id]}))
-
 (rf/reg-sub
  ::words
  (fn [db _]

@@ -43,11 +43,6 @@
   (fn [db [_ uuid]]
     (update-in db [:words :unknown] dissoc uuid)))
 
-(rf/reg-event-fx
-  ::init-words
-  (fn [_ [_ id]]
-    {:dispatch [::fetch-words id]}))
-
 (rf/reg-event-db
   ::ignore-word
   (fn [db [_ uuid]]
