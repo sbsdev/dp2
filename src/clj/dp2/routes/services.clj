@@ -123,8 +123,10 @@
                          (not-found)))}
 
       :put {:summary "Update or create a local word for a given document"
-            :parameters {:body {:untranslated string? :braille string?
-                                :type int? :grade int? :homograph-disambiguation string?
+            :parameters {:body {:untranslated string? :type int?
+                                (spec/opt :grade1) string?
+                                (spec/opt :grade2) string?
+                                :homograph-disambiguation string?
                                 :document-id int? :islocal boolean?
                                 :hyphenated string? :spelling int?}}
             :handler (fn [{{word :body} :parameters}]
@@ -132,8 +134,10 @@
                        (no-content))}
 
       :delete {:summary "Delete a local word for a given document"
-               :parameters {:body {:untranslated string? :braille string?
-                                   :type int? :grade int? :homograph-disambiguation string?
+               :parameters {:body {:untranslated string? :type int?
+                                   (spec/opt :grade1) string?
+                                   (spec/opt :grade2) string?
+                                   :homograph-disambiguation string?
                                    :document-id int? :islocal boolean?
                                    :hyphenated string? :spelling int?}}
                :handler (fn [{{word :body} :parameters}]

@@ -39,7 +39,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :local id])
           cleaned (-> word
-                      (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
+                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
                                     :document-id :islocal :hyphenated :spelling]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :put
@@ -54,7 +54,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :local id])
           cleaned (-> word
-                      (select-keys [:untranslated :braille :grade :type :homograph-disambiguation
+                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
                                     :document-id :islocal :hyphenated :spelling]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :delete

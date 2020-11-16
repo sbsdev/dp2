@@ -42,21 +42,33 @@
                           :hyphenated :hyphenation})
 
 (defn put-word [word]
-  (db/insert-local-word
-   (to-db word dictionary-keys dictionary-mapping))
-  (db/insert-hyphenation
-   (to-db word hyphenation-keys hyphenation-mapping)))
+  (let [{:keys [grade1 grade2]} word
+        additions (->>
+                   (for [[braille grade] [[grade1 1] [grade2 2]] :when braille]
+                     (db/insert-local-word
+                      (to-db (merge word {:braille braille :grade grade})
+                             dictionary-keys dictionary-mapping)))
+                   (reduce +))]
+    (db/insert-hyphenation
+     (to-db word hyphenation-keys hyphenation-mapping))
+    additions))
 
 (defn delete-word [word]
   ;; delete the hyphenation for this word only if there is no other
   ;; braille entry for it (we can have multiple entries for a word in
   ;; the braille db (for the two grades, for names etc) but we only
   ;; have one entry, per spelling in the hyphenation db)
-  (let [{id :document-id untranslated :untranslated} word
-        ref-count (-> {:id id :untranslated untranslated}
-                      db/get-local-word-count
-                      vals first)]
-    (when (= ref-count 0)
-      (db/delete-hyphenation (to-db word hyphenation-keys hyphenation-mapping))))
-  (db/delete-local-word
-   (to-db word dictionary-keys dictionary-mapping)))
+  (let [{:keys [grade1 grade2]} word
+        deletions (->>
+                   (for [[braille grade] [[grade1 1] [grade2 2]] :when braille]
+                              (db/delete-local-word
+                               (to-db (merge word {:braille braille :grade grade})
+                                      dictionary-keys dictionary-mapping)))
+                   (reduce +))]
+    (let [{id :document-id untranslated :untranslated} word
+          ref-count (-> {:id id :untranslated untranslated}
+                        db/get-local-word-count
+                        vals first)]
+      (when (= ref-count 0)
+        (db/delete-hyphenation (to-db word hyphenation-keys hyphenation-mapping))))
+    deletions))
