@@ -11,7 +11,10 @@
 
 (rf/reg-sub
  ::grade
- (fn [db _] (get db :current-grade)))
+ ; FIXME: Instead of a default value, maybe there should be an init
+ ; event that initializes the value of current-grade at the start of
+ ; the app
+ (fn [db _] (get db :current-grade 2)))
 
 (defn selector [dispatch-event]
   (let [current @(rf/subscribe [::grade])
