@@ -75,6 +75,11 @@
  (fn [db [_ id field-id]]
    (get-in db [:words :unknown id field-id])))
 
+(rf/reg-event-db
+ ::set-word-field
+ (fn [db [_ id field-id value]]
+   (assoc-in db [:words :unknown id field-id] value)))
+
 (rf/reg-sub
  ::valid?
  (fn [db [_ id]]
