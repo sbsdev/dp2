@@ -103,7 +103,8 @@
                   :type type
                   :grade grade
                   :homograph-disambiguation ""
-                  :spelling spelling}
+                  :spelling spelling
+                  :islocal false}
         tables (louis/get-tables grade {:name (name? type) :place (place? type)})
         brailles (map #(louis/translate % tables) words)
         hyphenations (map #(hyphenate/hyphenate % spelling) words)]
@@ -117,7 +118,9 @@
 (defn embellish-homograph [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
-                  :grade grade}
+                  :grade grade
+                  :spelling spelling
+                  :islocal false}
         untranslated (map #(string/replace % "|" "") words)
         hyphenations (map #(hyphenate/hyphenate % spelling) untranslated)
         tables (louis/get-tables grade)
