@@ -81,76 +81,78 @@
    (get-in db [:words :local uuid])))
 
 (rf/reg-sub
+ ::word-field
+ (fn [db [_ uuid field-id]]
+   (get-in db [:words :local uuid field-id])))
+
+(rf/reg-event-db
+ ::set-word-field
+ (fn [db [_ uuid field-id value]]
+   (assoc-in db [:words :local uuid field-id] value)))
+
+(rf/reg-sub
  ::valid?
  (fn [db [_ uuid]]
    (words/valid? (get-in db [:words :local uuid]))))
 
-(defn input-field [value initial-value validator]
-  (let [reset (fn [] (reset! value initial-value))
+(defn input-field [uuid field-id validator]
+  (let [initial-value @(rf/subscribe [::word-field uuid field-id])
         get-value (fn [e] (-> e .-target .-value))
-        ;save (fn [e] (rf/dispatch [::set-word id (assoc word k @value)]))
-        ]
+        reset! #(rf/dispatch [::set-word-field uuid field-id initial-value])
+        save! #(rf/dispatch [::set-word-field uuid field-id %])]
     (fn []
-      (let [valid? (validator @value)
-            changed? (not= initial-value @value)]
+      (let [value @(rf/subscribe [::word-field uuid field-id])
+            valid? (validator value)
+            changed? (not= initial-value value)]
         [:div.field
          [:input.input {:type "text"
                         :class (cond (not valid?) "is-danger"
                                      changed? "is-warning")
-                        :value @value
-                        :on-blur #(js/console.log (str "blured " @value))
-                        :on-change #(reset! value (get-value %))
-                        :on-key-down #(when (= (.-which %) 27) (reset))}]
+                        :value value
+                        :on-change #(save! (get-value %))
+                        :on-key-down #(when (= (.-which %) 27) (reset!))}]
          (when-not valid?
            [:p.help.is-danger "Input not valid"])]))))
 
-(rf/reg-event-db ::toggle-islocal
- (fn [db [_ uuid]]
-   (let [islocal (get-in db [:words :local uuid :islocal])]
-     (assoc-in db [:words :local uuid :islocal] (not islocal)))))
-
-(rf/reg-sub ::islocal
- (fn [db [_ uuid]] (get-in db [:words :local uuid :islocal])))
-
 (defn local-field [id]
-  (let [value @(rf/subscribe [::islocal id])]
+  (let [value @(rf/subscribe [::word-field id :islocal])]
     [:input {:type "checkbox"
              :checked value
-             :on-change (fn [e] (rf/dispatch [::toggle-islocal id]))}]))
+             :on-change #(rf/dispatch [::set-word-field id :islocal (not value)])}]))
 
-(defn buttons [id valid?]
-  [:div.buttons.has-addons
-   [:button.button.is-success
-    {:disabled (not valid?)
-     :on-click (fn [e] (rf/dispatch [::save-word id]))}
-    [:span.icon [:i.mi.mi-done]]
-    #_[:span "Approve"]]
-   [:button.button.is-danger
-    {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
-    [:span.icon [:i.mi.mi-cancel]]
-    #_[:span "Delete"]]])
+(defn buttons [id]
+  (let [valid? @(rf/subscribe [::valid? id])]
+    [:div.buttons.has-addons
+     [:button.button.is-success
+      {:disabled (not valid?)
+       :on-click (fn [e] (rf/dispatch [::save-word id]))}
+      [:span.icon [:i.mi.mi-done]]
+      #_[:span "Approve"]]
+     [:button.button.is-danger
+      {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
+      [:span.icon [:i.mi.mi-cancel]]
+      #_[:span "Delete"]]]))
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])
-        {:keys [uuid untranslated grade1 grade2 type homograph-disambiguation hyphenated] :as word} @(rf/subscribe [::word id])
-        value (r/atom word)
+        {:keys [uuid untranslated grade1 grade2 type homograph-disambiguation]} @(rf/subscribe [::word id])
         ]
     (fn []
       [:tr
        [:td untranslated]
        (when (#{0 1} grade)
          (if grade1
-           [:td [input-field (r/cursor value [:grade1]) grade1 words/braille-valid?]]
+           [:td [input-field uuid :grade1 words/braille-valid?]]
            [:td]))
        (when (#{0 2} grade)
          (if grade2
-           [:td [input-field (r/cursor value [:grade2]) grade2 words/braille-valid?]]
+           [:td [input-field uuid :grade2 words/braille-valid?]]
            [:td]))
-       [:td [input-field (r/cursor value [:hyphenated]) hyphenated #(words/hyphenation-valid? % untranslated)]]
+       [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
        [:td (get words/type-mapping type "Unknown")]
        [:td homograph-disambiguation]
        [:td [local-field uuid]]
-       [:td [buttons uuid (words/valid? @value)]]
+       [:td [buttons uuid]]
        ])))
 
 (defn local-words []
