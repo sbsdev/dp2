@@ -9,7 +9,7 @@
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_ id]]
-    (let [grade (-> db :current-grade)]
+    (let [grade @(rf/subscribe [::grade/grade])]
       {:db (assoc-in db [:loading :words] true)
        :http-xhrio {:method          :get
                     :uri             (str "/api/documents/" id "/words")
