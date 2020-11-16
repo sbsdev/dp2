@@ -114,7 +114,7 @@
       [:span.icon [:i.mi.mi-done]]
       #_[:span "Approve"]]
      [:button.button.is-danger
-      {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
+      {:on-click (fn [e] (rf/dispatch [::ignore-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Delete"]]]))
 
