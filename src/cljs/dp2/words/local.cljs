@@ -67,8 +67,8 @@
 
 (rf/reg-event-db
   ::ack-delete
-  (fn [db [_ uuid]]
-    (update-in db [:words :local] dissoc uuid)))
+  (fn [db [_ id]]
+    (update-in db [:words :local] dissoc id)))
 
 (rf/reg-sub
  ::words
@@ -77,31 +77,31 @@
 
 (rf/reg-sub
  ::word
- (fn [db [_ uuid]]
-   (get-in db [:words :local uuid])))
+ (fn [db [_ id]]
+   (get-in db [:words :local id])))
 
 (rf/reg-sub
  ::word-field
- (fn [db [_ uuid field-id]]
-   (get-in db [:words :local uuid field-id])))
+ (fn [db [_ id field-id]]
+   (get-in db [:words :local id field-id])))
 
 (rf/reg-event-db
  ::set-word-field
- (fn [db [_ uuid field-id value]]
-   (assoc-in db [:words :local uuid field-id] value)))
+ (fn [db [_ id field-id value]]
+   (assoc-in db [:words :local id field-id] value)))
 
 (rf/reg-sub
  ::valid?
- (fn [db [_ uuid]]
-   (words/valid? (get-in db [:words :local uuid]))))
+ (fn [db [_ id]]
+   (words/valid? (get-in db [:words :local id]))))
 
-(defn input-field [uuid field-id validator]
-  (let [initial-value @(rf/subscribe [::word-field uuid field-id])
+(defn input-field [id field-id validator]
+  (let [initial-value @(rf/subscribe [::word-field id field-id])
         get-value (fn [e] (-> e .-target .-value))
-        reset! #(rf/dispatch [::set-word-field uuid field-id initial-value])
-        save! #(rf/dispatch [::set-word-field uuid field-id %])]
+        reset! #(rf/dispatch [::set-word-field id field-id initial-value])
+        save! #(rf/dispatch [::set-word-field id field-id %])]
     (fn []
-      (let [value @(rf/subscribe [::word-field uuid field-id])
+      (let [value @(rf/subscribe [::word-field id field-id])
             valid? (validator value)
             changed? (not= initial-value value)]
         [:div.field
