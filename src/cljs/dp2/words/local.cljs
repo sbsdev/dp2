@@ -135,25 +135,22 @@
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])
-        {:keys [uuid untranslated grade1 grade2 type homograph-disambiguation]} @(rf/subscribe [::word id])
-        ]
-    (fn []
-      [:tr
-       [:td untranslated]
-       (when (#{0 1} grade)
-         (if grade1
-           [:td [input-field uuid :grade1 words/braille-valid?]]
-           [:td]))
-       (when (#{0 2} grade)
-         (if grade2
-           [:td [input-field uuid :grade2 words/braille-valid?]]
-           [:td]))
-       [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
-       [:td (get words/type-mapping type "Unknown")]
-       [:td homograph-disambiguation]
-       [:td [local-field uuid]]
-       [:td [buttons uuid]]
-       ])))
+        {:keys [uuid untranslated grade1 grade2 type homograph-disambiguation]} @(rf/subscribe [::word id])]
+    [:tr
+     [:td untranslated]
+     (when (#{0 1} grade)
+       (if grade1
+         [:td [input-field uuid :grade1 words/braille-valid?]]
+         [:td]))
+     (when (#{0 2} grade)
+       (if grade2
+         [:td [input-field uuid :grade2 words/braille-valid?]]
+         [:td]))
+     [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
+     [:td (get words/type-mapping type "Unknown")]
+     [:td homograph-disambiguation]
+     [:td [local-field uuid]]
+     [:td [buttons uuid]]]))
 
 (defn local-words []
   (let [words @(rf/subscribe [::words])
