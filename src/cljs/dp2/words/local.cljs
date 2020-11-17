@@ -147,10 +147,10 @@
          [:td [input-field uuid :grade2 words/braille-valid?]]
          [:td]))
      [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
-     [:td (get words/type-mapping type "Unknown")]
-     [:td homograph-disambiguation]
+     [:td {:width "8%"} (get words/type-mapping type "Unknown")]
+     [:td {:width "8%"} homograph-disambiguation]
      [:td [local-field uuid]]
-     [:td [buttons uuid]]]))
+     [:td {:width "8%"} [buttons uuid]]]))
 
 (defn local-words []
   (let [words @(rf/subscribe [::words])

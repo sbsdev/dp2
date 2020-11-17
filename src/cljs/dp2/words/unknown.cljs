@@ -137,10 +137,10 @@
          [:td [input-field uuid :grade2 words/braille-valid?]]
          [:td]))
      [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
-     [:td (get words/type-mapping type "Unknown")]
-     [:td homograph-disambiguation]
+     [:td {:width "8%"} (get words/type-mapping type "Unknown")]
+     [:td {:width "8%"} homograph-disambiguation]
      [:td [local-field uuid]]
-     [:td [buttons uuid]]]))
+     [:td {:width "8%"} [buttons uuid]]]))
 
 (defn unknown-words []
   (let [words @(rf/subscribe [::words])
@@ -154,7 +154,8 @@
         (when (#{0 1} grade) [:th "Grade 1"])
         (when (#{0 2} grade) [:th "Grade 2"])
         [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
-        [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
+        [:th "Homograph Disambiguation"] [:th "Local"]
+        [:th "Action"]]]
       [:tbody
        (for [{:keys [uuid]} words]
          ^{:key uuid}
