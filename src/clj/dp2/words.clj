@@ -22,9 +22,9 @@
   [words]
   (reduce (fn [m {:keys [grade braille islocal] :as word}]
             (-> m
-                (merge (select-keys word [:id :document-id :untranslated :type
-                                          :homograph-disambiguation
-                                          :hyphenated :spelling]))
+                ;; Merge everything but grade, braille and islocal.
+                ;; These will be added separately
+                (merge (dissoc word :grade :braille :islocal))
                 (assoc (grade-to-keyword grade) braille)
                 ;; we assume that if any of the grades are local then
                 ;; the whole word is local
