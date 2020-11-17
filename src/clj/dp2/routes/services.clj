@@ -9,6 +9,7 @@
     [reitit.ring.middleware.multipart :as multipart]
     [reitit.ring.middleware.parameters :as parameters]
     [spec-tools.data-spec :as spec]
+    [clojure.spec.alpha :as s]
     [dp2.middleware.formats :as formats]
     [dp2.middleware.exception :as exception]
     [ring.util.http-response :refer :all]
@@ -17,6 +18,8 @@
     [dp2.documents :as docs]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]))
+
+(s/def ::grade (s/and int? #(<= 0 % 2)))
 
 (defn service-routes []
   ["/api"
@@ -116,7 +119,7 @@
      {:swagger {:tags ["Local Words"]}
       :get {:summary "Get all local words for a given document"
             :parameters {:path {:id int?}
-                         :query {(spec/opt :grade) int?}}
+                         :query {(spec/opt :grade) ::grade}}
             :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
                        (if-let [words (local/get-words id grade)]
                          (ok words)
@@ -150,7 +153,7 @@
      {:swagger {:tags ["Local Words"]}
       :get {:summary "Get all unknown words for a given document"
             :parameters {:path {:id int?}
-                         :query {:grade int?}}
+                         :query {:grade ::grade}}
             :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
                        (let [version (docs/get-latest-version id)
                              unknown (unknown/get-words version id grade)]
