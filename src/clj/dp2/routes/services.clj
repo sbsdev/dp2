@@ -17,7 +17,8 @@
     [clojure.string :refer [blank?]]
     [dp2.documents :as docs]
     [dp2.words.unknown :as unknown]
-    [dp2.words.local :as local]))
+    [dp2.words.local :as local]
+    [dp2.words.global :as global]))
 
 (s/def ::grade (s/and int? #(<= 0 % 2)))
 
@@ -90,18 +91,14 @@
     {:swagger {:tags ["Global Words"]}}
 
     [""
-     {:get {:summary "Get global words. Optionally filter the results by using a search string, a grade, a type and a limit and an offset."
-            :parameters {:query {(spec/opt :search) string?
+     {:get {:summary "Get global words. Optionally filter the results by using `untranslated`, a `grade`, a `type`,  a `limit` and an `offset`."
+            :parameters {:query {(spec/opt :untranslated) string?
                                  (spec/opt :grade) int?
                                  (spec/opt :type) int?
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
-            :handler (fn [{{{:keys [search grade type limit offset]
-                             :or {limit 200 offset 0}} :query} :parameters}]
-                       (ok (if (blank? search)
-                             (db/get-global-words {:limit limit :offset offset})
-                             (db/find-global-words {:search search :grade grade :type type
-                                                    :limit limit :offset offset}))))}}]
+            :handler (fn [{{query :query} :parameters}]
+                       (ok (global/get-words query)))}}]
 
     ["/:untranslated"
      {:get {:summary "Get global words by untranslated"
@@ -109,7 +106,7 @@
                          :query {(spec/opt :grade) int?
                                  (spec/opt :type) int?}}
             :handler (fn [{{{:keys [untranslated]} :path {:keys [grade type]} :query} :parameters}]
-                       (if-let [words (db/get-global-word {:untranslated untranslated :grade grade :type type})]
+                       (if-let [words (not-empty (global/get-words {:untranslated untranslated :grade grade :type type}))]
                          (ok words)
                          (not-found)))}}]]
 
