@@ -149,7 +149,7 @@
                               :view #'document-local}]
      ["/words" {:name :words
                 :view #'global/words-page
-                :controllers [{:start (fn [_] (rf/dispatch [::global/fetch-words ""]))}]}]]))
+                :controllers [{:start (fn [_] (rf/dispatch [::global/fetch-words]))}]}]]))
 
 (defn start-router! []
   (rfe/start!
