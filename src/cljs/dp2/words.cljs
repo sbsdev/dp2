@@ -32,7 +32,7 @@
   [{:keys [grade1 grade2 hyphenated untranslated]}]
   (and (or (nil? grade1) (braille-valid? grade1))
        (or (nil? grade2) (braille-valid? grade2))
-       (hyphenation-valid? hyphenated untranslated)))
+       (or (nil? hyphenated) (hyphenation-valid? hyphenated untranslated))))
 
 (defn spelling-string [spelling]
   (case spelling
