@@ -59,14 +59,9 @@ SELECT * FROM documents_version
 WHERE document_id = :document_id
 AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_id = :document_id)
 
------------
--- Words --
------------
-
--- :name get-global-words :? :*
--- :doc retrieve global words given a `limit` and an `offset`
-SELECT * FROM dictionary_globalword
-LIMIT :limit OFFSET :offset
+------------------
+-- Global Words --
+------------------
 
 -- :name get-global-word :? :*
 -- :doc retrieve global words for a given `untranslated`, an optional `grade` and an optional `type`
@@ -78,10 +73,28 @@ WHERE untranslated = :untranslated
 -- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for `untranslated`, an optional `grade`, an optional `type`, a `limit` and an `offset`
 SELECT * FROM dictionary_globalword
-WHERE untranslated LIKE :search
+WHERE untranslated LIKE :untranslated
 --~ (when (:grade params) "AND grade = :grade")
 --~ (when (:type params) "AND type = :type")
 LIMIT :limit OFFSET :offset
+
+-- :name insert-global-word :! :n
+-- :doc Insert or update a word in the global dictionary.
+INSERT INTO dictionary_globalword (untranslated, braille, type, grade, homograph_disambiguation)
+VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation)
+ON DUPLICATE KEY UPDATE
+braille = VALUES(braille)
+
+-- :name delete-global-word :! :n
+-- :doc Delete a word in the global dictionary.
+DELETE FROM dictionary_globalword
+WHERE untranslated = :untranslated
+AND type = :type
+AND homograph_disambiguation = :homograph_disambiguation
+
+-----------------
+-- Local Words --
+-----------------
 
 -- :name get-local-words :? :*
 -- :doc retrieve local words for a given document `id` and an optional `grade`

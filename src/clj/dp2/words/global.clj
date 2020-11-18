@@ -23,14 +23,10 @@
 (def dictionary-mapping {:homograph-disambiguation :homograph_disambiguation})
 
 (defn put-word [word]
-  (let [{:keys [grade1 grade2]} word
-        additions (->>
-                   (for [[braille grade] [[grade1 1] [grade2 2]] :when braille]
-                     (db/insert-local-word
-                      (to-db (merge word {:braille braille :grade grade})
-                             dictionary-keys dictionary-mapping)))
-                   (reduce +))]
-    additions))
+  (->> word
+       words/separate-word
+       (map #(db/insert-global-word (to-db % dictionary-keys dictionary-mapping)))
+       (reduce +)))
 
 (defn delete-word [word]
   (db/delete-global-word

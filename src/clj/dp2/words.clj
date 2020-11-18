@@ -14,6 +14,18 @@
 (defn grade-to-keyword [grade]
   (keyword (str "grade" grade)))
 
+(defn separate-word [word]
+  (->>
+   (map (fn [w grade]
+          (let [k (grade-to-keyword grade)
+                braille (get w k)]
+            (-> w
+                (assoc :braille braille)
+                (assoc :grade grade)
+                (dissoc :grade1 :grade2))))
+        (repeat word) [1 2])
+   (filter #(:braille %))))
+
 (defn merge-words
   "Merge a seq of `words` into one. Presumably the words are for
   different grades. All keys are merged as usual except for `:braille`

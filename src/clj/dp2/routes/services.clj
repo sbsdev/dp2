@@ -98,7 +98,29 @@
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
             :handler (fn [{{query :query} :parameters}]
-                       (ok (global/get-words query)))}}]
+                       (ok (global/get-words query)))}
+
+      :put {:summary "Update or create a global word"
+            :parameters {:body {:untranslated string?
+                                :type int?
+                                (spec/opt :grade1) string?
+                                (spec/opt :grade2) string?
+                                :homograph-disambiguation string?}}
+            :handler (fn [{{word :body} :parameters}]
+                       (global/put-word word)
+                       (no-content))}
+
+      :delete {:summary "Delete a global word"
+               :parameters {:body {:untranslated string?
+                                   :type int?
+                                   (spec/opt :grade1) string?
+                                   (spec/opt :grade2) string?
+                                   :homograph-disambiguation string?}}
+               :handler (fn [{{word :body} :parameters}]
+                          (let [deleted (global/delete-word word)]
+                            (if (>= deleted 1)
+                              (no-content)
+                              (not-found))))}}]
 
     ["/:untranslated"
      {:get {:summary "Get global words by untranslated"
