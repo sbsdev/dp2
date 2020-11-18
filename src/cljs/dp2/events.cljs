@@ -95,36 +95,6 @@
   (fn [{:keys [db]} [_ id]]
     {:dispatch [:fetch-current-document id]}))
 
-;; Global words
-
-(rf/reg-event-db
-  :set-global-words
-  (fn [db [_ words]]
-    (assoc-in db [:words :global] words)))
-
-(rf/reg-event-fx
-  :fetch-global-words
-  (fn [_ [_ search]]
-    (let [request {:method          :get
-                   :uri             "/api/words"
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success       [:set-global-words]}]
-      (if (string/blank? search)
-        {:http-xhrio request}
-        {:http-xhrio (assoc request :params {:search (str search "%")})}))))
-
-(rf/reg-event-fx
-  :init-global-words
-  (fn [{:keys [db]} _]
-    (let [search (:words-search db)]
-      {:dispatch [:fetch-global-words search]})))
-
-(rf/reg-event-fx
-   :words-search-change
-   (fn [{:keys [db]} [_ new-search-value]]
-     {:dispatch [:fetch-global-words new-search-value]
-      :db   (assoc db :words-search new-search-value)}))
-
 ;;;;;;;;;;;;;;;;;;;
 ;; Subscriptions ;;
 ;;;;;;;;;;;;;;;;;;;
@@ -155,16 +125,6 @@
   :common/error
   (fn [db _]
     (:common/error db)))
-
-(rf/reg-sub
-  :words/global
-  (fn [db _]
-    (-> db :words :global)))
-
-(rf/reg-sub
-  :words-search
-  (fn [db _]
-    (-> db :words-search)))
 
 (rf/reg-sub
   :documents

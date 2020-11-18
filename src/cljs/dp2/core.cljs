@@ -12,6 +12,7 @@
     [dp2.words :as words]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]
+    [dp2.words.global :as global]
     [dp2.words.grade :as grade]
     [reitit.core :as reitit]
     [reitit.frontend.easy :as rfe]
@@ -39,33 +40,6 @@
                 [:div.navbar-start
                  [nav-link "#/" "Documents" :documents]
                  [nav-link "#/words" "Words" :words]]]]))
-
-(defn words-search []
-  (let [gettext (fn [e] (-> e .-target .-value))
-        emit    (fn [e] (rf/dispatch [:words-search-change (gettext e)]))]
-    [:div.field
-     [:div.control
-      [:input.input {:type "text"
-                     :placeholder "Search"
-                     :value @(rf/subscribe [:words-search])
-                     :on-change emit}]]]))
-
-(defn words-filter []
-  [:div.field.is-horizontal
-   [:div.field-body
-    [words-search]
-    [grade/selector :fixme #_"Add the event that updates the global words"]]])
-
-(defn words-page []
-  [:section.section>div.container>div.content
-   [words-filter]
-   [:table.table.is-striped
-    [:thead
-     [:tr
-      [:th "Untranslated"] [:th "Braille"] [:th "Grade"] [:th "Markup"] [:th "Homograph Disambiguation"]]]
-    [:tbody
-     (for [{:keys [id untranslated braille grade type homograph-disambiguation]} @(rf/subscribe [:words/global])]
-       ^{:key id} [:tr [:td untranslated] [:td braille] [:td grade] [:td type] [:td homograph-disambiguation]])]]])
 
 (def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
 
@@ -174,8 +148,8 @@
      ["/documents/:id/local" {:name :document-local
                               :view #'document-local}]
      ["/words" {:name :words
-                :view #'words-page
-                :controllers [{:start (fn [_] (rf/dispatch [:init-global-words]))}]}]]))
+                :view #'global/words-page
+                :controllers [{:start (fn [_] (rf/dispatch [::global/fetch-words ""]))}]}]]))
 
 (defn start-router! []
   (rfe/start!
