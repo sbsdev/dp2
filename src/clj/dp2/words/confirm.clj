@@ -3,6 +3,7 @@
    [clojure.set :refer [rename-keys]]
    [clojure.string :as string]
    [dp2.db.core :as db]
+   [dp2.louis :as louis]
    [dp2.hyphenate :as hyphenate]
    [dp2.words :as words]))
 
@@ -25,8 +26,18 @@
        (reduce (fn [acc w]
                  (assoc-in acc [(:spelling w) (:word w)] w)) {})))
 
+(defn complement-braille [{:keys [untranslated grade1 grade2 type] :as word}]
+  (let [params {:name (words/name? type) :place (words/place? type)}
+        tables {:grade1 (louis/get-tables 1 params)
+                :grade2 (louis/get-tables 2 params)}]
+    (cond-> word
+      (nil? grade1) (assoc :grade1 (louis/translate untranslated (:grade1 tables)))
+      (nil? grade2) (assoc :grade2 (louis/translate untranslated (:grade2 tables))))))
+
 (defn get-words []
-  (let [words (->> (db/get-confirmable-words) words/aggregate)
+  (let [words (->> (db/get-confirmable-words)
+                   words/aggregate
+                   (map complement-braille))
         suggested-hyphenations (->> words (map suggested-hyphenation))
         approved-hyphenations (approved-hyphenations words)]
     (map (fn [{:keys [untranslated language] :as word} suggested]
