@@ -164,7 +164,9 @@
         (when (#{0 1} grade) [:th "Grade 1"])
         (when (#{0 2} grade) [:th "Grade 2"])
         [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
-        [:th "Homograph Disambiguation"] [:th "Local"] [:th "Action"]]]
+        [:th "Homograph Disambiguation"]
+        [:th "Local"]
+        [:th "Action"]]]
       [:tbody
        (for [{:keys [uuid]} words]
          ^{:key uuid}
