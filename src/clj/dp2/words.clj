@@ -1,5 +1,8 @@
 (ns dp2.words)
 
+(defn name? [type] (#{1 2} type))
+(defn place? [type] (#{3 4} type))
+
 (defn spelling [language]
   (case language
     ("de" "de-CH") 1

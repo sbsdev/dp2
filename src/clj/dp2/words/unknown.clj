@@ -14,9 +14,6 @@
       (xpath/set-default-namespace! "http://www.daisy.org/z3986/2005/dtbook/")
       (xpath/declare-namespace! "brl" "http://www.daisy.org/z3986/2009/braille/")))
 
-(defn name? [type] (#{1 2} type))
-(defn place? [type] (#{3 4} type))
-
 (defn compare-with-known-words
   "Given a set of `words` return the ones that are unknown."
   ([words document-id grade]
@@ -105,7 +102,7 @@
                   :homograph-disambiguation ""
                   :spelling spelling
                   :islocal false}
-        tables (louis/get-tables grade {:name (name? type) :place (place? type)})
+        tables (louis/get-tables grade {:name (words/name? type) :place (words/place? type)})
         brailles (map #(louis/translate % tables) words)
         hyphenations (map #(hyphenate/hyphenate % spelling) words)]
     (map (fn [untranslated braille hyphenated]
