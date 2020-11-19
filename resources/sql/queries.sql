@@ -189,3 +189,15 @@ AND type NOT IN (2,4,5)
 AND document_id = :document_id
 AND untranslated in (:v*:words))
 
+-----------------------
+-- Confirmable words --
+-----------------------
+
+-- :name get-confirmable-words :? :*
+-- :doc retrieve local words that are ready for confirmation
+SELECT dict.*, doc.language
+FROM dictionary_localword AS dict,
+     documents_document AS doc
+WHERE dict.isConfirmed = false
+AND dict.document_id = doc.id
+
