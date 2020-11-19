@@ -41,12 +41,11 @@
         suggested-hyphenations (->> words (map suggested-hyphenation))
         approved-hyphenations (approved-hyphenations words)]
     (map (fn [{:keys [untranslated language] :as word} suggested]
-           ;; add the hyphenation to the word. If no hyphenation is
-           ;; given in the hyphenation database, i.e. in the approved
-           ;; hyphenations then just use the suggestion given by
-           ;; libhyphen
-           (assoc word :hyphenated
-                  (or (get-in approved-hyphenations [untranslated language])
-                      suggested)))
+           ;; If no hyphenation is given in the hyphenation database,
+           ;; i.e. in the approved hyphenations then just use the
+           ;; suggestion given by libhyphen
+           (let [approved-hyphenation (get-in approved-hyphenations [untranslated language])
+                 hyphenation (or approved-hyphenation suggested)]
+             (assoc word :hyphenated hyphenation)))
            words suggested-hyphenations)))
 
