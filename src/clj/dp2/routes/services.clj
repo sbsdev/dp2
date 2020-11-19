@@ -18,6 +18,7 @@
     [dp2.documents :as docs]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]
+    [dp2.words.confirm :as confirm]
     [dp2.words.global :as global]))
 
 (s/def ::grade (s/and int? #(<= 0 % 2)))
@@ -196,6 +197,11 @@
                         (if-let [doc (db/get-latest-version {:document_id id})]
                           (ok doc)
                           (not-found)))}}]]]
+
+   ["/confirmable"
+    {:swagger {:tags ["Confirmable Words"]}
+     :get {:summary "Get all local words that are ready to be confirmed"
+           :handler (fn [_] (ok (take 200 (confirm/get-words))))}}]
 
    ["/hyphenations"
     {:swagger {:tags ["Hyphenations"]}}
