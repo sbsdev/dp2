@@ -201,7 +201,14 @@
    ["/confirmable"
     {:swagger {:tags ["Confirmable Words"]}
      :get {:summary "Get all local words that are ready to be confirmed"
-           :handler (fn [_] (ok (take 200 (confirm/get-words))))}}]
+           :parameters {:query {(spec/opt :limit) int?
+                                (spec/opt :offset) int?}}
+           :handler (fn [{{{:keys [limit offset]
+                            :or {limit 200 offset 0}} :query} :parameters}]
+                      (ok (->>
+                           (confirm/get-words)
+                           (drop offset)
+                           (take limit))))}}]
 
    ["/hyphenations"
     {:swagger {:tags ["Hyphenations"]}}
