@@ -13,6 +13,7 @@
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]
     [dp2.words.global :as global]
+    [dp2.words.confirm :as confirm]
     [dp2.words.grade :as grade]
     [reitit.core :as reitit]
     [reitit.frontend.easy :as rfe]
@@ -39,6 +40,7 @@
                 {:class (when @expanded? :is-active)}
                 [:div.navbar-start
                  [nav-link "#/" "Documents" :documents]
+                 [nav-link "#/confirm" "Confirm" :confirm]
                  [nav-link "#/words" "Words" :words]]]]))
 
 (def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
@@ -147,6 +149,9 @@
                                 :view #'document-unknown}]
      ["/documents/:id/local" {:name :document-local
                               :view #'document-local}]
+     ["/confirm" {:name :confirm
+                  :view #'confirm/words-page
+                  :controllers [{:start (fn [_] (rf/dispatch [::confirm/fetch-words]))}]}]
      ["/words" {:name :words
                 :view #'global/words-page
                 :controllers [{:start (fn [_] (rf/dispatch [::global/fetch-words]))}]}]]))
