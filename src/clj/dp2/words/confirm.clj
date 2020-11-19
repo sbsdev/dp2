@@ -26,26 +26,30 @@
        (reduce (fn [acc w]
                  (assoc-in acc [(:spelling w) (:word w)] w)) {})))
 
-(defn complement-braille [{:keys [untranslated grade1 grade2 type] :as word}]
-  (let [params {:name (words/name? type) :place (words/place? type)}
-        tables {:grade1 (louis/get-tables 1 params)
-                :grade2 (louis/get-tables 2 params)}]
+(defn complement-approved-hyphenation [approved {:keys [untranslated language] :as word}]
+  (let [hyphenation (get-in approved [untranslated language])]
     (cond-> word
-      (nil? grade1) (assoc :grade1 (louis/translate untranslated (:grade1 tables)))
-      (nil? grade2) (assoc :grade2 (louis/translate untranslated (:grade2 tables))))))
+      hyphenation (assoc :hyphenated hyphenation))))
+
+(defn complement-hyphenation [{:keys [hyphenated] :as word}]
+  (let [hyphenation (suggested-hyphenation word)]
+    (cond-> word
+      (and (nil? hyphenated) hyphenation) (assoc :hyphenated hyphenation))))
+
+(defn complement-braille [{:keys [untranslated grade1 grade2 type] :as word}]
+  (let [params {:name (words/name? type) :place (words/place? type)}]
+    (cond-> word
+      (nil? grade1) (assoc :grade1 (louis/translate untranslated (louis/get-tables 1 params)))
+      (nil? grade2) (assoc :grade2 (louis/translate untranslated (louis/get-tables 2 params))))))
 
 (defn get-words []
   (let [words (->> (db/get-confirmable-words)
                    words/aggregate
                    (map complement-braille))
-        suggested-hyphenations (->> words (map suggested-hyphenation))
         approved-hyphenations (approved-hyphenations words)]
-    (map (fn [{:keys [untranslated language] :as word} suggested]
-           ;; If no hyphenation is given in the hyphenation database,
-           ;; i.e. in the approved hyphenations then just use the
-           ;; suggestion given by libhyphen
-           (let [approved-hyphenation (get-in approved-hyphenations [untranslated language])
-                 hyphenation (or approved-hyphenation suggested)]
-             (assoc word :hyphenated hyphenation)))
-           words suggested-hyphenations)))
+    (->> words
+         ;; first add approved hyphenations
+         (map (partial complement-approved-hyphenation approved-hyphenations))
+         ;; then add generated hyphenations
+         (map complement-hyphenation))))
 
