@@ -18,7 +18,11 @@
 (defn grade-to-keyword [grade]
   (keyword (str "grade" grade)))
 
-(defn separate-word [word]
+(defn separate-word
+  "Separate a `word` into multiple individual word maps where the
+  original `:grade1` and `:grade2` keys are mapped to `:grade` and
+  `:braille` values in each of the new maps."
+  [word]
   (->>
    (map (fn [w grade]
           (let [k (grade-to-keyword grade)
