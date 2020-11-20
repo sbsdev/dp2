@@ -161,7 +161,7 @@
                                    (spec/opt :grade1) string?
                                    (spec/opt :grade2) string?
                                    :homograph-disambiguation string?
-                                   :document-id int? :islocal boolean?
+                                   :document-id int?
                                    :hyphenated string? :spelling int?}}
                :handler (fn [{{word :body} :parameters}]
                           (let [deleted (local/delete-word word)]
