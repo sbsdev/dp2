@@ -109,11 +109,16 @@ WHERE document_id = :id
 AND untranslated = :untranslated
 
 -- :name insert-local-word :! :n
--- :doc Insert or update a word in the local dictionary.
-INSERT INTO dictionary_localword (untranslated, braille, type, grade, homograph_disambiguation, document_id, isLocal)
-VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal)
+-- :doc Insert or update a word in the local dictionary. Optionaly specify `isconfirmed`.
+INSERT INTO dictionary_localword (untranslated, braille, type, grade, homograph_disambiguation, document_id, isLocal, isConfirmed)
+/*~ (if (:isconfirmed params) */
+VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal, :isconfirmed)
+/*~*/
+VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal, DEFAULT)
+/*~ ) ~*/
 ON DUPLICATE KEY UPDATE
 braille = VALUES(braille),
+--~ (when (:isconfirmed params) "isConfirmed = VALUES(isConfirmed),")
 isLocal = VALUES(isLocal)
 
 -- :name delete-local-word :! :n
