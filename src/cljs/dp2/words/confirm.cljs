@@ -49,10 +49,12 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :confirm id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation]))]
+                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
+                                    :document-id :hyphenated :spelling]))
+          document-id (:document-id word)]
       {:http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
-                    :uri             (str "/api/confirm")
+                    :uri             (str "/api/documents/" document-id "/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::ack-delete id]
