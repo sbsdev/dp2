@@ -1,33 +1,39 @@
 (ns dp2.words.confirm
-  (:require
-   [clojure.set :refer [rename-keys]]
-   [clojure.string :as string]
-   [dp2.db.core :as db]
-   [dp2.louis :as louis]
-   [dp2.hyphenate :as hyphenate]
-   [dp2.words :as words]))
+  (:require [clojure.string :as string]
+            [conman.core :as conman]
+            [dp2.db.core :as db]
+            [dp2.hyphenate :as hyphenate]
+            [dp2.louis :as louis]
+            [dp2.words :as words]
+            [dp2.words.global :as global]
+            [dp2.words.local :as local]))
 
 (def language-to-spelling
   {"de-1901" 0
    "de" 1})
 
-(defn suggested-hyphenation [{:keys [untranslated language]}]
+(defn suggested-hyphenation [{:keys [untranslated spelling]}]
   (when-not (string/includes? untranslated "'")
-    (hyphenate/hyphenate untranslated (language-to-spelling language))))
+    (hyphenate/hyphenate untranslated spelling)))
 
 (defn approved-hyphenations [words]
   (->> words
        (remove (fn [word] (string/includes? (:untranslated word) "'")))
-       (group-by :language)
-       (mapcat (fn [[language words]]
+       (group-by :spelling)
+       (mapcat (fn [[spelling words]]
                  (db/get-hyphenations-in
                   {:words (map :untranslated words)
-                   :spelling (language-to-spelling language)})))
+                   :spelling spelling})))
        (reduce (fn [acc w]
-                 (assoc-in acc [(:spelling w) (:word w)] w)) {})))
+                 (assoc-in acc [(:word w) (:spelling w)] w)) {})))
 
-(defn complement-approved-hyphenation [{:keys [untranslated language] :as word} approved]
-  (let [hyphenation (get-in approved [untranslated language])]
+(defn complement-spelling [{:keys [language] :as word}]
+  (let [spelling (language-to-spelling language)]
+    (cond-> word
+      spelling (assoc :spelling spelling))))
+
+(defn complement-approved-hyphenation [{:keys [untranslated spelling] :as word} approved]
+  (let [hyphenation (get-in approved [untranslated spelling])]
     (cond-> word
       hyphenation (assoc :hyphenated hyphenation))))
 
@@ -45,7 +51,8 @@
 (defn get-words []
   (let [words (->> (db/get-confirmable-words)
                    words/aggregate
-                   (map complement-braille))
+                   (map complement-braille)
+                   (map complement-spelling))
         approved-hyphenations (approved-hyphenations words)]
     (->> words
          ;; first add approved hyphenations
