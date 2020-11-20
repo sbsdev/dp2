@@ -41,34 +41,38 @@
 (def hyphenation-mapping {:untranslated :word
                           :hyphenated :hyphenation})
 
-(defn put-word [word]
-  (let [{:keys [grade1 grade2]} word
-        additions (->>
-                   (for [[braille grade] [[grade1 1] [grade2 2]] :when braille]
-                     (db/insert-local-word
-                      (to-db (merge word {:braille braille :grade grade})
-                             dictionary-keys dictionary-mapping)))
-                   (reduce +))]
-    (db/insert-hyphenation
-     (to-db word hyphenation-keys hyphenation-mapping))
-    additions))
+(defn put-word
+  "Persist a `word` in the db. Upsert all braille translations and the
+  hyphenation. Returns the number of insertions/updates."
+  [word]
+  (db/insert-hyphenation (to-db word hyphenation-keys hyphenation-mapping))
+  (->> word
+       words/separate-word
+       (map #(db/insert-local-word (to-db % dictionary-keys dictionary-mapping)))
+       (reduce +)))
 
-(defn delete-word [word]
-  ;; delete the hyphenation for this word only if there is no other
-  ;; braille entry for it (we can have multiple entries for a word in
-  ;; the braille db (for the two grades, for names etc) but we only
-  ;; have one entry, per spelling in the hyphenation db)
-  (let [{:keys [grade1 grade2]} word
-        deletions (->>
-                   (for [[braille grade] [[grade1 1] [grade2 2]] :when braille]
-                              (db/delete-local-word
-                               (to-db (merge word {:braille braille :grade grade})
-                                      dictionary-keys dictionary-mapping)))
-                   (reduce +))]
-    (let [{id :document-id untranslated :untranslated} word
-          ref-count (-> {:id id :untranslated untranslated}
-                        db/get-local-word-count
-                        vals first)]
-      (when (= ref-count 0)
-        (db/delete-hyphenation (to-db word hyphenation-keys hyphenation-mapping))))
+(defn- ref-count
+  "Return the number of translations for a given `word` in a given document."
+  [{id :document-id untranslated :untranslated}]
+  (-> (db/get-local-word-count {:id id :untranslated untranslated})
+      vals first))
+
+(defn delete-word
+  "Remove a `word` from the db. If the word contains `:grade1` remove
+  the db record for `:grade` 1 and likewise if the word contains
+  `:grade2`. If there are no more braille translations for this word
+  then it is also removed from the hyphenations db. Returns the number
+  of deletions."
+  [word]
+  (let [deletions
+        (->> word
+             words/separate-word
+             (map #(db/delete-local-word (to-db % dictionary-keys dictionary-mapping)))
+             (reduce +))]
+    ;; delete the hyphenation for this word only if there is no other
+    ;; braille entry for it (we can have multiple entries for a word
+    ;; in the braille db (for the two grades, for names etc) but we
+    ;; only have one entry, per spelling in the hyphenation db)
+    (when (= (ref-count word) 0)
+      (db/delete-hyphenation (to-db word hyphenation-keys hyphenation-mapping)))
     deletions))
