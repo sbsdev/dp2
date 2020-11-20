@@ -21,6 +21,17 @@ GET http://localhost:3000/api/documents/644
 # Get global words
 GET http://localhost:3000/api/words/foo
 
+# Delete a global word
+DELETE http://localhost:3000/api/words
+Content-Type: application/json
+{
+  "untranslated": "hilabulaterobas",
+  "grade1": "HILA",
+  "grade2": "H4LA",
+  "type": 0,
+  "homograph-disambiguation": ""
+}
+
 # Get local words
 GET http://localhost:3000/api/documents/644/words
 
