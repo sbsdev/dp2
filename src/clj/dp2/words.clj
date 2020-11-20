@@ -1,4 +1,5 @@
-(ns dp2.words)
+(ns dp2.words
+  (:require [clojure.set :refer [rename-keys]]))
 
 (defn name? [type] (#{1 2} type))
 (defn place? [type] (#{3 4} type))
@@ -59,4 +60,20 @@
        (group-by (juxt :untranslated :type :homograph-disambiguation))
        vals
        (map merge-words)))
+
+(def hyphenation-keys [:untranslated :hyphenated :spelling])
+
+(def hyphenation-mapping {:untranslated :word
+                          :hyphenated :hyphenation})
+
+(def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation
+                      :document-id :islocal :isconfirmed])
+
+(def dictionary-mapping {:homograph-disambiguation :homograph_disambiguation
+                         :document-id :document_id})
+
+(defn to-db [word keys mapping]
+  (-> word
+      (select-keys keys)
+      (rename-keys mapping)))
 

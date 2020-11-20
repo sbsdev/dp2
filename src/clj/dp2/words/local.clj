@@ -1,9 +1,7 @@
 (ns dp2.words.local
-  (:require
-   [clojure.set :refer [rename-keys]]
-   [dp2.db.core :as db]
-   [dp2.hyphenate :as hyphenate]
-   [dp2.words :as words]))
+  (:require [dp2.db.core :as db]
+            [dp2.hyphenate :as hyphenate]
+            [dp2.words :as words]))
 
 (defn get-words [id grade]
   (let [document (db/get-document {:id id})
@@ -28,27 +26,16 @@
                   :spelling spelling))
          words suggested-hyphenations)))
 
-(defn- to-db [word keys mapping]
-  (-> word
-      (select-keys keys)
-      (rename-keys mapping)))
-
-(def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation
-                      :document-id :islocal])
-(def dictionary-mapping {:homograph-disambiguation :homograph_disambiguation
-                         :document-id :document_id})
-(def hyphenation-keys [:untranslated :hyphenated :spelling])
-(def hyphenation-mapping {:untranslated :word
-                          :hyphenated :hyphenation})
-
 (defn put-word
   "Persist a `word` in the db. Upsert all braille translations and the
   hyphenation. Returns the number of insertions/updates."
   [word]
-  (db/insert-hyphenation (to-db word hyphenation-keys hyphenation-mapping))
+  (db/insert-hyphenation
+   (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
   (->> word
        words/separate-word
-       (map #(db/insert-local-word (to-db % dictionary-keys dictionary-mapping)))
+       (map #(db/insert-local-word
+              (words/to-db % words/dictionary-keys words/dictionary-mapping)))
        (reduce +)))
 
 (defn- ref-count
@@ -67,12 +54,14 @@
   (let [deletions
         (->> word
              words/separate-word
-             (map #(db/delete-local-word (to-db % dictionary-keys dictionary-mapping)))
+             (map #(db/delete-local-word
+                    (words/to-db % words/dictionary-keys words/dictionary-mapping)))
              (reduce +))]
     ;; delete the hyphenation for this word only if there is no other
     ;; braille entry for it (we can have multiple entries for a word
     ;; in the braille db (for the two grades, for names etc) but we
     ;; only have one entry, per spelling in the hyphenation db)
     (when (= (ref-count word) 0)
-      (db/delete-hyphenation (to-db word hyphenation-keys hyphenation-mapping)))
+      (db/delete-hyphenation
+       (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
     deletions))

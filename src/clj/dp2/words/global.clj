@@ -13,21 +13,14 @@
                              :limit limit :offset offset})
       words/aggregate))
 
-(defn- to-db [word keys mapping]
-  (-> word
-      (select-keys keys)
-      (rename-keys mapping)))
-
-(def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation
-                      :islocal])
-(def dictionary-mapping {:homograph-disambiguation :homograph_disambiguation})
+(def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation])
 
 (defn put-word [word]
   (->> word
        words/separate-word
-       (map #(db/insert-global-word (to-db % dictionary-keys dictionary-mapping)))
+       (map #(db/insert-global-word (words/to-db % dictionary-keys words/dictionary-mapping)))
        (reduce +)))
 
 (defn delete-word [word]
   (db/delete-global-word
-   (to-db word [:untranslated :type :homograph-disambiguation] dictionary-mapping)))
+   (words/to-db word [:untranslated :type :homograph-disambiguation] words/dictionary-mapping)))
