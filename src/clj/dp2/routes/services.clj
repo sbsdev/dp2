@@ -208,7 +208,18 @@
                       (ok (->>
                            (confirm/get-words)
                            (drop offset)
-                           (take limit))))}}]
+                           (take limit))))}
+
+     :put {:summary "Confirm a local word"
+           :parameters {:body {:untranslated string? :type int?
+                               (spec/opt :grade1) string?
+                               (spec/opt :grade2) string?
+                               :homograph-disambiguation string?
+                               :document-id int? :islocal boolean?
+                               :hyphenated string? :spelling int?}}
+           :handler (fn [{{word :body} :parameters}]
+                      (confirm/put-word word)
+                      (no-content))}}]
 
    ["/hyphenations"
     {:swagger {:tags ["Hyphenations"]}}

@@ -60,3 +60,34 @@ Content-Type: application/json
 # Get words to confirm
 GET http://localhost:3000/api/confirmable?limit=10
 
+# Confirm a word and set it to local. This should simply upsert the
+# records in the db and set them to confirmed and local
+PUT http://localhost:3000/api/confirmable
+Content-Type: application/json
+{
+  "untranslated": "hilabulaterobas",
+  "grade1": "HILA",
+  "grade2": "H4LA",
+  "hyphenated": "hila-bula-tero-bas",
+  "spelling": 1,
+  "type": 0,
+  "homograph-disambiguation": "",
+  "document-id": 644,
+  "islocal": true
+}
+
+# Confirm a word. This should move the records to the global table
+PUT http://localhost:3000/api/confirmable
+Content-Type: application/json
+{
+  "untranslated": "hilabulaterobas",
+  "grade1": "HILA",
+  "grade2": "H4LA",
+  "hyphenated": "hila-bula-tero-bas",
+  "spelling": 1,
+  "type": 0,
+  "homograph-disambiguation": "",
+  "document-id": 644,
+  "islocal": false
+}
+
