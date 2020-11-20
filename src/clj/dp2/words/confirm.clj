@@ -26,7 +26,7 @@
        (reduce (fn [acc w]
                  (assoc-in acc [(:spelling w) (:word w)] w)) {})))
 
-(defn complement-approved-hyphenation [approved {:keys [untranslated language] :as word}]
+(defn complement-approved-hyphenation [{:keys [untranslated language] :as word} approved]
   (let [hyphenation (get-in approved [untranslated language])]
     (cond-> word
       hyphenation (assoc :hyphenated hyphenation))))
@@ -49,7 +49,7 @@
         approved-hyphenations (approved-hyphenations words)]
     (->> words
          ;; first add approved hyphenations
-         (map (partial complement-approved-hyphenation approved-hyphenations))
+         (map #(complement-approved-hyphenation % approved-hyphenations))
          ;; then add generated hyphenations
          (map complement-hyphenation))))
 
