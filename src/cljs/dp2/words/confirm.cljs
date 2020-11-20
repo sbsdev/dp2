@@ -36,12 +36,14 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :confirm id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation]))]
+                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
+                                    :document-id :hyphenated :spelling :islocal]))]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :uri             (str "/api/confirmable")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::ack-save id]
                     }})))
 
 (rf/reg-event-fx
@@ -61,10 +63,14 @@
                     }})))
 
 (rf/reg-event-db
-  ::ack-delete
+  ::ack-save
   (fn [db [_ id]]
     (update-in db [:words :confirm] dissoc id)))
 
+(rf/reg-event-db
+  ::ack-delete
+  (fn [db [_ id]]
+    (update-in db [:words :confirm] dissoc id)))
 
 (rf/reg-sub
   ::words
