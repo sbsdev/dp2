@@ -165,16 +165,16 @@
   (let [loading? @(rf/subscribe [::notifications/loading? :global])
         errors? @(rf/subscribe [::notifications/errors?])]
     [:section.section>div.container>div.content
-     (cond
-       errors? [notifications/error-notification]
-       loading? [notifications/loading-spinner]
-       :else
-       [:<>
-        [words-filter]
+     [:<>
+      [words-filter]
+      (cond
+        errors? [notifications/error-notification]
+        loading? [notifications/loading-spinner]
+        :else
         [:table.table.is-striped
          [:thead
           [:tr
            [:th "Untranslated"] [:th "Grade 1"] [:th "Grade 2"] [:th "Type"] [:th "Homograph Disambiguation"]]]
          [:tbody
           (for [{:keys [uuid]} @(rf/subscribe [::words])]
-            ^{:key uuid} [word uuid])]]])]))
+            ^{:key uuid} [word uuid])]])]]))
