@@ -1,19 +1,18 @@
 (ns dp2.words.confirm
-  (:require
-    [re-frame.core :as rf]
-    [ajax.core :as ajax]
-    [dp2.words :as words]
-    [clojure.string :as string]))
+  (:require [ajax.core :as ajax]
+            [dp2.words :as words]
+            [dp2.words.notifications :as notifications]
+            [re-frame.core :as rf]))
 
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_]]
-    {:db (assoc-in db [:loading :words] true)
-       :http-xhrio {:method          :get
-                    :uri             "/api/confirmable"
-                    :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::fetch-words-success]
-                    :on-failure      [::fetch-words-failure :fetch-confirm-words]}}))
+    {:db (assoc-in db [:loading :confirm] true)
+     :http-xhrio {:method          :get
+                  :uri             "/api/confirmable"
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [::fetch-words-success]
+                  :on-failure      [::fetch-words-failure :fetch-confirm-words]}}))
 
 (rf/reg-event-db
  ::fetch-words-success
@@ -22,14 +21,14 @@
                     (map #(assoc % :uuid (str (random-uuid)))))]
      (-> db
          (assoc-in [:words :confirm] (zipmap (map :uuid words) words))
-         (assoc-in [:loading :words] false)))))
+         (assoc-in [:loading :confirm] false)))))
 
 (rf/reg-event-db
  ::fetch-words-failure
  (fn [db [_ request-type response]]
    (-> db
        (assoc-in [:errors request-type] (get response :status-text))
-       (assoc-in [:loading :words] false))))
+       (assoc-in [:loading :confirm] false))))
 
 (rf/reg-event-fx
   ::save-word
@@ -149,19 +148,22 @@
      [:td {:width "8%"} [buttons uuid]]]))
 
 (defn words-page []
-  [:section.section>div.container>div.content
-   [:table.table.is-striped
-    [:thead
-     [:tr
-      [:th "Untranslated"]
-      [:th "Grade 1"]
-      [:th "Grade 2"]
-      [:th "Hyphenated"]
-      [:th "Spelling"]
-      [:th "Type"]
-      [:th "Homograph Disambiguation"]
-      [:th "Local"]
-      [:th "Action"]]]
-    [:tbody
-     (for [{:keys [uuid]} @(rf/subscribe [::words])]
-       ^{:key uuid} [word uuid])]]])
+  (let [loading? @(rf/subscribe [::notifications/loading? :confirm])]
+    [:section.section>div.container>div.content
+     (if loading?
+       [notifications/loading-spinner]
+       [:table.table.is-striped
+        [:thead
+         [:tr
+          [:th "Untranslated"]
+          [:th "Grade 1"]
+          [:th "Grade 2"]
+          [:th "Hyphenated"]
+          [:th "Spelling"]
+          [:th "Type"]
+          [:th "Homograph Disambiguation"]
+          [:th "Local"]
+          [:th "Action"]]]
+        [:tbody
+         (for [{:keys [uuid]} @(rf/subscribe [::words])]
+           ^{:key uuid} [word uuid])]])]))

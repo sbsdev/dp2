@@ -4,13 +4,14 @@
    [reagent.core :as r]
    [ajax.core :as ajax]
    [dp2.words :as words]
-   [dp2.words.grade :as grade]))
+   [dp2.words.grade :as grade]
+   [dp2.words.notifications :as notifications]))
 
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_ id]]
     (let [grade @(rf/subscribe [::grade/grade])]
-      {:db (assoc-in db [:loading :words] true)
+      {:db (assoc-in db [:loading :local] true)
        :http-xhrio {:method          :get
                     :uri             (str "/api/documents/" id "/words")
                     :params          {:grade grade}
@@ -25,14 +26,14 @@
                     (map #(assoc % :uuid (str (random-uuid)))))]
      (-> db
          (assoc-in [:words :local] (zipmap (map :uuid words) words))
-         (assoc-in [:loading :words] false)))))
+         (assoc-in [:loading :local] false)))))
 
 (rf/reg-event-db
  ::fetch-words-failure
  (fn [db [_ request-type response]]
    (-> db
        (assoc-in [:errors request-type] (get response :status-text))
-       (assoc-in [:loading :words] false))))
+       (assoc-in [:loading :local] false))))
 
 (rf/reg-event-fx
   ::save-word
@@ -155,19 +156,21 @@
 (defn local-words []
   (let [words @(rf/subscribe [::words])
         spelling (:spelling (first words))
-        grade @(rf/subscribe [::grade/grade])]
-    [:div.block
-     [:table.table.is-striped
-      [:thead
-       [:tr
-        [:th "Untranslated"]
-        (when (#{0 1} grade) [:th "Grade 1"])
-        (when (#{0 2} grade) [:th "Grade 2"])
-        [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
-        [:th "Homograph Disambiguation"]
-        [:th "Local"]
-        [:th "Action"]]]
-      [:tbody
-       (for [{:keys [uuid]} words]
-         ^{:key uuid}
-         [word uuid])]]]))
+        grade @(rf/subscribe [::grade/grade])
+        loading? @(rf/subscribe [::notifications/loading? :local])]
+    (if loading?
+      [notifications/loading-spinner]
+      [:table.table.is-striped
+       [:thead
+        [:tr
+         [:th "Untranslated"]
+         (when (#{0 1} grade) [:th "Grade 1"])
+         (when (#{0 2} grade) [:th "Grade 2"])
+         [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
+         [:th "Homograph Disambiguation"]
+         [:th "Local"]
+         [:th "Action"]]]
+       [:tbody
+        (for [{:keys [uuid]} words]
+          ^{:key uuid}
+          [word uuid])]])))

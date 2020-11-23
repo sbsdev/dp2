@@ -3,13 +3,14 @@
     [re-frame.core :as rf]
     [ajax.core :as ajax]
     [dp2.words :as words]
+    [dp2.words.notifications :as notifications]
     [clojure.string :as string]))
 
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_]]
     (let [search @(rf/subscribe [::search])]
-      {:db (assoc-in db [:loading :words] true)
+      {:db (assoc-in db [:loading :global] true)
        :http-xhrio {:method          :get
                     :uri             "/api/words"
                     :params          {:untranslated (if (string/blank? search) "" (str search "%"))}
@@ -24,14 +25,14 @@
                     (map #(assoc % :uuid (str (random-uuid)))))]
      (-> db
          (assoc-in [:words :global] (zipmap (map :uuid words) words))
-         (assoc-in [:loading :words] false)))))
+         (assoc-in [:loading :global] false)))))
 
 (rf/reg-event-db
  ::fetch-words-failure
  (fn [db [_ request-type response]]
    (-> db
        (assoc-in [:errors request-type] (get response :status-text))
-       (assoc-in [:loading :words] false))))
+       (assoc-in [:loading :global] false))))
 
 (rf/reg-event-fx
   ::save-word
@@ -161,12 +162,16 @@
      [:td {:width "8%"} [buttons uuid]]]))
 
 (defn words-page []
-  [:section.section>div.container>div.content
-   [words-filter]
-   [:table.table.is-striped
-    [:thead
-     [:tr
-      [:th "Untranslated"] [:th "Grade 1"] [:th "Grade 2"] [:th "Type"] [:th "Homograph Disambiguation"]]]
-    [:tbody
-     (for [{:keys [uuid]} @(rf/subscribe [::words])]
-       ^{:key uuid} [word uuid])]]])
+  (let [loading? @(rf/subscribe [::notifications/loading? :global])]
+    [:section.section>div.container>div.content
+     (if loading?
+       [notifications/loading-spinner]
+       [:<>
+        [words-filter]
+        [:table.table.is-striped
+         [:thead
+          [:tr
+           [:th "Untranslated"] [:th "Grade 1"] [:th "Grade 2"] [:th "Type"] [:th "Homograph Disambiguation"]]]
+         [:tbody
+          (for [{:keys [uuid]} @(rf/subscribe [::words])]
+            ^{:key uuid} [word uuid])]]])]))
