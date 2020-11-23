@@ -162,10 +162,13 @@
      [:td {:width "8%"} [buttons uuid]]]))
 
 (defn words-page []
-  (let [loading? @(rf/subscribe [::notifications/loading? :global])]
+  (let [loading? @(rf/subscribe [::notifications/loading? :global])
+        errors? @(rf/subscribe [::notifications/errors?])]
     [:section.section>div.container>div.content
-     (if loading?
-       [notifications/loading-spinner]
+     (cond
+       errors? [notifications/error-notification]
+       loading? [notifications/loading-spinner]
+       :else
        [:<>
         [words-filter]
         [:table.table.is-striped

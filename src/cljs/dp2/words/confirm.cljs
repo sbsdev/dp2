@@ -148,10 +148,13 @@
      [:td {:width "8%"} [buttons uuid]]]))
 
 (defn words-page []
-  (let [loading? @(rf/subscribe [::notifications/loading? :confirm])]
+  (let [loading? @(rf/subscribe [::notifications/loading? :confirm])
+        errors? @(rf/subscribe [::notifications/errors?])]
     [:section.section>div.container>div.content
-     (if loading?
-       [notifications/loading-spinner]
+     (cond
+       errors? [notifications/error-notification]
+       loading? [notifications/loading-spinner]
+       :else
        [:table.table.is-striped
         [:thead
          [:tr

@@ -147,9 +147,12 @@
   (let [words @(rf/subscribe [::words])
         spelling (:spelling (first words))
         grade @(rf/subscribe [::grade/grade])
-        loading? @(rf/subscribe [::notifications/loading? :unknown])]
-    (if loading?
-      [notifications/loading-spinner]
+        loading? @(rf/subscribe [::notifications/loading? :unknown])
+        errors? @(rf/subscribe [::notifications/errors?])]
+    (cond
+      errors? [notifications/error-notification]
+      loading? [notifications/loading-spinner]
+      :else
       [:table.table.is-striped
        [:thead
         [:tr
