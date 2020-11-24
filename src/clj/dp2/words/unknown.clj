@@ -1,13 +1,13 @@
 (ns dp2.words.unknown
-  (:require
-   [dp2.db.core :as db]
-   [clojure.set :refer [difference]]
-   [clojure.string :as string]
-   [sigel.xslt.core :as xslt]
-   [sigel.xpath.core :as xpath]
-   [dp2.louis :as louis]
-   [dp2.words :as words]
-   [dp2.hyphenate :as hyphenate]))
+  (:require [clojure.java.io :as io]
+            [clojure.set :refer [difference]]
+            [clojure.string :as string]
+            [dp2.db.core :as db]
+            [dp2.hyphenate :as hyphenate]
+            [dp2.louis :as louis]
+            [dp2.words :as words]
+            [sigel.xpath.core :as xpath]
+            [sigel.xslt.core :as xslt]))
 
 (def compiler
   (-> (xpath/compiler)
@@ -47,13 +47,13 @@
 
 (defn filter-braille
   [xml]
-  (xslt/transform (xslt/compile-xslt "resources/xslt/filter.xsl") xml))
+  (xslt/transform (xslt/compile-xslt (io/resource "xslt/filter.xsl")) xml))
 
 (defn filter-braille-and-names
   [xml]
-  (let [xslt [(xslt/compile-xslt "resources/xslt/filter.xsl")
-              (xslt/compile-xslt "resources/xslt/filter_names.xsl")
-              (xslt/compile-xslt "resources/xslt/to_string.xsl")]]
+  (let [xslt [(xslt/compile-xslt (io/resource "xslt/filter.xsl"))
+              (xslt/compile-xslt (io/resource "xslt/filter_names.xsl"))
+              (xslt/compile-xslt (io/resource "xslt/to_string.xsl"))]]
     (xslt/transform xslt xml)))
 
 (def valid-character-types
