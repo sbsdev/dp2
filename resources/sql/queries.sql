@@ -63,19 +63,28 @@ AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_i
 -- Global Words --
 ------------------
 
--- :name get-global-word :? :*
--- :doc retrieve global words for a given `untranslated`, an optional `grade` and an optional `type`
-SELECT * FROM dictionary_globalword
-WHERE untranslated = :untranslated
---~ (when (:grade params) "AND grade = :grade")
---~ (when (:type params) "AND type = :type")
-
 -- :name find-global-words :? :*
--- :doc retrieve all global words given a simple pattern for `untranslated`, an optional `grade`, an optional `type`, a `limit` and an `offset`
-SELECT * FROM dictionary_globalword
-WHERE untranslated LIKE :untranslated
---~ (when (:grade params) "AND grade = :grade")
---~ (when (:type params) "AND type = :type")
+-- :doc retrieve all global words given a simple pattern for `untranslated`, a `limit` and an `offset`
+(SELECT t1.untranslated, t2.braille as grade1, t1.braille as grade2, t1.type, t1.homograph_disambiguation
+FROM dictionary_globalword t1
+LEFT JOIN dictionary_globalword t2
+ON t1.untranslated = t2.untranslated
+AND t1.type = t2.type
+AND t1.homograph_disambiguation = t2.homograph_disambiguation
+AND t1.grade <> t2.grade
+WHERE t1.untranslated like :untranslated
+AND t1.grade = 2)
+UNION DISTINCT
+(SELECT t1.untranslated, t1.braille as grade1, t2.braille as grade2, t1.type, t1.homograph_disambiguation
+FROM dictionary_globalword t1
+LEFT JOIN dictionary_globalword t2
+ON t1.untranslated = t2.untranslated
+AND t1.type = t2.type
+AND t1.homograph_disambiguation = t2.homograph_disambiguation
+AND t1.grade <> t2.grade
+WHERE t1.untranslated LIKE :untranslated 
+AND t1.grade = 1)
+ORDER BY untranslated
 LIMIT :limit OFFSET :offset
 
 -- :name insert-global-word :! :n

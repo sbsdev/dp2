@@ -92,10 +92,8 @@
     {:swagger {:tags ["Global Words"]}}
 
     [""
-     {:get {:summary "Get global words. Optionally filter the results by using `untranslated`, a `grade`, a `type`,  a `limit` and an `offset`."
+     {:get {:summary "Get global words. Optionally filter the results by using `untranslated`, `limit` and `offset`."
             :parameters {:query {(spec/opt :untranslated) string?
-                                 (spec/opt :grade) int?
-                                 (spec/opt :type) int?
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
             :handler (fn [{{query :query} :parameters}]

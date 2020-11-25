@@ -6,12 +6,10 @@
    [dp2.words :as words]
    [clojure.string :as string]))
 
-(defn get-words [{:keys [untranslated grade type limit offset]
-                  :or {limit 200 offset 0}}]
+(defn get-words [{:keys [untranslated limit offset]
+                  :or {limit 100 offset 0}}]
   (-> (db/find-global-words {:untranslated (if (string/blank? untranslated) "%" untranslated)
-                             :grade grade :type type
-                             :limit limit :offset offset})
-      words/aggregate))
+                             :limit limit :offset offset})))
 
 (def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation])
 

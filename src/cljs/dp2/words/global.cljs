@@ -13,7 +13,8 @@
       {:db (assoc-in db [:loading :global] true)
        :http-xhrio {:method          :get
                     :uri             "/api/words"
-                    :params          {:untranslated (if (string/blank? search) "" (str search "%"))}
+                    :params          {:untranslated (if (string/blank? search) "" (str search "%"))
+                                      :limit 50}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]
                     :on-failure      [::fetch-words-failure :fetch-global-words]}})))
@@ -39,7 +40,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :global id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation]))]
+                      (select-keys [:untranslated :grade-1 :grade-2 :type :homograph-disambiguation]))]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :uri             (str "/api/words")
@@ -52,7 +53,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :global id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation]))]
+                      (select-keys [:untranslated :grade-1 :grade-2 :type :homograph-disambiguation]))]
       {:http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
                     :uri             (str "/api/words")
@@ -155,8 +156,8 @@
   (let [{:keys [uuid untranslated type homograph-disambiguation]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [input-field uuid :grade1 words/braille-valid?]]
-     [:td [input-field uuid :grade2 words/braille-valid?]]
+     [:td [input-field uuid :grade-1 words/braille-valid?]]
+     [:td [input-field uuid :grade-2 words/braille-valid?]]
      [:td {:width "8%"} (get words/type-mapping type "Unknown")]
      [:td {:width "8%"} homograph-disambiguation]
      [:td {:width "8%"} [buttons uuid]]]))
