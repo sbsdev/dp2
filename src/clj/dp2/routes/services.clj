@@ -210,10 +210,7 @@
                                 (spec/opt :offset) int?}}
            :handler (fn [{{{:keys [limit offset]
                             :or {limit default-limit offset 0}} :query} :parameters}]
-                      (ok (->>
-                           (confirm/get-words)
-                           (drop offset)
-                           (take limit))))}
+                      (ok (confirm/get-words limit offset)))}
 
      :put {:summary "Confirm a local word"
            :parameters {:body {:untranslated string? :type int?

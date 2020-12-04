@@ -268,11 +268,38 @@ AND untranslated in (:v*:words))
 -- Confirmable words --
 -----------------------
 
--- :name get-confirmable-words :? :*
--- :doc retrieve local words that are ready for confirmation
-SELECT dict.*, doc.language
-FROM dictionary_localword AS dict,
-     documents_document AS doc
-WHERE dict.isConfirmed = false
-AND dict.document_id = doc.id
-
+-- :name get-confirmable-words-aggregated :? :*
+-- :doc retrieve local words that are ready for confirmation. The words contain braille for both grades and the hyphenation if they exist.
+SELECT words.*, (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling, hyphenation.hyphenation
+FROM
+  (SELECT DISTINCT w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation, w.document_id, BIT_OR(w.isLocal) AS isLocal
+  FROM
+    ((SELECT t1.untranslated, t2.braille as uncontracted, t1.braille as contracted, t1.type, t1.homograph_disambiguation, t1.document_id, IFNULL(t1.isLocal OR t2.isLocal,FALSE) AS isLocal
+      FROM dictionary_localword t1
+      LEFT JOIN dictionary_localword t2
+      ON t1.untranslated = t2.untranslated
+      AND t1.type = t2.type
+      AND t1.homograph_disambiguation = t2.homograph_disambiguation
+      AND t1.grade <> t2.grade
+      WHERE t1.isConfirmed = FALSE
+      AND t1.grade = 2)
+    UNION DISTINCT
+      (SELECT t1.untranslated, t1.braille as uncontracted, t2.braille as contracted, t1.type, t1.homograph_disambiguation, t1.document_id, IFNULL(t1.isLocal OR t2.isLocal,FALSE) AS isLocal
+      FROM dictionary_localword t1
+      LEFT JOIN dictionary_localword t2
+      ON t1.untranslated = t2.untranslated
+      AND t1.type = t2.type
+      AND t1.homograph_disambiguation = t2.homograph_disambiguation
+      AND t1.grade <> t2.grade
+      WHERE t1.isConfirmed = FALSE
+      AND t1.grade = 1)
+    ORDER BY untranslated
+    ) AS w
+  GROUP BY w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation
+  ) AS words
+JOIN documents_document doc ON words.document_id = doc.id
+LEFT JOIN hyphenation_test.words AS hyphenation
+ON words.untranslated = hyphenation.word
+AND hyphenation.spelling = (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END)
+ORDER BY words.untranslated
+LIMIT :limit OFFSET :offset

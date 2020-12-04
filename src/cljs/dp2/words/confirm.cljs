@@ -35,7 +35,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :confirm id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
+                      (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling :islocal]))]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
@@ -50,7 +50,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :confirm id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
+                      (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :delete
@@ -135,13 +135,13 @@
       #_[:span "Delete"]]]))
 
 (defn word [id]
-  (let [{:keys [uuid untranslated type homograph-disambiguation language]} @(rf/subscribe [::word id])]
+  (let [{:keys [uuid untranslated type homograph-disambiguation hyphenated spelling]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [input-field uuid :grade1 words/braille-valid?]]
-     [:td [input-field uuid :grade2 words/braille-valid?]]
-     [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
-     [:td language]
+     [:td [input-field uuid :uncontracted words/braille-valid?]]
+     [:td [input-field uuid :contracted words/braille-valid?]]
+     [:td (when hyphenated [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)])]
+     [:td spelling]
      [:td {:width "8%"} (get words/type-mapping type "Unknown")]
      [:td {:width "8%"} homograph-disambiguation]
      [:td [local-field uuid]]
