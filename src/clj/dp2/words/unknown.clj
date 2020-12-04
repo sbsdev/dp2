@@ -170,8 +170,7 @@
 (defn get-words
   [xml document-id grade]
   (let [document (db/get-document {:id document-id})
-        language (:language document)
-        spelling (words/spelling language)
+        spelling (:spelling document)
         grades (words/grades grade)]
     (->>
      (concat

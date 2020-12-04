@@ -26,17 +26,21 @@ WHERE id = :id
 
 -- :name get-documents :? :*
 -- :doc retrieve all documents given a limit and an offset
-SELECT * FROM documents_document LIMIT :limit OFFSET :offset
+SELECT *, (CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling
+FROM documents_document
+LIMIT :limit OFFSET :offset
 
 -- :name find-documents :? :*
 -- :doc retrieve all documents given a `search` term, a `limit` and an `offset`
-SELECT * FROM documents_document
+SELECT *, (CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling
+FROM documents_document
 WHERE title LIKE :search
 LIMIT :limit OFFSET :offset
 
 -- :name get-document :? :1
 -- :doc retrieve a document record given the `id`
-SELECT * FROM documents_document
+SELECT *, (CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling
+FROM documents_document
 WHERE id = :id
 
 -- :name get-images :? :*

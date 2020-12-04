@@ -11,7 +11,7 @@
 
 (defn get-words [id grade limit offset]
   (let [document (db/get-document {:id id})
-        spelling (words/spelling (:language document))
+        spelling (:spelling document)
         words (if (= grade 0)
                 (db/get-local-words-aggregated {:id id :limit limit :offset offset})
                 (db/get-local-words {:id id :grade grade :limit limit :offset offset}))
