@@ -69,7 +69,8 @@
             :parameters {:query {(spec/opt :search) string?
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
-            :handler (fn [{{{:keys [limit offset search] :or {limit 200 offset 0}} :query} :parameters}]
+            :handler (fn [{{{:keys [limit offset search]
+                             :or {limit default-limit offset 0}} :query} :parameters}]
                        (ok (if (blank? search)
                              (db/get-documents {:limit limit :offset offset})
                              (db/find-documents {:limit limit :offset offset :search search}))))}}]
@@ -208,7 +209,7 @@
            :parameters {:query {(spec/opt :limit) int?
                                 (spec/opt :offset) int?}}
            :handler (fn [{{{:keys [limit offset]
-                            :or {limit 200 offset 0}} :query} :parameters}]
+                            :or {limit default-limit offset 0}} :query} :parameters}]
                       (ok (->>
                            (confirm/get-words)
                            (drop offset)
@@ -235,7 +236,7 @@
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
             :handler (fn [{{{:keys [spelling search limit offset]
-                             :or {limit 200 offset 0}} :query} :parameters}]
+                             :or {limit default-limit offset 0}} :query} :parameters}]
                        (ok (db/get-hyphenation {:spelling spelling :search search
                                                 :limit limit :offset offset})))}
 
