@@ -3,28 +3,20 @@
             [dp2.hyphenate :as hyphenate]
             [dp2.words :as words]))
 
-(defn get-words [id grade]
+(defn- add-suggested-hyphenation-maybe [word spelling]
+  (cond-> word
+    (nil? (:hyphenated word)) (assoc
+                               :hyphenated (hyphenate/hyphenate (:untranslated word) spelling)
+                               :spelling spelling)))
+
+(defn get-words [id grade limit offset]
   (let [document (db/get-document {:id id})
         spelling (words/spelling (:language document))
-        grades (words/grades grade)
-        words (mapcat #(db/get-local-words {:id id :grade %}) grades)
-        words (words/aggregate words)
-        untranslated (map :untranslated words)
-        approved-hyphenations (->>
-                               (db/get-hyphenations-in
-                                {:spelling spelling :words untranslated})
-                               (map (juxt :word :hyphenation))
-                               (into {}))
-        suggested-hyphenations (map (fn [word] (hyphenate/hyphenate word spelling)) untranslated)]
-    (map (fn [word suggested]
-           ;; add the hyphenation to the word. If no hyphenation is
-           ;; given in the hyphenation database, i.e. in the approved
-           ;; hyphenations then just use the suggestion given by
-           ;; libhyphen
-           (assoc word
-                  :hyphenated (or (get approved-hyphenations word) suggested)
-                  :spelling spelling))
-         words suggested-hyphenations)))
+        words (if (= grade 0)
+                (db/get-local-words-aggregated {:id id :limit limit :offset offset})
+                (db/get-local-words {:id id :grade grade :limit limit :offset offset}))
+        untranslated (map :untranslated words)]
+    (map #(add-suggested-hyphenation-maybe % spelling) words)))
 
 (defn put-word
   "Persist a `word` in the db. Upsert all braille translations and the

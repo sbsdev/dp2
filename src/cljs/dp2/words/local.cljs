@@ -40,7 +40,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :local id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
+                      (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :islocal :hyphenated :spelling]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :put
@@ -55,7 +55,7 @@
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :local id])
           cleaned (-> word
-                      (select-keys [:untranslated :grade1 :grade2 :type :homograph-disambiguation
+                      (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling]))
           document-id (:document-id word)]
       {:http-xhrio {:method          :delete
@@ -136,16 +136,16 @@
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])
-        {:keys [uuid untranslated grade1 grade2 type homograph-disambiguation]} @(rf/subscribe [::word id])]
+        {:keys [uuid untranslated uncontracted contracted type homograph-disambiguation]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
      (when (#{0 1} grade)
-       (if grade1
-         [:td [input-field uuid :grade1 words/braille-valid?]]
+       (if uncontracted
+         [:td [input-field uuid :uncontracted words/braille-valid?]]
          [:td]))
      (when (#{0 2} grade)
-       (if grade2
-         [:td [input-field uuid :grade2 words/braille-valid?]]
+       (if contracted
+         [:td [input-field uuid :contracted words/braille-valid?]]
          [:td]))
      [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
      [:td {:width "8%"} (get words/type-mapping type "Unknown")]

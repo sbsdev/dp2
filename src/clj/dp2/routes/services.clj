@@ -23,6 +23,8 @@
 
 (s/def ::grade (s/and int? #(<= 0 % 2)))
 
+(def default-limit 100)
+
 (defn service-routes []
   ["/api"
    {:coercion spec-coercion/coercion
@@ -137,9 +139,13 @@
      {:swagger {:tags ["Local Words"]}
       :get {:summary "Get all local words for a given document"
             :parameters {:path {:id int?}
-                         :query {(spec/opt :grade) ::grade}}
-            :handler (fn [{{{:keys [id]} :path {:keys [grade]} :query} :parameters}]
-                       (if-let [words (local/get-words id grade)]
+                         :query {(spec/opt :grade) ::grade
+                                 (spec/opt :limit) int?
+                                 (spec/opt :offset) int?}}
+            :handler (fn [{{{:keys [id]} :path
+                            {:keys [grade limit offset]
+                             :or {limit default-limit offset 0}} :query} :parameters}]
+                       (if-let [words (local/get-words id grade limit offset)]
                          (ok words)
                          (not-found)))}
 
