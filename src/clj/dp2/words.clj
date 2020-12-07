@@ -64,7 +64,8 @@
                 ;; we assume that if any of the grades are local then
                 ;; the whole word is local
                 (update :islocal #(or %1 %2) islocal)))
-          {} words))
+          {:contracted nil :uncontracted nil}
+          words))
 
 (defn aggregate
   "Given a seq of `words` with distinct entries for each `:untranslated`
