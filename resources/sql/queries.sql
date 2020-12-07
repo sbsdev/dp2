@@ -122,7 +122,7 @@ SELECT words.untranslated,
        IF(:grade = 2, words.braille, NULL) AS contracted,
        words.type, words.homograph_disambiguation, words.document_id, words.isLocal,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = 644) AS spelling,
-       hyphenation.hyphenation
+       hyphenation.hyphenation AS hyphenated
 FROM dictionary_localword words
 LEFT JOIN hyphenation_test.words AS hyphenation
 ON words.untranslated = hyphenation.word
@@ -138,7 +138,9 @@ LIMIT :limit OFFSET :offset
 
 -- :name get-local-words-aggregated :? :*
 -- :doc retrieve aggregated local words for a given document `id`. The words contain braille for both grades and the hyphenation if they exist.
-SELECT words.*, (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :id) AS spelling, hyphenation.hyphenation
+SELECT words.*,
+       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :id) AS spelling,
+       hyphenation.hyphenation AS hyphenated
 FROM
   (SELECT DISTINCT w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation, w.document_id, BIT_OR(w.isLocal) AS isLocal
   FROM
@@ -274,7 +276,9 @@ AND untranslated in (:v*:words))
 
 -- :name get-confirmable-words-aggregated :? :*
 -- :doc retrieve local words that are ready for confirmation. The words contain braille for both grades and the hyphenation if they exist.
-SELECT words.*, (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling, hyphenation.hyphenation
+SELECT words.*,
+       (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling,
+       hyphenation.hyphenation AS hyphenated
 FROM
   (SELECT DISTINCT w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation, w.document_id, BIT_OR(w.isLocal) AS isLocal
   FROM
