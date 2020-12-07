@@ -105,8 +105,8 @@
       :put {:summary "Update or create a global word"
             :parameters {:body {:untranslated string?
                                 :type int?
-                                (spec/opt :grade1) string?
-                                (spec/opt :grade2) string?
+                                :uncontracted (spec/maybe string?)
+                                :contracted (spec/maybe string?)
                                 :homograph-disambiguation string?}}
             :handler (fn [{{word :body} :parameters}]
                        (global/put-word word)
@@ -115,8 +115,8 @@
       :delete {:summary "Delete a global word"
                :parameters {:body {:untranslated string?
                                    :type int?
-                                   (spec/opt :grade1) string?
-                                   (spec/opt :grade2) string?
+                                   :uncontracted (spec/maybe string?)
+                                   :contracted (spec/maybe string?)
                                    :homograph-disambiguation string?}}
                :handler (fn [{{word :body} :parameters}]
                           (let [deleted (global/delete-word word)]
@@ -152,8 +152,8 @@
 
       :put {:summary "Update or create a local word for a given document"
             :parameters {:body {:untranslated string? :type int?
-                                (spec/opt :grade1) string?
-                                (spec/opt :grade2) string?
+                                :uncontracted (spec/maybe string?)
+                                :contracted (spec/maybe string?)
                                 :homograph-disambiguation string?
                                 :document-id int? :islocal boolean?
                                 :hyphenated string? :spelling int?}}
@@ -163,8 +163,8 @@
 
       :delete {:summary "Delete a local word for a given document"
                :parameters {:body {:untranslated string? :type int?
-                                   (spec/opt :grade1) string?
-                                   (spec/opt :grade2) string?
+                                   :uncontracted (spec/maybe string?)
+                                   :contracted (spec/maybe string?)
                                    :homograph-disambiguation string?
                                    :document-id int?
                                    :hyphenated string? :spelling int?}}
@@ -214,8 +214,8 @@
 
      :put {:summary "Confirm a local word"
            :parameters {:body {:untranslated string? :type int?
-                               (spec/opt :grade1) string?
-                               (spec/opt :grade2) string?
+                               :uncontracted (spec/maybe string?)
+                               :contracted (spec/maybe string?)
                                :homograph-disambiguation string?
                                :document-id int? :islocal boolean?
                                :hyphenated string? :spelling int?}}

@@ -29,9 +29,9 @@
        (some? (re-matches #"[a-z\xC0-\xFF\u0100-\u017F-]+" hyphenation))))
 
 (defn valid?
-  [{:keys [grade1 grade2 hyphenated untranslated]}]
-  (and (or (nil? grade1) (braille-valid? grade1))
-       (or (nil? grade2) (braille-valid? grade2))
+  [{:keys [uncontracted contracted hyphenated untranslated]}]
+  (and (or (nil? uncontracted) (braille-valid? uncontracted))
+       (or (nil? contracted) (braille-valid? contracted))
        (or (nil? hyphenated) (hyphenation-valid? hyphenated untranslated))))
 
 (defn spelling-string [spelling]

@@ -30,11 +30,11 @@
       vals first))
 
 (defn delete-word
-  "Remove a `word` from the db. If the word contains `:grade1` remove
-  the db record for `:grade` 1 and likewise if the word contains
-  `:grade2`. If there are no more braille translations for this word
-  then it is also removed from the hyphenations db. Returns the number
-  of deletions."
+  "Remove a `word` from the db. If the word contains `:uncontracted`
+  remove the db record for `:grade` 1 and likewise if the word
+  contains `:contracted`. If there are no more braille translations
+  for this word then it is also removed from the hyphenations db.
+  Returns the number of deletions."
   [word]
   (let [deletions
         (->> word
