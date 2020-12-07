@@ -85,8 +85,12 @@
 
     ["/:id/images"
      {:get {:summary "Get all images for a given document"
-            :parameters {:path {:id int?}}
-            :handler (fn [{{{:keys [id]} :path} :parameters}]
+            :parameters {:path {:id int?}
+                         :query {(spec/opt :limit) int?
+                                 (spec/opt :offset) int?}}
+            :handler (fn [{{{:keys [id]} :path
+                            {:keys [limit offset]
+                             :or {limit default-limit offset 0}} :query} :parameters}]
                        (if-let [doc (db/get-images {:id id})]
                          (ok doc)
                          (not-found)))}}]]
@@ -99,8 +103,9 @@
             :parameters {:query {(spec/opt :untranslated) string?
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
-            :handler (fn [{{query :query} :parameters}]
-                       (ok (global/get-words query)))}
+            :handler (fn [{{{:keys [untranslated limit offset]
+                             :or {limit default-limit offset 0}} :query} :parameters}]
+                       (ok (global/get-words {:untranslated untranslated :limit limit :offset offset})))}
 
       :put {:summary "Update or create a global word"
             :parameters {:body {:untranslated string?
@@ -127,10 +132,12 @@
     ["/:untranslated"
      {:get {:summary "Get global words by untranslated"
             :parameters {:path {:untranslated string?}
-                         :query {(spec/opt :grade) int?
-                                 (spec/opt :type) int?}}
-            :handler (fn [{{{:keys [untranslated]} :path {:keys [grade type]} :query} :parameters}]
-                       (if-let [words (not-empty (global/get-words {:untranslated untranslated :grade grade :type type}))]
+                         :query {(spec/opt :limit) int?
+                                 (spec/opt :offset) int?}}
+            :handler (fn [{{{:keys [untranslated]} :path
+                            {:keys [limit offset]
+                             :or {limit default-limit offset 0}} :query} :parameters}]
+                       (if-let [words (not-empty (global/get-words {:untranslated untranslated :limit limit :offset offset}))]
                          (ok words)
                          (not-found)))}}]]
 
