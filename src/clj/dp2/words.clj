@@ -1,8 +1,28 @@
 (ns dp2.words
-  (:require [clojure.set :refer [rename-keys]]))
+  (:require [clojure.set :refer [rename-keys]]
+            [clojure.string :as string]
+            [dp2.hyphenate :as hyphenate]
+            [dp2.louis :as louis]))
 
 (defn name? [type] (#{1 2} type))
 (defn place? [type] (#{3 4} type))
+
+(defn suggested-hyphenation [{:keys [untranslated spelling]}]
+  (when-not (string/includes? untranslated "'")
+    (hyphenate/hyphenate untranslated spelling)))
+
+(defn complement-hyphenation [{:keys [hyphenated] :as word}]
+  (let [hyphenation (suggested-hyphenation word)]
+    (cond-> word
+      (and (nil? hyphenated) hyphenation) (assoc :hyphenated hyphenation))))
+
+(defn complement-braille [{:keys [untranslated uncontracted contracted type] :as word}]
+  (let [params {:name (name? type) :place (place? type)}]
+    (cond-> word
+      (nil? uncontracted)
+      (assoc :uncontracted (louis/translate untranslated (louis/get-tables 1 params)))
+      (nil? contracted)
+      (assoc :contracted (louis/translate untranslated (louis/get-tables 2 params))))))
 
 (defn grades [grade]
   (case grade ; convert grade into a list of grades

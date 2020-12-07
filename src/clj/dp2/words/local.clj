@@ -3,20 +3,13 @@
             [dp2.hyphenate :as hyphenate]
             [dp2.words :as words]))
 
-(defn- add-suggested-hyphenation-maybe [word spelling]
-  (cond-> word
-    (nil? (:hyphenated word)) (assoc
-                               :hyphenated (hyphenate/hyphenate (:untranslated word) spelling)
-                               :spelling spelling)))
-
 (defn get-words [id grade limit offset]
   (let [document (db/get-document {:id id})
         spelling (:spelling document)
         words (if (= grade 0)
                 (db/get-local-words-aggregated {:id id :limit limit :offset offset})
-                (db/get-local-words {:id id :grade grade :limit limit :offset offset}))
-        untranslated (map :untranslated words)]
-    (map #(add-suggested-hyphenation-maybe % spelling) words)))
+                (db/get-local-words {:id id :grade grade :limit limit :offset offset}))]
+    (map words/complement-hyphenation words)))
 
 (defn put-word
   "Persist a `word` in the db. Upsert all braille translations and the
