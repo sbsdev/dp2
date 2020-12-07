@@ -206,6 +206,10 @@ AND grade = :grade
 AND homograph_disambiguation = :homograph_disambiguation
 AND document_id = :document_id
 
+-------------------
+-- Unknown words --
+-------------------
+
 -- :name get-all-known-homographs :? :*
 -- :doc given a list of `words` retrieve all (locally and globally) known homographs for a given `document_id`, `grade`
 (SELECT homograph_disambiguation
