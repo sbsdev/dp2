@@ -142,13 +142,15 @@
 (defn buttons [id]
   (let [valid? @(rf/subscribe [::valid? id])]
     [:div.buttons.has-addons
-     [:button.button.is-success
+     [:button.button.is-success.has-tooltip-arrow
       {:disabled (not valid?)
+       :data-tooltip "Save"
        :on-click (fn [e] (rf/dispatch [::save-word id]))}
       [:span.icon [:i.mi.mi-done]]
       #_[:span "Approve"]]
-     [:button.button.is-danger
-      {:on-click (fn [e] (rf/dispatch [::delete-word id]))}
+     [:button.button.is-danger.has-tooltip-arrow
+      {:data-tooltip "Delete"
+       :on-click (fn [e] (rf/dispatch [::delete-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Delete"]]]))
 
