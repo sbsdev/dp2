@@ -25,7 +25,7 @@
 (defn loading-spinner []
   [:div.block
    [:p.has-text-centered.has-text-weight-semibold "Loading..."]
-   [:button.button.is-large.is-fullwidth.is-dark.is-loading "Loading..."]])
+   [:button.button.is-large.is-fullwidth.is-loading "Loading..."]])
 
 (defn error-notification []
   (let [errors @(rf/subscribe [::errors])]
