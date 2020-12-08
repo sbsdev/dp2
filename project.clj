@@ -34,6 +34,7 @@
                  [org.clojure/clojurescript "1.10.773" :scope "provided"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
+                 [org.clojars.pntblnk/clj-ldap "0.0.17"]
                  [org.webjars.npm/bulma "0.9.0"]
                  [org.webjars.npm/creativebulma__bulma-tooltip "1.0.2"]
                  [org.webjars.npm/material-icons "0.3.1"]
