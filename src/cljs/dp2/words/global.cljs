@@ -1,10 +1,10 @@
 (ns dp2.words.global
-  (:require
-    [re-frame.core :as rf]
-    [ajax.core :as ajax]
-    [dp2.words :as words]
-    [dp2.words.notifications :as notifications]
-    [clojure.string :as string]))
+  (:require [ajax.core :as ajax]
+            [clojure.string :as string]
+            [dp2.validation :as validation]
+            [dp2.words :as words]
+            [dp2.words.notifications :as notifications]
+            [re-frame.core :as rf]))
 
 (rf/reg-event-fx
   ::fetch-words
@@ -118,7 +118,7 @@
 (rf/reg-sub
  ::valid?
  (fn [db [_ id]]
-   (words/valid? (get-in db [:words :global id]))))
+   (validation/word-valid? (get-in db [:words :global id]))))
 
 (defn input-field [id field-id validator]
   (let [initial-value @(rf/subscribe [::word-field id field-id])
@@ -158,8 +158,8 @@
   (let [{:keys [uuid untranslated type homograph-disambiguation]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [input-field uuid :uncontracted words/braille-valid?]]
-     [:td [input-field uuid :contracted words/braille-valid?]]
+     [:td [input-field uuid :uncontracted validation/braille-valid?]]
+     [:td [input-field uuid :contracted validation/braille-valid?]]
      [:td {:width "8%"} (get words/type-mapping type "Unknown")]
      [:td {:width "8%"} homograph-disambiguation]
      [:td {:width "8%"} [buttons uuid]]]))

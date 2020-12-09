@@ -1,11 +1,10 @@
 (ns dp2.words.unknown
-  (:require
-   [re-frame.core :as rf]
-   [clojure.string :as string]
-   [ajax.core :as ajax]
-   [dp2.words :as words]
-   [dp2.words.grade :as grade]
-   [dp2.words.notifications :as notifications]))
+  (:require [ajax.core :as ajax]
+            [dp2.validation :as validation]
+            [dp2.words :as words]
+            [dp2.words.grade :as grade]
+            [dp2.words.notifications :as notifications]
+            [re-frame.core :as rf]))
 
 (rf/reg-event-fx
   ::fetch-words
@@ -84,7 +83,7 @@
 (rf/reg-sub
  ::valid?
  (fn [db [_ id]]
-   (words/valid? (get-in db [:words :unknown id]))))
+   (validation/word-valid? (get-in db [:words :unknown id]))))
 
 (defn input-field [id field-id validator]
   (let [initial-value @(rf/subscribe [::word-field id field-id])
@@ -133,13 +132,13 @@
      [:td untranslated]
      (when (#{0 1} grade)
        (if uncontracted
-         [:td [input-field uuid :uncontracted words/braille-valid?]]
+         [:td [input-field uuid :uncontracted validation/braille-valid?]]
          [:td]))
      (when (#{0 2} grade)
        (if contracted
-         [:td [input-field uuid :contracted words/braille-valid?]]
+         [:td [input-field uuid :contracted validation/braille-valid?]]
          [:td]))
-     [:td [input-field uuid :hyphenated #(words/hyphenation-valid? % untranslated)]]
+     [:td [input-field uuid :hyphenated #(validation/hyphenation-valid? % untranslated)]]
      [:td {:width "8%"} (get words/type-mapping type "Unknown")]
      [:td {:width "8%"} homograph-disambiguation]
      [:td [local-field uuid]]
