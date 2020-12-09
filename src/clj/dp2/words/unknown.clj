@@ -69,7 +69,7 @@
   (->>
    (sequence text)
    ;; drop everything that is not a letter, space or punctuation
-   (filter valid-char?)
+   (map #(if (valid-char? %) % " "))
    (string/join)))
 
 (defn- extract-xpath [xml xpath]
