@@ -87,6 +87,25 @@
 (defn extract-places [xml]
   (extract-xpath xml "//brl:place/text()"))
 
+(def dummy-text "┊")
+
+(def ellipsis-re #"(?U)\.{3}[\p{Alpha}']{2,}|[\p{Alpha}']{2,}\.{3}")
+
+(defn extract-special-words [xml re to-replace]
+  (->> xml
+   str
+   (re-seq re)
+   (map string/lower-case)
+   (map #(string/replace % to-replace dummy-text))))
+
+(defn extract-ellipsis-words [xml]
+  (extract-special-words xml ellipsis-re "..."))
+
+(def supplement-hyphen-re #"(?U)\B-[\w']{2,}|[\w']{2,}-\B")
+
+(defn extract-hyphen-words [xml]
+  (extract-special-words xml supplement-hyphen-re "-"))
+
 (defn extract-words [xml]
   (->>
    (string/split (filter-text (str xml)) #"(?U)\W")
@@ -180,4 +199,3 @@
       (get-plain xml document-id grades spelling))
      words/aggregate
      (sort-by :untranslated))))
-
