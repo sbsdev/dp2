@@ -106,6 +106,11 @@
 (defn extract-hyphen-words [xml]
   (extract-special-words xml supplement-hyphen-re "-"))
 
+(defn filter-special-words [text]
+  (-> text
+      (string/replace ellipsis-re "")
+      (string/replace supplement-hyphen-re "")))
+
 (defn extract-words [xml]
   (->>
    (string/split (filter-text (str xml)) #"(?U)\W")
