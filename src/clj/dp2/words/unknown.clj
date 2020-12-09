@@ -112,12 +112,16 @@
       (string/replace supplement-hyphen-re "")))
 
 (defn extract-words [xml]
-  (->>
-   (string/split (filter-text (str xml)) #"(?U)\W")
-   ;; drop words shorter than 3 chars
-   (remove (fn [word] (< (count word) 3)))
-   (map string/lower-case)
-   set))
+  (-> xml
+   str
+   filter-special-words
+   filter-text
+   (string/split #"(?U)\W")
+   (->>
+    ;; drop words shorter than 3 chars
+    (remove (fn [word] (< (count word) 3)))
+    (map string/lower-case)
+    set)))
 
 (defn embellish-words [words document-id grade type spelling]
   (let [template {:document-id document-id
