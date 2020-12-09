@@ -1,14 +1,14 @@
 (ns dp2.words
   (:require [clojure.set :refer [rename-keys]]
-            [clojure.string :as string]
             [dp2.hyphenate :as hyphenate]
-            [dp2.louis :as louis]))
+            [dp2.louis :as louis]
+            [dp2.validation :as validation]))
 
 (defn name? [type] (#{1 2} type))
 (defn place? [type] (#{3 4} type))
 
 (defn suggested-hyphenation [{:keys [untranslated spelling]}]
-  (when-not (string/includes? untranslated "'")
+  (when (re-matches validation/valid-hyphenation-re untranslated)
     (hyphenate/hyphenate untranslated spelling)))
 
 (defn complement-hyphenation [{:keys [hyphenated] :as word}]
