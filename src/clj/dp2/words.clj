@@ -64,12 +64,13 @@
   which will be merged to `:uncontracted` or `:contracted`, depending
   on the grade of the original words."
   [words]
-  (reduce (fn [m {:keys [grade braille islocal] :as word}]
+  (reduce (fn [m {:keys [grade uncontracted contracted islocal] :as word}]
             (-> m
                 ;; Merge everything but grade, braille and islocal.
                 ;; These will be added separately
                 (merge (dissoc word :grade :braille :islocal))
-                (assoc (get grade-to-keyword grade) braille)
+                (assoc (get grade-to-keyword grade)
+                       (case grade 1 uncontracted 2 contracted))
                 ;; we assume that if any of the grades are local then
                 ;; the whole word is local
                 (update :islocal #(or %1 %2) islocal)))
