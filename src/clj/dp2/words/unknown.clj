@@ -128,7 +128,7 @@
     (map string/lower-case)
     set)))
 
-(defn embellish-words [words document-id grade type spelling]
+(defn complement-words [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
                   :grade grade
@@ -140,7 +140,7 @@
          (map words/complement-braille)
          (map words/complement-hyphenation))))
 
-(defn embellish-homograph [words document-id grade type spelling]
+(defn complement-homograph [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
                   :grade grade
@@ -159,7 +159,7 @@
     (mapcat (fn [grade]
               (-> words
                   (compare-with-known-names document-id grade)
-                  (embellish-words document-id grade 1 spelling)))
+                  (complement-words document-id grade 1 spelling)))
             grades)))
 
 (defn get-places
@@ -168,7 +168,7 @@
     (mapcat (fn [grade]
               (-> words
                   (compare-with-known-places document-id grade)
-                  (embellish-words document-id grade 3 spelling)))
+                  (complement-words document-id grade 3 spelling)))
             grades)))
 
 (defn get-homographs
@@ -177,7 +177,7 @@
     (mapcat (fn [grade]
               (-> words
                   (compare-with-known-homographs document-id grade)
-                  (embellish-homograph document-id grade 5 spelling)))
+                  (complement-homograph document-id grade 5 spelling)))
             grades)))
 
 (defn get-plain
@@ -188,7 +188,7 @@
     (mapcat (fn [grade]
               (-> (union plain-words special-words)
                   (compare-with-known-words document-id grade)
-                  (embellish-words document-id grade 0 spelling)))
+                  (complement-words document-id grade 0 spelling)))
             grades)))
 
 (defn get-words
