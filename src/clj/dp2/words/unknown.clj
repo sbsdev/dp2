@@ -184,9 +184,10 @@
   [xml document-id grades spelling]
   (let [filtered (-> xml filter-braille-and-names)
         special-words (-> filtered extract-special-words)
-        plain-words (-> filtered filter-special-words extract-words)]
+        plain-words (-> filtered filter-special-words extract-words)
+        all-words (union plain-words special-words)]
     (mapcat (fn [grade]
-              (-> (union plain-words special-words)
+              (-> all-words
                   (compare-with-known-words document-id grade)
                   (complement-words document-id grade 0 spelling)))
             grades)))
