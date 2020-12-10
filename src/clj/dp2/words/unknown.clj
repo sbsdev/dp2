@@ -134,35 +134,24 @@
                   :grade grade
                   :homograph-disambiguation ""
                   :spelling spelling
-                  :islocal false}
-        tables (louis/get-tables grade {:name (words/name? type) :place (words/place? type)})
-        brailles (map #(louis/translate % tables) words)
-        hyphenations (map #(hyphenate/hyphenate % spelling) words)]
-    (map (fn [untranslated braille hyphenated]
-           (assoc template
-                  :untranslated untranslated
-                  :braille braille
-                  :hyphenated hyphenated))
-         words brailles hyphenations)))
+                  :islocal false}]
+    (->> words
+         (map #(assoc template :untranslated %))
+         (map words/complement-braille)
+         (map words/complement-hyphenation))))
 
 (defn embellish-homograph [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
                   :grade grade
                   :spelling spelling
-                  :islocal false}
-        untranslated (map #(string/replace % "|" "") words)
-        hyphenations (map #(hyphenate/hyphenate % spelling) untranslated)
-        tables (louis/get-tables grade)
-        brailles (map #(louis/translate (string/replace % "|" "┊") tables) words)]
-
-    (map (fn [untranslated braille hyphenated homograph]
-           (assoc template
-                  :untranslated untranslated
-                  :braille braille
-                  :hyphenated hyphenated
-                  :homograph-disambiguation homograph))
-         untranslated brailles hyphenations words)))
+                  :islocal false}]
+    (->> words
+         (map #(assoc template
+                      :homograph-disambiguation %
+                      :untranslated (string/replace % "|" "")))
+         (map words/complement-braille)
+         (map words/complement-hyphenation))))
 
 (defn get-names
   [xml document-id grades spelling]
