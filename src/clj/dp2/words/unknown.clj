@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.set :refer [difference]]
             [clojure.string :as string]
+            [clojure.set :refer [union]]
             [dp2.db.core :as db]
             [dp2.hyphenate :as hyphenate]
             [dp2.louis :as louis]
@@ -108,7 +109,7 @@
   (extract-re xml supplement-hyphen-re "-"))
 
 (defn extract-special-words [xml]
-  (conj
+  (union
    (extract-ellipsis-words xml)
    (extract-hyphen-words xml)))
 
@@ -198,7 +199,7 @@
         special-words (extract-special-words filtered)
         plain-words (-> filtered filter-special-words extract-words)]
     (mapcat (fn [grade]
-              (-> (conj plain-words special-words)
+              (-> (union plain-words special-words)
                   (compare-with-known-words document-id grade)
                   (embellish-words document-id grade 0 spelling)))
             grades)))
