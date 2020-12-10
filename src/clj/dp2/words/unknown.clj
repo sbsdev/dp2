@@ -195,8 +195,8 @@
 
 (defn get-plain
   [xml document-id grades spelling]
-  (let [filtered (-> xml filter-braille-and-names extract-words)
-        special-words (extract-special-words filtered)
+  (let [filtered (-> xml filter-braille-and-names)
+        special-words (-> filtered extract-special-words)
         plain-words (-> filtered filter-special-words extract-words)]
     (mapcat (fn [grade]
               (-> (union plain-words special-words)
