@@ -1,5 +1,6 @@
 (ns dp2.words
   (:require [clojure.set :refer [rename-keys]]
+            [clojure.string :as string]
             [dp2.hyphenate :as hyphenate]
             [dp2.louis :as louis]
             [dp2.validation :as validation]))
@@ -16,8 +17,16 @@
     (cond-> word
       (and (nil? hyphenated) hyphenation) (assoc :hyphenated hyphenation))))
 
-(defn complement-braille [{:keys [untranslated uncontracted contracted type] :as word}]
-  (let [params {:name (name? type) :place (place? type)}]
+(def braille-dummy-text "┊")
+
+(defn complement-braille
+  [{:keys [untranslated uncontracted contracted type homograph-disambiguation] :as word}]
+  (let [params {:name (name? type) :place (place? type)}
+        ;; for homographs we have to use the homograph-disambiguation
+        ;; to get the braille
+        untranslated (if (string/blank? homograph-disambiguation)
+                       untranslated
+                       (string/replace homograph-disambiguation "|" braille-dummy-text))]
     (cond-> word
       (nil? uncontracted)
       (assoc :uncontracted (louis/translate untranslated (louis/get-tables 1 params)))

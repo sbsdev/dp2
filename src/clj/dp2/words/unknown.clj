@@ -88,8 +88,6 @@
 (defn extract-places [xml]
   (extract-xpath xml "//brl:place/text()"))
 
-(def dummy-text "┊")
-
 (def ellipsis-re #"(?U)\.{3}[\p{Alpha}']{2,}|[\p{Alpha}']{2,}\.{3}")
 
 (defn extract-re [xml re to-replace]
@@ -97,7 +95,7 @@
    str
    (re-seq re)
    (map string/lower-case)
-   (map #(string/replace % to-replace dummy-text))
+   (map #(string/replace % to-replace words/braille-dummy-text))
    set))
 
 (defn extract-ellipsis-words [xml]
