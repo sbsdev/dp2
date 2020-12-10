@@ -91,20 +91,26 @@
 
 (def ellipsis-re #"(?U)\.{3}[\p{Alpha}']{2,}|[\p{Alpha}']{2,}\.{3}")
 
-(defn extract-special-words [xml re to-replace]
+(defn extract-re [xml re to-replace]
   (->> xml
    str
    (re-seq re)
    (map string/lower-case)
-   (map #(string/replace % to-replace dummy-text))))
+   (map #(string/replace % to-replace dummy-text))
+   set))
 
 (defn extract-ellipsis-words [xml]
-  (extract-special-words xml ellipsis-re "..."))
+  (extract-re xml ellipsis-re "..."))
 
 (def supplement-hyphen-re #"(?U)\B-[\w']{2,}|[\w']{2,}-\B")
 
 (defn extract-hyphen-words [xml]
-  (extract-special-words xml supplement-hyphen-re "-"))
+  (extract-re xml supplement-hyphen-re "-"))
+
+(defn extract-special-words [xml]
+  (conj
+   (extract-ellipsis-words xml)
+   (extract-hyphen-words xml)))
 
 (defn filter-special-words [text]
   (-> text
