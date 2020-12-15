@@ -147,7 +147,7 @@
      {:swagger {:tags ["Local Words"]}
       :get {:summary "Get all local words for a given document"
             :parameters {:path {:id int?}
-                         :query {(spec/opt :grade) ::grade
+                         :query {:grade ::grade
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
             :handler (fn [{{{:keys [id]} :path
