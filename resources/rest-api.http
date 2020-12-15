@@ -1,13 +1,14 @@
 # -*- mode: restclient; -*-
 
-# Ping
-GET http://localhost:3000/api/ping
+#############
+# Documents #
+#############
 
 # Get many documents
 GET http://localhost:3000/api/documents
 
 # Search documents by name (starting with "wo")
-GET http://localhost:3000/api/documents?search=wo%25
+GET http://localhost:3000/api/documents?search=weit%25
 
 # Get documents with a limit
 GET http://localhost:3000/api/documents?limit=1
@@ -18,33 +19,52 @@ GET http://localhost:3000/api/documents?limit=1&offset=5
 # Get a document
 GET http://localhost:3000/api/documents/644
 
+################
+# Global words #
+################
+
 # Get global words
 GET http://localhost:3000/api/words/foo
+
+# Add a global word
+PUT http://localhost:3000/api/words
+Content-Type: application/json
+{
+  "untranslated": "hilabulaterobas",
+  "uncontracted": "HILA",
+  "contracted": "H4LA",
+  "type": 0,
+  "homograph-disambiguation": ""
+}
 
 # Delete a global word
 DELETE http://localhost:3000/api/words
 Content-Type: application/json
 {
   "untranslated": "hilabulaterobas",
-  "grade1": "HILA",
-  "grade2": "H4LA",
+  "uncontracted": "HILA",
+  "contracted": "H4LA",
   "type": 0,
   "homograph-disambiguation": ""
 }
 
+###############
+# Local words #
+###############
+
 # Get local words
-GET http://localhost:3000/api/documents/644/words
+GET http://localhost:3000/api/documents/644/words?grade=1
 
 # Check a document for unknown words
-GET http://localhost:3000/api/documents/644/check-words
+GET http://localhost:3000/api/documents/644/unknown-words?grade=1
 
 # Add a local word
 PUT http://localhost:3000/api/documents/644/words
 Content-Type: application/json
 {
   "untranslated": "hilabulaterobas",
-  "grade1": "HILA",
-  "grade2": "H4LA",
+  "uncontracted": "HILA",
+  "contracted": "H4LA",
   "hyphenated": "hila-bula-tero-bas",
   "spelling": 1,
   "type": 0,
@@ -58,8 +78,8 @@ DELETE http://localhost:3000/api/documents/644/words
 Content-Type: application/json
 {
   "untranslated": "hilabulaterobas",
-  "grade1": "HILA",
-  "grade2": "H4LA",
+  "uncontracted": "HILA",
+  "contracted": "H4LA",
   "hyphenated": "hila-bula-tero-bas",
   "spelling": 1,
   "type": 0,
@@ -77,8 +97,8 @@ PUT http://localhost:3000/api/confirmable
 Content-Type: application/json
 {
   "untranslated": "hilabulaterobas",
-  "grade1": "HILA",
-  "grade2": "H4LA",
+  "uncontracted": "HILA",
+  "contracted": "H4LA",
   "hyphenated": "hila-bula-tero-bas",
   "spelling": 1,
   "type": 0,
@@ -92,8 +112,8 @@ PUT http://localhost:3000/api/confirmable
 Content-Type: application/json
 {
   "untranslated": "hilabulaterobas",
-  "grade1": "HILA",
-  "grade2": "H4LA",
+  "uncontracted": "HILA",
+  "contracted": "H4LA",
   "hyphenated": "hila-bula-tero-bas",
   "spelling": 1,
   "type": 0,
