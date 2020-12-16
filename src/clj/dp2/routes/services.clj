@@ -122,6 +122,7 @@
                        (ok (global/get-words {:untranslated untranslated :limit limit :offset offset})))}
 
       :put {:summary "Update or create a global word"
+            :middleware [middleware/wrap-restricted]
             :parameters {:body {:untranslated string?
                                 :type int?
                                 :uncontracted (spec/maybe string?)
@@ -132,6 +133,7 @@
                        (no-content))}
 
       :delete {:summary "Delete a global word"
+               :middleware [middleware/wrap-restricted]
                :parameters {:body {:untranslated string?
                                    :type int?
                                    :uncontracted (spec/maybe string?)
@@ -184,6 +186,7 @@
                        (no-content))}
 
       :delete {:summary "Delete a local word for a given document"
+               :middleware [middleware/wrap-restricted]
                :parameters {:body {:untranslated string? :type int?
                                    :uncontracted (spec/maybe string?)
                                    :contracted (spec/maybe string?)
@@ -235,6 +238,7 @@
                       (ok (confirm/get-words limit offset)))}
 
      :put {:summary "Confirm a local word"
+           :middleware [middleware/wrap-restricted]
            :parameters {:body {:untranslated string? :type int?
                                :uncontracted (spec/maybe string?)
                                :contracted (spec/maybe string?)
@@ -260,12 +264,14 @@
                                                 :limit limit :offset offset})))}
 
       :put {:summary "Update or create a hyphenation"
+            :middleware [middleware/wrap-restricted]
             :parameters {:body {:word string? :hyphenation string? :spelling int?}}
             :handler (fn [{{{:keys [word hyphenation spelling]} :body} :parameters}]
                        (db/insert-hyphenation {:word word :hyphenation hyphenation :spelling spelling})
                        (no-content))}
 
       :delete {:summary "Delete a hyphenation"
+               :middleware [middleware/wrap-restricted]
                :parameters {:body {:word string? :spelling int? :hyphenation string?}}
                :handler (fn [{{{:keys [word spelling]} :body} :parameters}]
                           (let [deleted (db/delete-hyphenation {:word word :spelling spelling})]
