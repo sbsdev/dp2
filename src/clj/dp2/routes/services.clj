@@ -10,12 +10,14 @@
     [reitit.ring.middleware.parameters :as parameters]
     [spec-tools.data-spec :as spec]
     [clojure.spec.alpha :as s]
+    [dp2.middleware :as middleware]
     [dp2.middleware.formats :as formats]
     [dp2.middleware.exception :as exception]
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]
     [clojure.string :refer [blank?]]
     [dp2.documents :as docs]
+    [dp2.auth :as auth]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]
     [dp2.words.confirm :as confirm]
@@ -59,6 +61,18 @@
      {:get (swagger-ui/create-swagger-ui-handler
              {:url "/api/swagger.json"
               :config {:validator-url nil}})}]]
+
+   ["/login"
+    {:post
+     {:summary    "Handle user login"
+      :tags       ["Authentication"]
+      :parameters {:body {:username string?
+                          :password string?}}
+      :handler    (fn [{{{:keys [username password]} :body} :parameters}]
+                    (if-let [credentials (auth/login username password)]
+                      (ok credentials) ; return token and user info
+                      (bad-request
+                       {:message "Cannot authenticate user with given password"})))}}]
 
    ["/documents"
     {:swagger {:tags ["Documents"]}}
@@ -158,6 +172,7 @@
                          (not-found)))}
 
       :put {:summary "Update or create a local word for a given document"
+            :middleware [middleware/wrap-restricted]
             :parameters {:body {:untranslated string? :type int?
                                 :uncontracted (spec/maybe string?)
                                 :contracted (spec/maybe string?)

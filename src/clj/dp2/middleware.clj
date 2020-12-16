@@ -13,8 +13,9 @@
     [immutant.web.middleware :refer [wrap-session]]
     [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
     [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
-            [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]
+    [buddy.auth.accessrules :refer [restrict]]
+    [buddy.auth :refer [authenticated?]]
+    [buddy.auth.backends.token :refer [jws-backend]]
     [buddy.auth.backends.session :refer [session-backend]])
   )
 
@@ -54,7 +55,7 @@
                      :on-error on-error}))
 
 (defn wrap-auth [handler]
-  (let [backend (session-backend)]
+  (let [backend (jws-backend {:secret (env :jwt-secret)})]
     (-> handler
         (wrap-authentication backend)
         (wrap-authorization backend))))
