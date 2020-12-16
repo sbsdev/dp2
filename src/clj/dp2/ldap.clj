@@ -2,15 +2,22 @@
   (:require
    [mount.core :refer [defstate]]
    [clj-ldap.client :as ldap]
-   [dp2.config :refer [env]]))
+   [dp2.config :refer [env]]
+   [clojure.tools.logging :as log]))
 
-(defstate ldap-pool :start
-  (ldap/connect
-   {:host
-    {:address         (env :ldap-adress)
-     :port            389
-     :connect-timeout (* 1000 5)
-     :timeout         (* 1000 30)}}))
+(defstate ldap-pool
+  :start
+  (if-let [address (env :ldap-address)]
+    (ldap/connect
+     {:host
+      {:address address
+       :port 389
+       :connect-timeout (* 1000 5)
+       :timeout (* 1000 30)}})
+    (log/warn "LDAP bind address not found, please set :ldap-adress in the config file"))
+  :stop
+  (when ldap-pool
+    (ldap/close ldap-pool)))
 
 (defn authenticate [username password & [attributes]]
   (let [conn           (ldap/get-connection ldap-pool)
