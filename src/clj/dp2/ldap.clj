@@ -24,10 +24,12 @@
         qualified-name (str "uid=" username ",cn=users,cn=accounts,dc=sbszh,dc=ch")]
     (try
       (if (ldap/bind? conn qualified-name password)
-        (first (ldap/search conn
-                            "cn=users,cn=accounts,dc=sbszh,dc=ch"
-                            {:filter (str "uid=" username)
-                             :attributes (or attributes [])})))
+        (-> conn
+            (ldap/search "cn=users,cn=accounts,dc=sbszh,dc=ch"
+                         {:filter (str "uid=" username)
+                          :attributes (or attributes [])})
+            first
+            (select-keys [:uid :mail :initials :displayName :telephoneNumber])))
       (finally (ldap/release-connection ldap-pool conn)))))
 
 
