@@ -33,6 +33,11 @@
    (assoc-in db [:errors request-type] (get response :status-text))))
 
 (rf/reg-sub
+ ::authenticated?
+ (fn [db [_ id]]
+   (->> db :credentials some?)))
+
+(rf/reg-sub
   ::token
   (fn [db _]
     (->> db :credentials :token)))

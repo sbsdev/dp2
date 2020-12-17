@@ -113,16 +113,18 @@
              :on-change #(rf/dispatch [::set-word-field id :islocal (not value)])}]))
 
 (defn buttons [id]
-  (let [valid? @(rf/subscribe [::valid? id])]
+  (let [valid? @(rf/subscribe [::valid? id])
+        authenticated? @(rf/subscribe [::auth/authenticated?])]
     [:div.buttons.has-addons
      [:button.button.is-success.has-tooltip-arrow
-      {:disabled (not valid?)
+      {:disabled (not (and valid? authenticated?))
        :data-tooltip "Save"
        :on-click (fn [e] (rf/dispatch [::save-word id]))}
       [:span.icon [:i.mi.mi-done]]
       #_[:span "Approve"]]
      [:button.button.is-danger.has-tooltip-arrow
-      {:data-tooltip "Ignore"
+      {:disabled (not authenticated?)
+       :data-tooltip "Ignore"
        :on-click (fn [e] (rf/dispatch [::ignore-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span "Delete"]]]))
