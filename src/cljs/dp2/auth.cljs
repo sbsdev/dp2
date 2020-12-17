@@ -30,7 +30,7 @@
 (rf/reg-event-db
  ::login-failure
  (fn [db [_ request-type response]]
-   (assoc-in db [:errors request-type] (get response :status-text))))
+   (assoc-in db [:errors request-type] (get-in response [:response :message]))))
 
 (rf/reg-sub
  ::authenticated?
@@ -65,36 +65,33 @@
        [:a.button {:href "#/login"} "Log in"])]))
 
 (defn login-page []
-  (let [errors? @(rf/subscribe [::notifications/errors?])
-        username (r/atom "")
+  (let [username (r/atom "")
         password (r/atom "")]
     (fn []
-      [:section.section>div.container>div.content
-       (cond
-         errors? [notifications/error-notification]
-         :else
-         [:<>
-          [:div.field.has-icons-left
-           [:label.label "Username"]
-           [:input.input
-             {:type "text"
-              :on-change #(reset! username (-> % .-target .-value))
-              :on-key-down #(case (.-which %)
-                              27 (reset! username "")
-                              nil)
-              :value @username}]]
-          [:div.field.has-icons-left
-           [:label.label "Password"]
-           [:input.input
-             {:type "password"
-              :on-change #(reset! password (-> % .-target .-value))
-              :on-key-down #(case (.-which %)
-                              27 (reset! password "")
-                              nil)
-              :value @password}]]
-          [:div.field.is-grouped
-           [:div.control
-            [:a.button.is-link
-             {:on-click (fn [e] (rf/dispatch [::login @username @password]))
-              :href "#/"}
-             "Submit"]]]])])))
+      (let [errors? @(rf/subscribe [::notifications/errors?])]
+        [:section.section>div.container>div.content
+         (when errors?
+           [notifications/error-notification])
+         [:div.field.has-icons-left
+          [:label.label "Username"]
+          [:input.input
+           {:type "text"
+            :on-change #(reset! username (-> % .-target .-value))
+            :on-key-down #(case (.-which %)
+                            27 (reset! username "")
+                            nil)
+            :value @username}]]
+         [:div.field.has-icons-left
+          [:label.label "Password"]
+          [:input.input
+           {:type "password"
+            :on-change #(reset! password (-> % .-target .-value))
+            :on-key-down #(case (.-which %)
+                            27 (reset! password "")
+                            nil)
+            :value @password}]]
+         [:div.field.is-grouped
+          [:div.control
+           [:button.button.is-link
+            {:on-click (fn [e] (rf/dispatch [::login @username @password]))}
+            "Submit"]]]]))))
