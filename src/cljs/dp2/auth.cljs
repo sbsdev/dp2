@@ -1,5 +1,6 @@
 (ns dp2.auth
   (:require [ajax.core :as ajax]
+            [dp2.events]
             [dp2.words.notifications :as notifications]
             [re-frame.core :as rf]
             [reagent.core :as r]))
@@ -20,12 +21,13 @@
  (fn [db [_]]
    (dissoc db :credentials)))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  ::login-success
- (fn [db [_ {:keys [token user]}]]
-   (-> db
-       (assoc-in [:credentials :token] token)
-       (assoc-in [:credentials :user] user))))
+ (fn [{:keys [db]} [_ {:keys [token user]}]]
+   {:db (-> db
+            (assoc-in [:credentials :token] token)
+            (assoc-in [:credentials :user] user))
+    :common/navigate-fx! [:documents]}))
 
 (rf/reg-event-db
  ::login-failure
@@ -62,7 +64,7 @@
        [:<>
         [:a.button.is-primary initials]
         [:a.button.is-light {:on-click #(rf/dispatch [::logout])} "Log out"]]
-       [:a.button {:href "#/login"} "Log in"])]))
+       [:a.button {:on-click #(rf/dispatch [:common/navigate! :login])} "Log in"])]))
 
 (defn login-page []
   (let [username (r/atom "")
