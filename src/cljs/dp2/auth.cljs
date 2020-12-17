@@ -50,6 +50,10 @@
   (let [initials @(rf/subscribe [::user-initials])]
     [:div.buttons
      (if initials
+       #_[:div.navbar-item.has-dropdown.is-hoverable
+        [:a.navbar-link.has-text-weight-bold.is-arrowless initials]
+        [:div.navbar-dropdown
+         [:a.navbar-item {:on-click #(rf/dispatch [::logout])} "Logout"]]]
        [:<>
         [:a.button.is-primary initials]
         [:a.button.is-light {:on-click #(rf/dispatch [::logout])} "Log out"]]
