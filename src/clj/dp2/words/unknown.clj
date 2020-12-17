@@ -138,6 +138,7 @@
     (->> words
          (map #(assoc template :untranslated %))
          (map words/complement-braille)
+         (map words/complement-ellipsis-braille)
          (map words/complement-hyphenation))))
 
 (defn complement-homograph [words document-id grade type spelling]
@@ -151,6 +152,9 @@
                       :homograph-disambiguation %
                       :untranslated (string/replace % "|" "")))
          (map words/complement-braille)
+         ;; FIXME: I don't there really are homographs with ellipsis,
+         ;; so we could drop the following line
+         (map words/complement-ellipsis-braille)
          (map words/complement-hyphenation))))
 
 (defn get-names

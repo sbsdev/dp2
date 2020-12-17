@@ -19,6 +19,16 @@
 
 (def braille-dummy-text "┊")
 
+(defn complement-ellipsis-braille
+  [{:keys [untranslated uncontracted contracted] :as word}]
+  (cond-> word
+    (string/starts-with? untranslated braille-dummy-text)
+    (assoc :uncontracted (str braille-dummy-text uncontracted)
+           :contracted (str braille-dummy-text contracted))
+    (string/ends-with? untranslated braille-dummy-text)
+    (assoc :uncontracted (str uncontracted braille-dummy-text)
+           :contracted (str contracted braille-dummy-text))))
+
 (defn complement-braille
   [{:keys [untranslated uncontracted contracted type homograph-disambiguation] :as word}]
   (let [params {:name (name? type) :place (place? type)}
