@@ -1,6 +1,7 @@
 (ns dp2.words.global
   (:require [ajax.core :as ajax]
             [clojure.string :as string]
+            [dp2.auth :as auth]
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.notifications :as notifications]
@@ -43,6 +44,7 @@
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation]))]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
+                    :headers 	     (auth/auth-header db)
                     :uri             (str "/api/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
@@ -56,6 +58,7 @@
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation]))]
       {:http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
+                    :headers 	     (auth/auth-header db)
                     :uri             (str "/api/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})

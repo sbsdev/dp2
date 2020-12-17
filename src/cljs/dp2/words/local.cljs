@@ -1,5 +1,6 @@
 (ns dp2.words.local
   (:require [ajax.core :as ajax]
+            [dp2.auth :as auth]
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.grade :as grade]
@@ -44,6 +45,7 @@
           document-id (:document-id word)]
       {:http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
+                    :headers 	     (auth/auth-header db)
                     :uri             (str "/api/documents/" document-id "/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
@@ -59,6 +61,7 @@
           document-id (:document-id word)]
       {:http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
+                    :headers 	     (auth/auth-header db)
                     :uri             (str "/api/documents/" document-id "/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
