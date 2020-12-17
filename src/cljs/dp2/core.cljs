@@ -9,6 +9,7 @@
     [markdown.core :refer [md->html]]
     [dp2.ajax :as ajax]
     [dp2.events]
+    [dp2.auth :as auth]
     [dp2.words :as words]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]
@@ -41,7 +42,10 @@
                 [:div.navbar-start
                  [nav-link "#/" "Documents" :documents]
                  [nav-link "#/confirm" "Confirm" :confirm]
-                 [nav-link "#/words" "Words" :words]]]]))
+                 [nav-link "#/words" "Words" :words]]
+                [:div.navbar-end
+                 [:div.navbar-item
+                  (auth/user-buttons)]]]]))
 
 (def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
 
@@ -141,6 +145,8 @@
     [["/" {:name        :documents
            :view        #'documents-page
            :controllers [{:start (fn [_] (rf/dispatch [:init-documents]))}]}]
+     ["/login" {:name :login
+                :view #'auth/login-page}]
      ["/documents/:id" {:name :document
                         :view #'document-page
                         :controllers [{:parameters {:path [:id]}
