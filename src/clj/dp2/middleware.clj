@@ -5,6 +5,7 @@
     [cognitect.transit :as transit]
     [clojure.tools.logging :as log]
     [dp2.layout :refer [error-page]]
+    [dp2.i18n :refer [tr]]
     [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
     [dp2.middleware.formats :as formats]
     [muuntaja.middleware :refer [wrap-format wrap-params]]
@@ -26,8 +27,8 @@
       (catch Throwable t
         (log/error t (.getMessage t))
         (error-page {:status 500
-                     :title "Something very bad has happened!"
-                     :message "We've dispatched a team of highly trained gnomes to take care of the problem."})))))
+                     :title (tr [:something-bad-happened])
+                     :message (tr [:something-bad-happened-message])})))))
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
@@ -35,7 +36,7 @@
     {:error-response
      (error-page
        {:status 403
-        :title "Invalid anti-forgery token"})}))
+        :title (tr [:invalid-anti-forgery-token])})}))
 
 
 (defn wrap-formats [handler]
@@ -48,7 +49,7 @@
 (defn on-error [request response]
   (error-page
     {:status 403
-     :title (str "Access to " (:uri request) " is not authorized")}))
+     :title (tr [:not-authorized] [(:uri request)])}))
 
 (defn wrap-restricted [handler]
   (restrict handler {:handler authenticated?

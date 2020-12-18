@@ -16,6 +16,7 @@
     [dp2.words.global :as global]
     [dp2.words.confirm :as confirm]
     [dp2.words.grade :as grade]
+    [dp2.i18n :refer [tr]]
     [reitit.core :as reitit]
     [reitit.frontend.easy :as rfe]
     [clojure.string :as string])
@@ -40,24 +41,24 @@
                [:div#nav-menu.navbar-menu
                 {:class (when @expanded? :is-active)}
                 [:div.navbar-start
-                 [nav-link "#/" "Documents" :documents]
-                 [nav-link "#/confirm" "Confirm" :confirm]
-                 [nav-link "#/words" "Words" :words]]
+                 [nav-link "#/" (tr [:documents]) :documents]
+                 [nav-link "#/confirm" (tr [:confirm]) :confirm]
+                 [nav-link "#/words" (tr [:words]) :words]]
                 [:div.navbar-end
                  [:div.navbar-item
                   (auth/user-buttons)]]]]))
 
-(def state-mapping {1 "New" 4 "In Production" 6 "Finished"})
+(def state-mapping {1 (tr [:new]) 4 (tr [:in-production]) 6 (tr [:finished])})
 
 (defn document-summary [{:keys [title author source-publisher state-id]}]
   (let [state (state-mapping state-id state-id)]
     [:div.block
      [:table.table
       [:tbody
-       [:tr [:th {:width 200} "Title:"] [:td title]]
-       [:tr [:th "Author:"] [:td author]]
-       [:tr [:th "Source Publisher:"] [:td source-publisher]]
-       [:tr [:th "State:"] [:td state]]]]]))
+       [:tr [:th {:width 200} (tr [:title])] [:td title]]
+       [:tr [:th (tr [:author])] [:td author]]
+       [:tr [:th (tr [:source-publisher])] [:td source-publisher]]
+       [:tr [:th (tr [:state])] [:td state]]]]]))
 
 (defn document-tab-link [uri title page on-click]
   (if-let [is-active (= page @(rf/subscribe [:common/page-id]))]
@@ -68,9 +69,9 @@
   [:div.block
    [:div.tabs.is-boxed
     [:ul
-     [document-tab-link (str "#/documents/" id) "Details" :document]
-     [document-tab-link (str "#/documents/" id "/unknown") "Unknown Words" :document-unknown (fn [_] (rf/dispatch [::unknown/fetch-words id]))]
-     [document-tab-link (str "#/documents/" id "/local") "Local Words" :document-local (fn [_] (rf/dispatch [::local/fetch-words id]))]
+     [document-tab-link (str "#/documents/" id) (tr [:details]) :document]
+     [document-tab-link (str "#/documents/" id "/unknown") (tr [:unknown-words]) :document-unknown (fn [_] (rf/dispatch [::unknown/fetch-words id]))]
+     [document-tab-link (str "#/documents/" id "/local") (tr [:local-words]) :document-local (fn [_] (rf/dispatch [::local/fetch-words id]))]
      ]]])
 
 (defn document-details [document]
@@ -109,7 +110,7 @@
     [:div.field
      [:div.control
       [:input.input {:type "text"
-                     :placeholder "Search"
+                     :placeholder (tr [:search])
                      :value @(rf/subscribe [:documents-search])
                      :on-change emit}]]]))
 
@@ -124,7 +125,7 @@
    [:table.table.is-striped
     [:thead
      [:tr
-      [:th "Title"] [:th "Author"] [:th "Source Publisher"] [:th "State"]]]
+      [:th (tr [:title])] [:th (tr [:author])] [:th (tr [:source-publisher])] [:th (tr [:state])]]]
     [:tbody
      (for [{:keys [id author source-publisher state-id] :as document} @(rf/subscribe [:documents])]
        ^{:key id} [:tr

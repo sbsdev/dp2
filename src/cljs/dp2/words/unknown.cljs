@@ -5,6 +5,7 @@
             [dp2.words :as words]
             [dp2.words.grade :as grade]
             [dp2.words.notifications :as notifications]
+            [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]))
 
 (rf/reg-event-fx
@@ -104,7 +105,7 @@
                         :on-change #(save! (get-value %))
                         :on-key-down #(when (= (.-which %) 27) (reset!))}]
          (when-not valid?
-           [:p.help.is-danger "Input not valid"])]))))
+           [:p.help.is-danger (tr [:input-not-valid])])]))))
 
 (defn local-field [id]
   (let [value @(rf/subscribe [::word-field id :islocal])]
@@ -118,16 +119,16 @@
     [:div.buttons.has-addons
      [:button.button.is-success.has-tooltip-arrow
       {:disabled (not (and valid? authenticated?))
-       :data-tooltip "Save"
+       :data-tooltip (tr [:save])
        :on-click (fn [e] (rf/dispatch [::save-word id]))}
       [:span.icon [:i.mi.mi-done]]
-      #_[:span "Approve"]]
+      #_[:span (tr [:save])]]
      [:button.button.is-danger.has-tooltip-arrow
       {:disabled (not authenticated?)
-       :data-tooltip "Ignore"
+       :data-tooltip (tr [:ignore])
        :on-click (fn [e] (rf/dispatch [::ignore-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
-      #_[:span "Delete"]]]))
+      #_[:span (tr [:ignore])]]]))
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])
@@ -144,7 +145,7 @@
          [:td]))
      [:td (when hyphenated
             [input-field uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
-     [:td {:width "8%"} (get words/type-mapping type "Unknown")]
+     [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
      [:td {:width "8%"} homograph-disambiguation]
      [:td [local-field uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
@@ -162,12 +163,14 @@
       [:table.table.is-striped
        [:thead
         [:tr
-         [:th "Untranslated"]
-         (when (#{0 1} grade) [:th "Grade 1"])
-         (when (#{0 2} grade) [:th "Grade 2"])
-         [:th "Hyphenated (" (words/spelling-string spelling) ")"] [:th "Type"]
-         [:th "Homograph Disambiguation"] [:th "Local"]
-         [:th "Action"]]]
+         [:th (tr [:untranslated])]
+         (when (#{0 1} grade) [:th (tr [:uncontracted])])
+         (when (#{0 2} grade) [:th (tr [:contracted])])
+         [:th (tr [:hyphenated-with-spelling] [(words/spelling-string spelling)])]
+         [:th (tr [:type])]
+         [:th (tr [:homograph-disambiguation])]
+         [:th (tr [:local])]
+         [:th (tr [:action])]]]
        [:tbody
         (for [{:keys [uuid]} words]
           ^{:key uuid}

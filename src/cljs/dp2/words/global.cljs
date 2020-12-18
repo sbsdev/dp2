@@ -5,6 +5,7 @@
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.notifications :as notifications]
+            [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]))
 
 (rf/reg-event-fx
@@ -94,7 +95,7 @@
     [:div.field
      [:div.control
       [:input.input {:type "text"
-                     :placeholder "Search"
+                     :placeholder (tr [:search])
                      :value @(rf/subscribe [::search])
                      :on-change emit}]]]))
 
@@ -140,7 +141,7 @@
                         :on-change #(save! (get-value %))
                         :on-key-down #(when (= (.-which %) 27) (reset!))}]
          (when-not valid?
-           [:p.help.is-danger "Input not valid"])]))))
+           [:p.help.is-danger (tr [:input-not-valid])])]))))
 
 (defn buttons [id]
   (let [valid? @(rf/subscribe [::valid? id])
@@ -148,16 +149,16 @@
     [:div.buttons.has-addons
      [:button.button.is-success.has-tooltip-arrow
       {:disabled (not (and valid? authenticated?))
-       :data-tooltip "Save"
+       :data-tooltip (tr [:save])
        :on-click (fn [e] (rf/dispatch [::save-word id]))}
       [:span.icon [:i.mi.mi-done]]
-      #_[:span "Approve"]]
+      #_[:span (tr [:save])]]
      [:button.button.is-danger.has-tooltip-arrow
       {:disabled (not authenticated?)
-       :data-tooltip "Delete"
+       :data-tooltip (tr [:delete])
        :on-click (fn [e] (rf/dispatch [::delete-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
-      #_[:span "Delete"]]]))
+      #_[:span (tr [:delete])]]]))
 
 (defn word [id]
   (let [{:keys [uuid untranslated type homograph-disambiguation]} @(rf/subscribe [::word id])]
@@ -165,7 +166,7 @@
      [:td untranslated]
      [:td [input-field uuid :uncontracted validation/braille-valid?]]
      [:td [input-field uuid :contracted validation/braille-valid?]]
-     [:td {:width "8%"} (get words/type-mapping type "Unknown")]
+     [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
      [:td {:width "8%"} homograph-disambiguation]
      [:td {:width "8%"} [buttons uuid]]]))
 
@@ -182,7 +183,12 @@
         [:table.table.is-striped
          [:thead
           [:tr
-           [:th "Untranslated"] [:th "Grade 1"] [:th "Grade 2"] [:th "Type"] [:th "Homograph Disambiguation"]]]
+           [:th (tr [:untranslated])]
+           [:th (tr [:uncontracted])]
+           [:th (tr [:contracted])]
+           [:th (tr [:type])]
+           [:th (tr [:homograph-disambiguation])]
+           [:th (tr [:action])]]]
          [:tbody
           (for [{:keys [uuid]} @(rf/subscribe [::words])]
             ^{:key uuid} [word uuid])]])]]))

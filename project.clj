@@ -14,6 +14,7 @@
                  [com.fasterxml.jackson.core/jackson-core "2.11.2"]
                  [com.fasterxml.jackson.core/jackson-databind "2.11.2"]
                  [com.google.protobuf/protobuf-java "3.8.0"]
+                 [com.taoensso/tempura "1.2.1"]
                  [conman "0.9.0"]
                  [cprop "0.1.17"]
                  [day8.re-frame/http-fx "0.2.1"]

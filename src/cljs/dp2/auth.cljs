@@ -2,6 +2,7 @@
   (:require [ajax.core :as ajax]
             [dp2.events]
             [dp2.words.notifications :as notifications]
+            [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
@@ -60,11 +61,11 @@
        #_[:div.navbar-item.has-dropdown.is-hoverable
         [:a.navbar-link.has-text-weight-bold.is-arrowless initials]
         [:div.navbar-dropdown
-         [:a.navbar-item {:on-click #(rf/dispatch [::logout])} "Logout"]]]
+         [:a.navbar-item {:on-click #(rf/dispatch [::logout])} (tr [:logout])]]]
        [:<>
         [:a.button.is-primary initials]
-        [:a.button.is-light {:on-click #(rf/dispatch [::logout])} "Log out"]]
-       [:a.button {:on-click #(rf/dispatch [:common/navigate! :login])} "Log in"])]))
+        [:a.button.is-light {:on-click #(rf/dispatch [::logout])} (tr [:logout])]]
+       [:a.button {:on-click #(rf/dispatch [:common/navigate! :login])} (tr [:login])])]))
 
 (defn login-page []
   (let [username (r/atom "")
@@ -75,7 +76,7 @@
          (when errors?
            [notifications/error-notification])
          [:div.field.has-icons-left
-          [:label.label "Username"]
+          [:label.label (tr [:username])]
           [:input.input
            {:type "text"
             :on-change #(reset! username (-> % .-target .-value))
@@ -84,7 +85,7 @@
                             nil)
             :value @username}]]
          [:div.field.has-icons-left
-          [:label.label "Password"]
+          [:label.label (tr [:password])]
           [:input.input
            {:type "password"
             :on-change #(reset! password (-> % .-target .-value))
@@ -96,4 +97,4 @@
           [:div.control
            [:button.button.is-link
             {:on-click (fn [e] (rf/dispatch [::login @username @password]))}
-            "Submit"]]]]))))
+            (tr [:login])]]]]))))

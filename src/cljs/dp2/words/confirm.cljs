@@ -4,6 +4,7 @@
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.notifications :as notifications]
+            [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]))
 
 (rf/reg-event-fx
@@ -117,7 +118,7 @@
                         :on-change #(save! (get-value %))
                         :on-key-down #(when (= (.-which %) 27) (reset!))}]
          (when-not valid?
-           [:p.help.is-danger "Input not valid"])]))))
+           [:p.help.is-danger (tr [:input-not-valid])])]))))
 
 (defn local-field [id]
   (let [value @(rf/subscribe [::word-field id :islocal])]
@@ -131,16 +132,16 @@
     [:div.buttons.has-addons
      [:button.button.is-success.has-tooltip-arrow
       {:disabled (not (and valid? authenticated?))
-       :data-tooltip "Approve"
+       :data-tooltip (tr [:approve])
        :on-click (fn [e] (rf/dispatch [::save-word id]))}
       [:span.icon [:i.mi.mi-done]]
-      #_[:span "Approve"]]
+      #_[:span (tr [:approve])]]
      [:button.button.is-danger.has-tooltip-arrow
       {:disabled (not authenticated?)
-       :data-tooltip "Delete"
+       :data-tooltip (tr [:delete])
        :on-click (fn [e] (rf/dispatch [::delete-word id]))}
       [:span.icon [:i.mi.mi-cancel]]
-      #_[:span "Delete"]]]))
+      #_[:span (tr [:delete])]]]))
 
 (defn word [id]
   (let [{:keys [uuid untranslated type homograph-disambiguation hyphenated spelling]} @(rf/subscribe [::word id])]
@@ -151,7 +152,7 @@
      [:td (when hyphenated
             [input-field uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
      [:td spelling]
-     [:td {:width "8%"} (get words/type-mapping type "Unknown")]
+     [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
      [:td {:width "8%"} homograph-disambiguation]
      [:td [local-field uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
@@ -167,15 +168,15 @@
        [:table.table.is-striped
         [:thead
          [:tr
-          [:th "Untranslated"]
-          [:th "Grade 1"]
-          [:th "Grade 2"]
-          [:th "Hyphenated"]
-          [:th "Spelling"]
-          [:th "Type"]
-          [:th "Homograph Disambiguation"]
-          [:th "Local"]
-          [:th "Action"]]]
+          [:th (tr [:untranslated])]
+          [:th (tr [:uncontracted])]
+          [:th (tr [:contracted])]
+          [:th (tr [:hyphenated])]
+          [:th (tr [:spelling])]
+          [:th (tr [:type])]
+          [:th (tr [:homograph-disambiguation])]
+          [:th (tr [:local])]
+          [:th (tr [:action])]]]
         [:tbody
          (for [{:keys [uuid]} @(rf/subscribe [::words])]
            ^{:key uuid} [word uuid])]])]))

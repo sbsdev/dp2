@@ -1,6 +1,7 @@
 (ns dp2.words.grade
   (:require
-    [re-frame.core :as rf]))
+   [re-frame.core :as rf]
+   [dp2.i18n :refer [tr]]))
 
 (rf/reg-event-fx
   ::set-grade
@@ -25,8 +26,8 @@
       [:div.select.is-fullwidth
        [:select
         {:on-change emit}
-        (for [[v s] [[1 "Grade 1"]
-                     [2 "Grade 2"]
-                     [0 "Both"]]]
+        (for [[v s] [[1 (tr [:uncontracted])]
+                     [2 (tr [:contracted])]
+                     [0 (tr [:both-grades])]]]
           ^{:key v}
           [:option (if (not= current v) {:value v} {:selected "selected" :value v}) s])]]]]))

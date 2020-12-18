@@ -1,5 +1,6 @@
 (ns dp2.words.notifications
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [dp2.i18n :refer [tr]]))
 
 (rf/reg-sub
   ::loading?
@@ -24,8 +25,8 @@
 
 (defn loading-spinner []
   [:div.block
-   [:p.has-text-centered.has-text-weight-semibold "Loading..."]
-   [:button.button.is-large.is-fullwidth.is-loading "Loading..."]])
+   [:p.has-text-centered.has-text-weight-semibold (tr [:loading])]
+   [:button.button.is-large.is-fullwidth.is-loading (tr [:loading])]])
 
 (defn error-notification []
   (let [errors @(rf/subscribe [::errors])]
@@ -36,4 +37,4 @@
          [:div.notification.is-danger
           [:button.delete
            {:on-click (fn [e] (rf/dispatch [::ack-error k]))}]
-          [:strong (str k ":")] (str " " v)])])))
+          [:strong (str k ":")] (str " " v)])]))) ; FIXME: Translation?
