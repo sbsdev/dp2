@@ -313,5 +313,7 @@ JOIN documents_document doc ON words.document_id = doc.id
 LEFT JOIN hyphenation_test.words AS hyphenation
 ON words.untranslated = hyphenation.word
 AND hyphenation.spelling = (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END)
+-- only get words from finished productions
+where doc.state_id = (SELECT id FROM documents_state WHERE sort_order = (SELECT MAX(sort_order) FROM documents_state))
 ORDER BY words.untranslated
 LIMIT :limit OFFSET :offset
