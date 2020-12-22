@@ -163,7 +163,7 @@
     (mapcat (fn [grade]
               (-> words
                   (compare-with-known-names document-id grade)
-                  (complement-words document-id grade 1 spelling)))
+                  (complement-words document-id grade 2 spelling)))
             grades)))
 
 (defn get-places
@@ -172,7 +172,7 @@
     (mapcat (fn [grade]
               (-> words
                   (compare-with-known-places document-id grade)
-                  (complement-words document-id grade 3 spelling)))
+                  (complement-words document-id grade 4 spelling)))
             grades)))
 
 (defn get-homographs
