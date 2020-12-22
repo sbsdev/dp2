@@ -14,7 +14,7 @@
        :port 389
        :connect-timeout (* 1000 5)
        :timeout (* 1000 30)}})
-    (log/warn "LDAP bind address not found, please set :ldap-adress in the config file"))
+    (log/warn "LDAP bind address not found, please set :ldap-address in the config file"))
   :stop
   (when ldap-pool
     (ldap/close ldap-pool)))
