@@ -146,6 +146,33 @@
       [:span.icon [:i.mi.mi-cancel]]
       #_[:span (tr [:delete])]]]))
 
+(defn type-field [id]
+  (let [type @(rf/subscribe [::word-field id :type])
+        set-type-fn (fn [type]
+                      (fn [e] (rf/dispatch [::set-word-field id :type type])))]
+    (case type
+      0 nil
+      (1 2)
+      [:div.select
+       [:select
+        [:option {:selected (= type 2)
+                  :on-click (set-type-fn 2)}
+         (tr [:type-name])]
+        [:option {:selected (= type 1)
+                  :on-click (set-type-fn 1)}
+         (tr [:type-name-hoffmann])]]]
+      (3 4)
+      [:div.select
+       [:select
+        [:option {:selected (= type 4)
+                  :on-click (set-type-fn 4)}
+         (tr [:type-place])]
+        [:option {:selected (= type 3)
+                  :on-click (set-type-fn 3)}
+         (tr [:type-place-langenthal])]]]
+      5 (tr [:type-homograph])
+      :else (tr [:unknown]))))
+
 (defn word [id]
   (let [{:keys [uuid untranslated type homograph-disambiguation hyphenated spelling]} @(rf/subscribe [::word id])]
     [:tr
@@ -155,7 +182,7 @@
      [:td (when hyphenated
             [input-field uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
      [:td spelling]
-     [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
+     [:td {:width "8%"} [type-field uuid]]
      [:td {:width "8%"} homograph-disambiguation]
      [:td [local-field uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
