@@ -19,15 +19,30 @@
 
 (def braille-dummy-text "┊")
 
+(defn- complement-string [s start end]
+  (let [prepend #(str %2 %1)
+        append #(str %1 %2)]
+    (cond-> s
+      (not (string/starts-with? s start))
+      (prepend start)
+      (not (string/ends-with? s end))
+      (append end))))
+
 (defn complement-ellipsis-braille
   [{:keys [untranslated uncontracted contracted] :as word}]
-  (cond-> word
-    (string/starts-with? untranslated braille-dummy-text)
-    (assoc :uncontracted (str braille-dummy-text uncontracted)
-           :contracted (str braille-dummy-text contracted))
-    (string/ends-with? untranslated braille-dummy-text)
-    (assoc :uncontracted (str uncontracted braille-dummy-text)
-           :contracted (str contracted braille-dummy-text))))
+  (let [starts-with? (string/starts-with? untranslated braille-dummy-text)
+        ends-with? (string/ends-with? untranslated braille-dummy-text)
+        uncontracted (cond-> uncontracted
+                       starts-with?
+                       (complement-string braille-dummy-text "")
+                       ends-with?
+                       (complement-string "" braille-dummy-text))
+        contracted (cond-> contracted
+                     starts-with?
+                     (complement-string braille-dummy-text "")
+                     ends-with?
+                     (complement-string "" braille-dummy-text))]
+    (assoc word :uncontracted uncontracted :contracted contracted)))
 
 (defn complement-braille
   [{:keys [untranslated uncontracted contracted type homograph-disambiguation] :as word}]
