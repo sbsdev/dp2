@@ -59,6 +59,9 @@
                     :something-bad-happened-message "We've dispatched a team of highly trained gnomes to take care of the problem."
                     :invalid-anti-forgery-token "Invalid anti-forgery token"
                     :not-authorized "Access to %1 is not authorized"
+                    ;;
+                    :previous "Previous"
+                    :next "Next"
                     }
                    :de
                    {:missing "Fehlende Übersetzung"
@@ -118,6 +121,9 @@
                     :something-bad-happened-message "Die IT ist informiert und arbeitet an der Behebung."
                     :invalid-anti-forgery-token "Invalid anti-forgery token"
                     :not-authorized "Zugriff auf %1 nicht gestattet"
+                    ;;
+                    :previous "Vorherige"
+                    :next "Nächste"
                     }})
 
 (def tr (partial tempura/tr {:dict translations :default-locale :en} [:de]))

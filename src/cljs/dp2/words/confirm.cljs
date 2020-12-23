@@ -1,21 +1,24 @@
 (ns dp2.words.confirm
   (:require [ajax.core :as ajax]
             [dp2.auth :as auth]
+            [dp2.i18n :refer [tr]]
+            [dp2.pagination :as pagination]
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.notifications :as notifications]
-            [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]))
 
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_]]
-    {:db (assoc-in db [:loading :confirm] true)
-     :http-xhrio {:method          :get
-                  :uri             "/api/confirmable"
-                  :response-format (ajax/json-response-format {:keywords? true})
-                  :on-success      [::fetch-words-success]
-                  :on-failure      [::fetch-words-failure :fetch-confirm-words]}}))
+    (let [offset (get-in db [:pagination :confirm] 0)]
+      {:db (assoc-in db [:loading :confirm] true)
+       :http-xhrio {:method          :get
+                    :uri             "/api/confirmable"
+                    :params          {:offset (* offset pagination/page-size) :limit pagination/page-size}
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-words-success]
+                    :on-failure      [::fetch-words-failure :fetch-confirm-words]}})))
 
 (rf/reg-event-db
  ::fetch-words-success
@@ -165,18 +168,20 @@
        errors? [notifications/error-notification]
        loading? [notifications/loading-spinner]
        :else
-       [:table.table.is-striped
-        [:thead
-         [:tr
-          [:th (tr [:untranslated])]
-          [:th (tr [:uncontracted])]
-          [:th (tr [:contracted])]
-          [:th (tr [:hyphenated])]
-          [:th (tr [:spelling])]
-          [:th (tr [:type])]
-          [:th (tr [:homograph-disambiguation])]
-          [:th (tr [:local])]
-          [:th (tr [:action])]]]
-        [:tbody
-         (for [{:keys [uuid]} @(rf/subscribe [::words])]
-           ^{:key uuid} [word uuid])]])]))
+       [:<>
+        [:table.table.is-striped
+         [:thead
+          [:tr
+           [:th (tr [:untranslated])]
+           [:th (tr [:uncontracted])]
+           [:th (tr [:contracted])]
+           [:th (tr [:hyphenated])]
+           [:th (tr [:spelling])]
+           [:th (tr [:type])]
+           [:th (tr [:homograph-disambiguation])]
+           [:th (tr [:local])]
+           [:th (tr [:action])]]]
+         [:tbody
+          (for [{:keys [uuid]} @(rf/subscribe [::words])]
+            ^{:key uuid} [word uuid])]]
+        [pagination/pagination :confirm [::fetch-words]]])]))

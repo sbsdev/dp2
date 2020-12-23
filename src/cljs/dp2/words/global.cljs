@@ -2,21 +2,24 @@
   (:require [ajax.core :as ajax]
             [clojure.string :as string]
             [dp2.auth :as auth]
+            [dp2.i18n :refer [tr]]
+            [dp2.pagination :as pagination]
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.notifications :as notifications]
-            [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]))
 
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_]]
-    (let [search @(rf/subscribe [::search])]
+    (let [search (get db :words-search)
+          offset (get-in db [:pagination :global] 0)]
       {:db (assoc-in db [:loading :global] true)
        :http-xhrio {:method          :get
                     :uri             "/api/words"
                     :params          {:untranslated (if (string/blank? search) "" (str search "%"))
-                                      :limit 50}
+                                      :offset (* offset pagination/page-size)
+                                      :limit pagination/page-size}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]
                     :on-failure      [::fetch-words-failure :fetch-global-words]}})))
@@ -86,7 +89,10 @@
    ::set-search
    (fn [{:keys [db]} [_ new-search-value]]
      {:db (assoc db :words-search new-search-value)
-      :dispatch [::fetch-words]}))
+      :dispatch-n ; when searching for a new word reset the pagination
+      (list
+       [::pagination/reset :global]
+       [::fetch-words])}))
 
 
 (defn words-search []
@@ -180,15 +186,17 @@
         errors? [notifications/error-notification]
         loading? [notifications/loading-spinner]
         :else
-        [:table.table.is-striped
-         [:thead
-          [:tr
-           [:th (tr [:untranslated])]
-           [:th (tr [:uncontracted])]
-           [:th (tr [:contracted])]
-           [:th (tr [:type])]
-           [:th (tr [:homograph-disambiguation])]
-           [:th (tr [:action])]]]
-         [:tbody
-          (for [{:keys [uuid]} @(rf/subscribe [::words])]
-            ^{:key uuid} [word uuid])]])]]))
+        [:<>
+         [:table.table.is-striped
+          [:thead
+           [:tr
+            [:th (tr [:untranslated])]
+            [:th (tr [:uncontracted])]
+            [:th (tr [:contracted])]
+            [:th (tr [:type])]
+            [:th (tr [:homograph-disambiguation])]
+            [:th (tr [:action])]]]
+          [:tbody
+           (for [{:keys [uuid]} @(rf/subscribe [::words])]
+             ^{:key uuid} [word uuid])]]
+         [pagination/pagination :global [::fetch-words]]])]]))
