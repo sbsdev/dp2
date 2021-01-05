@@ -5,8 +5,9 @@
             [dp2.louis :as louis]
             [dp2.validation :as validation]))
 
-(defn name? [type] (#{1 2} type))
-(defn place? [type] (#{3 4} type))
+(defn is-name? [{:keys [type]}] (some? (#{1 2} type)))
+(defn is-place? [{:keys [type]}] (some? (#{3 4} type)))
+(defn is-homograph? [{:keys [type]}] (some? (#{5} type)))
 
 (defn suggested-hyphenation [{:keys [untranslated spelling]}]
   (when (re-matches validation/valid-hyphenation-re untranslated)
@@ -45,13 +46,13 @@
     (assoc word :uncontracted uncontracted :contracted contracted)))
 
 (defn complement-braille
-  [{:keys [untranslated uncontracted contracted type homograph-disambiguation] :as word}]
-  (let [params {:name (name? type) :place (place? type)}
+  [{:keys [untranslated uncontracted contracted homograph-disambiguation] :as word}]
+  (let [params {:name (is-name? word) :place (is-place? word)}
         ;; for homographs we have to use the homograph-disambiguation
         ;; to get the braille
-        untranslated (if (string/blank? homograph-disambiguation)
-                       untranslated
-                       (string/replace homograph-disambiguation "|" braille-dummy-text))]
+        untranslated (if (is-homograph? word)
+                       (string/replace homograph-disambiguation "|" braille-dummy-text)
+                       untranslated)]
     (cond-> word
       (nil? uncontracted)
       (assoc :uncontracted (louis/translate untranslated (louis/get-tables 1 params)))
