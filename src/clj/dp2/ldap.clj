@@ -1,9 +1,8 @@
 (ns dp2.ldap
-  (:require
-   [mount.core :refer [defstate]]
-   [clj-ldap.client :as ldap]
-   [dp2.config :refer [env]]
-   [clojure.tools.logging :as log]))
+  (:require [clj-ldap.client :as ldap]
+            [clojure.tools.logging :as log]
+            [dp2.config :refer [env]]
+            [mount.core :refer [defstate]]))
 
 (defstate ldap-pool
   :start
