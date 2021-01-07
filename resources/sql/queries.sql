@@ -251,7 +251,7 @@ WHERE grade = :grade
 -- place.
 AND type NOT IN (2,4,5)
 AND document_id = :document_id
-AND untranslated in (:v*:words))
+AND untranslated IN (:v*:words))
 
 -----------------------
 -- Confirmable words --
