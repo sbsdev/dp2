@@ -34,6 +34,7 @@
                  [nrepl "0.8.2"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/clojurescript "1.10.773" :scope "provided"]
+                 [org.clojure/core.async "1.3.610"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
                  [org.clojars.pntblnk/clj-ldap "0.0.17"]
