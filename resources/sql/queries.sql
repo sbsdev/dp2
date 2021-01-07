@@ -45,6 +45,14 @@ AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_i
 -- Global Words --
 ------------------
 
+-- :name get-global-words :? :*
+-- :doc retrieve all global words
+SELECT untranslated,
+       IF(grade = 1, braille, NULL) AS uncontracted,
+       IF(grade = 2, braille, NULL) AS contracted,
+        type, homograph_disambiguation
+FROM dictionary_globalword
+
 -- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for `untranslated`, a `limit` and an `offset`
 (SELECT t1.untranslated, t2.braille as uncontracted, t1.braille as contracted, t1.type, t1.homograph_disambiguation

@@ -1,9 +1,11 @@
-(ns dp2.words.whitelists
+(ns dp2.whitelists.tables
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [dp2.config :refer [env]]
             [dp2.louis :as louis]
-            [dp2.words :as words]))
+            [dp2.words :as words]
+            [dp2.db.core :as db]
+            [clojure.tools.logging :as log]))
 
 (def ascii-to-dots
   {\A "1"
@@ -222,3 +224,12 @@
     (write-global-table 2 {} (filter is-plain? contracted-words))
     (write-global-table 2 {:name true} (filter words/is-name? contracted-words))
     (write-global-table 2 {:place true} (filter words/is-place? contracted-words))))
+
+(defn export-local-tables [document-id]
+  (log/infof "Exporting local tables for %s" document-id)
+  (write-local-tables document-id (db/get-local-words-aggregated {:id document-id})))
+
+(defn export-global-tables []
+  (log/info "Exporting global tables")
+  (write-global-tables (db/get-global-words))
+  (log/info "Finished exporting global tables"))
