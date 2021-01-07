@@ -26,7 +26,7 @@
 
 (defstate global-dict-chan
   ;; throttle the write of the global tables to once every two hours at most
-  :start (let [times (rest (chime/periodic-seq (Instant/now) (Duration/ofMinutes 3) #_(Duration/ofHours 2)))
+  :start (let [times (rest (chime/periodic-seq (Instant/now) (Duration/ofHours 2)))
                cron (chime-ch times {:ch (async/chan (async/sliding-buffer 1))})
                ch (async/chan (async/sliding-buffer 1))]
            (go-loop []
