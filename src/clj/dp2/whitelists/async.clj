@@ -1,4 +1,4 @@
-(ns dp2.whitelists.core
+(ns dp2.whitelists.async
   "Asynchronous interface to writing whitelist tables. Refer
   to [[dp2.whitelists.tables]] for the synchronous API."
   (:require [chime.core :as chime]

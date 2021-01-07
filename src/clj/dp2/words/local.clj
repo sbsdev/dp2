@@ -2,7 +2,7 @@
   (:require [dp2.db.core :as db]
             [dp2.hyphenate :as hyphenate]
             [dp2.words :as words]
-            [dp2.whitelists.core :as whitelists]))
+            [dp2.whitelists.async :as whitelists]))
 
 (defn get-words [id grade limit offset]
   (let [document (db/get-document {:id id})
