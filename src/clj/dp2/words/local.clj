@@ -1,7 +1,8 @@
 (ns dp2.words.local
   (:require [dp2.db.core :as db]
             [dp2.hyphenate :as hyphenate]
-            [dp2.words :as words]))
+            [dp2.words :as words]
+            [dp2.whitelists.core :as whitelists]))
 
 (defn get-words [id grade limit offset]
   (let [document (db/get-document {:id id})
@@ -17,11 +18,14 @@
   [word]
   (db/insert-hyphenation
    (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
-  (->> word
-       words/separate-word
-       (map #(db/insert-local-word
-              (words/to-db % words/dictionary-keys words/dictionary-mapping)))
-       (reduce +)))
+  (let [insertions
+        (->> word
+             words/separate-word
+             (map #(db/insert-local-word
+                    (words/to-db % words/dictionary-keys words/dictionary-mapping)))
+             (reduce +))]
+    (whitelists/export-local-tables (:document-id word))
+    insertions))
 
 (defn- ref-count
   "Return the number of translations for a given `word` in a given document."
@@ -49,4 +53,5 @@
     (when (= (ref-count word) 0)
       (db/delete-hyphenation
        (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
+    (whitelists/export-local-tables (:document-id word))
     deletions))
