@@ -115,7 +115,7 @@ ORDER BY words.untranslated
 LIMIT :limit OFFSET :offset
 
 -- :name get-local-words-aggregated :? :*
--- :doc retrieve aggregated local words for a given document `id`. The words contain braille for both grades and the hyphenation if they exist.
+-- :doc retrieve aggregated local words for a given document `id`. The words contain braille for both grades and the hyphenation if they exist. Optionally the results can be limited by `limit` and `offset`.
 SELECT words.*,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :id) AS spelling,
        hyphenation.hyphenation AS hyphenated
@@ -154,7 +154,8 @@ AND hyphenation.spelling =
   FROM  documents_document
   WHERE id = :id)
 ORDER BY words.untranslated
-LIMIT :limit OFFSET :offset
+--~ (when (:limit params) "LIMIT :limit")
+--~ (when (:offset params) "OFFSET :offset")
 
 -- :name get-local-word-count :? :1
 -- :doc retrieve the number of local words for a given document `id` and `untranslated`
