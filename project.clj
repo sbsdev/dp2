@@ -1,4 +1,4 @@
-(defproject dp2 "0.2.0-SNAPSHOT"
+(defproject dp2 :project/git-ref-short
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -63,7 +63,13 @@
   :main ^:skip-aot dp2.core
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-immutant "2.1.0"]] 
+            [lein-immutant "2.1.0"]
+            [me.arrdem/lein-git-version "2.0.8"]]
+
+  ;; see https://github.com/arrdem/lein-git-version
+  :git-version {:version-file "resources/dp2/version.edn"
+                :version-file-keys [:ref-short :timestamp :tag :ahead :branch :dirty?]}
+
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
