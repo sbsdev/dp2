@@ -13,14 +13,20 @@
   (when (re-matches validation/valid-hyphenation-re untranslated)
     (hyphenate/hyphenate untranslated spelling)))
 
-(defn complement-hyphenation [{:keys [hyphenated] :as word}]
+(defn complement-hyphenation
+  "Add hyphenation to a `word` if it is missing"
+  [{:keys [hyphenated] :as word}]
   (let [hyphenation (suggested-hyphenation word)]
     (cond-> word
       (and (nil? hyphenated) hyphenation) (assoc :hyphenated hyphenation))))
 
 (def braille-dummy-text "┊")
 
-(defn- complement-string [s start end]
+(defn- complement-string
+  "Given a string `s`, prepend `start` and/or append `end` if it doesn't
+  already start or end with `start` or `end` respectively. If `s` is
+  nil it is simply returned."
+  [s start end]
   (let [prepend #(str %2 %1)
         append #(str %1 %2)]
     (when (some? s)
@@ -31,6 +37,9 @@
         (append end)))))
 
 (defn complement-ellipsis-braille
+  "Add ellipsis to the braille of a `word` if it is missing. Depending
+  on whether `:untranslated` starts or ends with the dummy text, the
+  dummy text is also added to `:uncontracted` and `:contracted`."
   [{:keys [untranslated uncontracted contracted] :as word}]
   (let [starts-with-dummy? (string/starts-with? untranslated braille-dummy-text)
         ends-with-dummy? (string/ends-with? untranslated braille-dummy-text)
@@ -47,6 +56,9 @@
     (assoc word :uncontracted uncontracted :contracted contracted)))
 
 (defn complement-braille
+  "Add braille to a `word` if it is missing. If any of `:uncontracted`
+  or `:contracted` is nil then the correct braille is translated with
+  louis and added to the word."
   [{:keys [untranslated uncontracted contracted homograph-disambiguation] :as word}]
   (let [params {:name (is-name? word) :place (is-place? word)}
         ;; for homographs we have to use the homograph-disambiguation

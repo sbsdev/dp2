@@ -128,7 +128,11 @@
     (map string/lower-case)
     set)))
 
-(defn complement-words [words document-id grade type spelling]
+(defn complement-words
+  "Convert a seq of strings (`words`) to a seq of maps that contains the
+  basic information for that word, such as `:document-id`, `:type`,
+  `:spelling`, etc."
+  [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
                   :grade grade
@@ -138,7 +142,9 @@
     (->> words
          (map #(assoc template :untranslated %)))))
 
-(defn complement-homograph [words document-id grade type spelling]
+(defn complement-homographs
+  "Same as [[complement-words]] but for homographs."
+  [words document-id grade type spelling]
   (let [template {:document-id document-id
                   :type type
                   :grade grade
@@ -173,7 +179,7 @@
     (mapcat (fn [grade]
               (-> words
                   (compare-with-known-homographs document-id grade)
-                  (complement-homograph document-id grade 5 spelling)))
+                  (complement-homographs document-id grade 5 spelling)))
             grades)))
 
 (defn get-plain
