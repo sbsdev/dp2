@@ -31,17 +31,17 @@
 
 (defn complement-ellipsis-braille
   [{:keys [untranslated uncontracted contracted] :as word}]
-  (let [starts-with? (string/starts-with? untranslated braille-dummy-text)
-        ends-with? (string/ends-with? untranslated braille-dummy-text)
+  (let [starts-with-dummy? (string/starts-with? untranslated braille-dummy-text)
+        ends-with-dummy? (string/ends-with? untranslated braille-dummy-text)
         uncontracted (cond-> uncontracted
-                       starts-with?
+                       starts-with-dummy?
                        (complement-string braille-dummy-text "")
-                       ends-with?
+                       ends-with-dummy?
                        (complement-string "" braille-dummy-text))
         contracted (cond-> contracted
-                     starts-with?
+                     starts-with-dummy?
                      (complement-string braille-dummy-text "")
-                     ends-with?
+                     ends-with-dummy?
                      (complement-string "" braille-dummy-text))]
     (assoc word :uncontracted uncontracted :contracted contracted)))
 
