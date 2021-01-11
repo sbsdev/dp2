@@ -97,39 +97,6 @@
         (repeat word) [1 2])
    (filter #(:braille %))))
 
-(defn merge-words
-  "Merge a seq of `words` into one. Presumably the words are for
-  different grades. All keys are merged as usual except for `:braille`
-  which will be merged to `:uncontracted` or `:contracted`, depending
-  on the grade of the original words."
-  [words]
-  (reduce (fn [m {:keys [grade uncontracted contracted islocal] :as word}]
-            (-> m
-                ;; Merge everything but grade, braille and islocal.
-                ;; These will be added separately
-                (merge (dissoc word :grade :braille :islocal))
-                (assoc (get grade-to-keyword grade)
-                       (case grade 1 uncontracted 2 contracted))
-                ;; we assume that if any of the grades are local then
-                ;; the whole word is local
-                (update :islocal #(or %1 %2) islocal)))
-          {:contracted nil :uncontracted nil}
-          words))
-
-(defn aggregate
-  "Given a seq of `words` with distinct entries for each `:untranslated`
-  and `:grade,` aggregate them into a seq with distinct entries for
-  each `:untranslated` but aggregate the grades into that one entry.
-  So
-  `[{:untranslated \"foo\" :grade 1 :braille \"FOO\"} {:untranslated \"foo\" :grade 2 :braille \"F4\"}]`
-  becomes
-  [{:untranslated \"foo\" :uncontracted \"FOO\" :contracted \"F4\"]"
-  [words]
-  (->> words
-       (group-by (juxt :untranslated :type :homograph-disambiguation))
-       vals
-       (map merge-words)))
-
 (def hyphenation-keys [:untranslated :hyphenated :spelling])
 
 (def hyphenation-mapping {:untranslated :word
