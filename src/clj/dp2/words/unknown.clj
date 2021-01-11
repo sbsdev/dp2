@@ -136,10 +136,7 @@
                   :spelling spelling
                   :islocal false}]
     (->> words
-         (map #(assoc template :untranslated %))
-         (map words/complement-braille)
-         (map words/complement-ellipsis-braille)
-         (map words/complement-hyphenation))))
+         (map #(assoc template :untranslated %)))))
 
 (defn complement-homograph [words document-id grade type spelling]
   (let [template {:document-id document-id
@@ -150,12 +147,7 @@
     (->> words
          (map #(assoc template
                       :homograph-disambiguation %
-                      :untranslated (string/replace % "|" "")))
-         (map words/complement-braille)
-         ;; FIXME: I don't there really are homographs with ellipsis,
-         ;; so we could drop the following line
-         (map words/complement-ellipsis-braille)
-         (map words/complement-hyphenation))))
+                      :untranslated (string/replace % "|" ""))))))
 
 (defn get-names
   [xml document-id grades spelling]
@@ -208,4 +200,7 @@
       (get-homographs xml document-id grades spelling)
       (get-plain xml document-id grades spelling))
      words/aggregate
+     (map words/complement-braille)
+     (map words/complement-ellipsis-braille)
+     (map words/complement-hyphenation)
      (sort-by :untranslated))))
