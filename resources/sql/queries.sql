@@ -197,70 +197,111 @@ AND document_id = :document_id
 -- Unknown words --
 -------------------
 
--- :name get-all-known-homographs :? :*
--- :doc given a list of `words` retrieve all (locally and globally) known homographs for a given `document_id`, `grade`
-(SELECT homograph_disambiguation
-FROM dictionary_globalword
-WHERE grade = :grade
-AND type = 5
-AND homograph_disambiguation in (:v*:words))
-UNION
-(SELECT homograph_disambiguation
-FROM dictionary_localword
-WHERE grade = :grade
-AND type = 5
-AND document_id = :document_id
-AND homograph_disambiguation in (:v*:words))
+-- :name delete-unknown-words :! :n
+-- :doc empty the "temporary" table containing words from a new document
+DELETE FROM dictionary_unknownword
 
--- :name get-all-known-names :? :*
--- :doc given a list of `words` retrieve all (locally and globally) known names for a given `document_id`, `grade`
-(SELECT untranslated
-FROM dictionary_globalword
-WHERE grade = :grade
-AND type IN (1,2)
-AND untranslated in (:v*:words))
-UNION
-(SELECT untranslated
-FROM dictionary_localword
-WHERE grade = :grade
-AND type IN (1,2)
-AND document_id = :document_id
-AND untranslated in (:v*:words))
+-- :name insert-unknown-words :! :n
+-- :doc insert a list of new `words` into a "temporary" table. This later used to join with the already known words to query the unknown words
+INSERT INTO dictionary_unknownword (untranslated, type, homograph_disambiguation, document_id)
+VALUES :tuple*:words
 
--- :name get-all-known-places :? :*
--- :doc given a list of `words` retrieve all (locally and globally) known places for a given `document_id`, `grade`
-(SELECT untranslated
-FROM dictionary_globalword
-WHERE grade = :grade
-AND type IN (3,4)
-AND untranslated in (:v*:words))
+-- :name get-all-unknown-words :? :*
+-- :doc given a `document-id` retrieve all unknown words for it. This
+-- assumes that the new words contained in this document have been
+-- inserted into the `dictionary_unknownword` table.
+(SELECT unknown.untranslated,
+       COALESCE(l1.braille, g1.braille) AS uncontracted,
+       COALESCE(l2.braille, g2.braille) AS contracted,
+       unknown.type,
+       unknown.homograph_disambiguation,
+       FALSE AS isLocal,
+       unknown.document_id,
+       hyphenation.hyphenation AS hyphenated,
+       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
+FROM dictionary_unknownword unknown
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (0,1,3)
+LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (0,1,3)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (0,1,3)
+LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (0,1,3)
+LEFT JOIN hyphenation_test.words AS hyphenation
+     ON unknown.untranslated = hyphenation.word
+     AND hyphenation.spelling =
+     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
+	  FROM  documents_document
+	  WHERE id = :document-id)
+WHERE unknown.type = 0
+AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
 UNION
-(SELECT untranslated
-FROM dictionary_localword
-WHERE grade = :grade
-AND type IN (3,4)
-AND document_id = :document_id
-AND untranslated in (:v*:words))
-
--- :name get-all-known-words :? :*
--- :doc given a list of `words` retrieve all (locally and globally) known words for a given `document_id`, `grade` 
-(SELECT untranslated
-FROM dictionary_globalword
-WHERE grade = :grade
-AND type NOT IN (2,4,5)
-AND untranslated in (:v*:words))
+(SELECT unknown.untranslated,
+       COALESCE(l1.braille, g1.braille) AS uncontracted,
+       COALESCE(l2.braille, g2.braille) AS contracted,
+       unknown.type,
+       unknown.homograph_disambiguation,
+       FALSE AS isLocal,
+       unknown.document_id,
+       hyphenation.hyphenation AS hyphenated,
+       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
+FROM dictionary_unknownword unknown
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (1,2)
+LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (1,2)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (1,2)
+LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (1,2)
+LEFT JOIN hyphenation_test.words AS hyphenation
+     ON unknown.untranslated = hyphenation.word
+     AND hyphenation.spelling =
+     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
+	  FROM  documents_document
+	  WHERE id = :document-id)
+WHERE unknown.type = 2
+AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
 UNION
-(SELECT untranslated
-FROM dictionary_localword
-WHERE grade = :grade
--- exclude type 2,4 and 5 as these probably have a different
--- translations, so we do need to show these words if they are not
--- tagged even if they have an entry in the dictionary as a name or a
--- place.
-AND type NOT IN (2,4,5)
-AND document_id = :document_id
-AND untranslated IN (:v*:words))
-
+(SELECT unknown.untranslated,
+       COALESCE(l1.braille, g1.braille) AS uncontracted,
+       COALESCE(l2.braille, g2.braille) AS contracted,
+       unknown.type,
+       unknown.homograph_disambiguation,
+       FALSE AS isLocal,
+       unknown.document_id,
+       hyphenation.hyphenation AS hyphenated,
+       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
+FROM dictionary_unknownword unknown
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (3,4)
+LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (3,4)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (3,4)
+LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (3,4)
+LEFT JOIN hyphenation_test.words AS hyphenation
+     ON unknown.untranslated = hyphenation.word
+     AND hyphenation.spelling =
+     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
+	  FROM  documents_document
+	  WHERE id = :document-id)
+WHERE unknown.type = 4
+AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
+UNION
+(SELECT unknown.untranslated,
+       COALESCE(l1.braille, g1.braille) AS uncontracted,
+       COALESCE(l2.braille, g2.braille) AS contracted,
+       unknown.type,
+       unknown.homograph_disambiguation,
+       FALSE AS isLocal,
+       unknown.document_id,
+       hyphenation.hyphenation AS hyphenated,
+       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
+FROM dictionary_unknownword unknown
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (5)
+LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (5)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (5)
+LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (5)
+LEFT JOIN hyphenation_test.words AS hyphenation
+     ON unknown.untranslated = hyphenation.word
+     AND hyphenation.spelling =
+     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
+	  FROM  documents_document
+	  WHERE id = :document-id)
+WHERE unknown.type = 5
+AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
+LIMIT :limit OFFSET :offset
 -----------------------
 -- Confirmable words --
 -----------------------

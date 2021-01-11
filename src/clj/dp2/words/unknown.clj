@@ -15,37 +15,6 @@
       (xpath/set-default-namespace! "http://www.daisy.org/z3986/2005/dtbook/")
       (xpath/declare-namespace! "brl" "http://www.daisy.org/z3986/2009/braille/")))
 
-(defn compare-with-known-words
-  "Given a set of `words` return the ones that are unknown."
-  ([words document-id grade]
-   (compare-with-known-words words document-id grade db/get-all-known-words))
-  ([words document-id grade query-fn]
-   (if (empty? words)
-     ;; if there are no words then none of them can be unknown.
-     ; The db query doesn't like an empty word list
-     #{}
-     (let [known-words
-           (->>
-            (query-fn {:document_id document-id :grade grade :words words})
-            (map :untranslated)
-            set)]
-       (difference words known-words)))))
-
-(defn compare-with-known-homographs
-  "Given a set of `homographs` return the ones that are unknown."
-  [homographs document-id grade]
-  (compare-with-known-words homographs document-id grade db/get-all-known-homographs))
-
-(defn compare-with-known-names
-  "Given a set of `names` return the ones that are unknown."
-  [names document-id grade]
-  (compare-with-known-words names document-id grade db/get-all-known-names))
-
-(defn compare-with-known-places
-  "Given a set of `places` return the ones that are unknown."
-  [places document-id grade]
-  (compare-with-known-words places document-id grade db/get-all-known-places))
-
 (defn filter-braille
   [xml]
   (xslt/transform (xslt/compile-xslt (io/resource "xslt/filter.xsl")) xml))
@@ -128,85 +97,45 @@
     (map string/lower-case)
     set)))
 
-(defn complement-words
-  "Convert a seq of strings (`words`) to a seq of maps that contains the
-  basic information for that word, such as `:document-id`, `:type`,
-  `:spelling`, etc."
-  [words document-id grade type spelling]
-  (let [template {:document-id document-id
-                  :type type
-                  :grade grade
-                  :homograph-disambiguation ""
-                  :spelling spelling
-                  :islocal false}]
-    (->> words
-         (map #(assoc template :untranslated %)))))
-
-(defn complement-homographs
-  "Same as [[complement-words]] but for homographs."
-  [words document-id grade type spelling]
-  (let [template {:document-id document-id
-                  :type type
-                  :grade grade
-                  :spelling spelling
-                  :islocal false}]
-    (->> words
-         (map #(assoc template
-                      :homograph-disambiguation %
-                      :untranslated (string/replace % "|" ""))))))
-
 (defn get-names
-  [xml document-id grades spelling]
-  (let [words (-> xml filter-braille extract-names)]
-    (mapcat (fn [grade]
-              (-> words
-                  (compare-with-known-names document-id grade)
-                  (complement-words document-id grade 2 spelling)))
-            grades)))
+  [xml document-id]
+  (let [words (-> xml filter-braille extract-names)
+        tuples (map (fn [w] [w 2 "" document-id]) words)]
+    tuples))
 
 (defn get-places
-  [xml document-id grades spelling]
-  (let [words (-> xml filter-braille extract-places)]
-    (mapcat (fn [grade]
-              (-> words
-                  (compare-with-known-places document-id grade)
-                  (complement-words document-id grade 4 spelling)))
-            grades)))
+  [xml document-id]
+  (let [words (-> xml filter-braille extract-places)
+        tuples (map (fn [w] [w 4 "" document-id]) words)]
+    tuples))
 
 (defn get-homographs
-  [xml document-id grades spelling]
-  (let [words (-> xml filter-braille extract-homographs)]
-    (mapcat (fn [grade]
-              (-> words
-                  (compare-with-known-homographs document-id grade)
-                  (complement-homographs document-id grade 5 spelling)))
-            grades)))
+  [xml document-id]
+  (let [words (-> xml filter-braille extract-homographs)
+        tuples (map (fn [w] [(string/replace w "|" "") 5 w document-id]) words)]
+    tuples))
 
 (defn get-plain
-  [xml document-id grades spelling]
+  [xml document-id]
   (let [filtered (-> xml filter-braille-and-names)
         special-words (-> filtered extract-special-words) ; ellipsis and hyphen
         plain-words (-> filtered filter-special-words extract-words)
-        all-words (union plain-words special-words)]
-    (mapcat (fn [grade]
-              (-> all-words
-                  (compare-with-known-words document-id grade)
-                  (complement-words document-id grade 0 spelling)))
-            grades)))
+        all-words (union plain-words special-words)
+        tuples (map (fn [w] [w 0 "" document-id]) all-words)]
+    tuples))
 
 (defn get-words
-  [xml document-id grade]
-  (let [document (db/get-document {:id document-id})
-        spelling (:spelling document)
-        grades (words/grades grade)]
-    (->>
-     (concat
-      (get-names xml document-id grades spelling)
-      (get-places xml document-id grades spelling)
-      (get-homographs xml document-id grades spelling)
-      (get-plain xml document-id grades spelling))
-     words/aggregate
-     (map words/complement-braille)
-     (map words/complement-ellipsis-braille)
-     (map words/complement-hyphenation)
-     (sort-by :untranslated))))
+  [xml document-id limit offset]
+  (db/delete-unknown-words)
+  (db/insert-unknown-words
+   {:words (concat
+            (get-names xml document-id)
+            (get-places xml document-id)
+            (get-homographs xml document-id)
+            (get-plain xml document-id))})
+  (->>
+   (db/get-all-unknown-words {:document-id document-id :limit limit :offset offset})
+   (map words/complement-braille)
+   (map words/complement-ellipsis-braille)
+   (map words/complement-hyphenation)
+   (sort-by :untranslated)))
