@@ -23,11 +23,12 @@
 (defn- complement-string [s start end]
   (let [prepend #(str %2 %1)
         append #(str %1 %2)]
-    (cond-> s
-      (not (string/starts-with? s start))
-      (prepend start)
-      (not (string/ends-with? s end))
-      (append end))))
+    (when (some? s)
+      (cond-> s
+        (not (string/starts-with? s start))
+        (prepend start)
+        (not (string/ends-with? s end))
+        (append end)))))
 
 (defn complement-ellipsis-braille
   [{:keys [untranslated uncontracted contracted] :as word}]
