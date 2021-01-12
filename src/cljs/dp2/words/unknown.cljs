@@ -1,21 +1,25 @@
 (ns dp2.words.unknown
   (:require [ajax.core :as ajax]
             [dp2.auth :as auth]
+            [dp2.i18n :refer [tr]]
+            [dp2.pagination :as pagination]
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.grade :as grade]
             [dp2.words.notifications :as notifications]
-            [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]))
 
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_ id]]
-    (let [grade @(rf/subscribe [::grade/grade])]
+    (let [grade @(rf/subscribe [::grade/grade])
+          offset (get-in db [:pagination :unknown] 0)]
       {:db (assoc-in db [:loading :unknown] true)
        :http-xhrio {:method          :get
                     :uri             (str "/api/documents/" id "/unknown-words")
-                    :params          {:grade grade}
+                    :params          {:grade grade
+                                      :offset (* offset pagination/page-size)
+                                      :limit pagination/page-size}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]
                     :on-failure      [::fetch-words-failure :fetch-words]}})))
@@ -152,6 +156,7 @@
 
 (defn unknown-words []
   (let [words @(rf/subscribe [::words])
+        document @(rf/subscribe [:current-document])
         spelling (:spelling (first words))
         grade @(rf/subscribe [::grade/grade])
         loading? @(rf/subscribe [::notifications/loading? :unknown])
@@ -160,18 +165,20 @@
       errors? [notifications/error-notification]
       loading? [notifications/loading-spinner]
       :else
-      [:table.table.is-striped
-       [:thead
-        [:tr
-         [:th (tr [:untranslated])]
-         (when (#{0 1} grade) [:th (tr [:uncontracted])])
-         (when (#{0 2} grade) [:th (tr [:contracted])])
-         [:th (tr [:hyphenated-with-spelling] [(words/spelling-string spelling)])]
-         [:th (tr [:type])]
-         [:th (tr [:homograph-disambiguation])]
-         [:th (tr [:local])]
-         [:th (tr [:action])]]]
-       [:tbody
-        (for [{:keys [uuid]} words]
-          ^{:key uuid}
-          [word uuid])]])))
+      [:<>
+       [:table.table.is-striped
+        [:thead
+         [:tr
+          [:th (tr [:untranslated])]
+          (when (#{0 1} grade) [:th (tr [:uncontracted])])
+          (when (#{0 2} grade) [:th (tr [:contracted])])
+          [:th (tr [:hyphenated-with-spelling] [(words/spelling-string spelling)])]
+          [:th (tr [:type])]
+          [:th (tr [:homograph-disambiguation])]
+          [:th (tr [:local])]
+          [:th (tr [:action])]]]
+        [:tbody
+         (for [{:keys [uuid]} words]
+           ^{:key uuid}
+           [word uuid])]]
+       [pagination/pagination :unknown [::fetch-words (:id document)]]])))
