@@ -125,7 +125,7 @@
     tuples))
 
 (defn get-words
-  [xml document-id limit offset]
+  [xml document-id grade limit offset]
   (db/delete-unknown-words)
   (db/insert-unknown-words
    {:words (concat
@@ -134,7 +134,7 @@
             (get-homographs xml document-id)
             (get-plain xml document-id))})
   (->>
-   (db/get-all-unknown-words {:document-id document-id :limit limit :offset offset})
+   (db/get-all-unknown-words {:document-id document-id :grade grade :limit limit :offset offset})
    (map words/complement-braille)
    (map words/complement-ellipsis-braille)
    (map words/complement-hyphenation)

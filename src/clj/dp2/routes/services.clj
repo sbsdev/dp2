@@ -211,13 +211,14 @@
      {:swagger {:tags ["Local Words"]}
       :get {:summary "Get all unknown words for a given document"
             :parameters {:path {:id int?}
-                         :query {(spec/opt :limit) int?
+                         :query {:grade ::grade
+                                 (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
             :handler (fn [{{{:keys [id]} :path
-                            {:keys [limit offset]
+                            {:keys [grade limit offset]
                              :or {limit default-limit offset 0}} :query} :parameters}]
                        (let [version (docs/get-latest-version id)
-                             unknown (unknown/get-words version id limit offset)]
+                             unknown (unknown/get-words version id grade limit offset)]
                          (ok unknown)))}}]
 
     ["/versions"
