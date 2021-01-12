@@ -4,10 +4,14 @@
    [clojure.string :as string]))
 
 (def valid-braille-re
+  "RegExp to validate Braille"
   #"-?[A-Z0-9&%\[^\],;:/?+=\(*\).\\@#\"!>$_<\'àáâãåæçèéêëìíîïðñòóôõøùúûýþÿœāăąćĉċčďđēėęğģĥħĩīįıĳĵķĺļľŀłńņňŋōŏőŕŗřśŝşšţťŧũūŭůűųŵŷźżžǎẁẃẅỳ┊]+")
 
 (def valid-hyphenation-re
-  #"[a-z\xC0-\xFF\u0100-\u017F-]+")
+  "RegExp to validate a hyphenation. Allow a set of lowercase characters
+  and hyphens, but require that the hyphenation starts and ends with
+  at least two chars"
+  #"[a-z\xC0-\xFF\u0100-\u017F]{2,}[a-z\xC0-\xFF\u0100-\u017F-]*[a-z\xC0-\xFF\u0100-\u017F]{2,}")
 
 (defn braille-valid?
   "Return true if `s` is valid ascii braille."
