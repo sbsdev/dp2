@@ -400,6 +400,7 @@ LIMIT :limit OFFSET :offset
 -- :doc retrieve local words that are ready for confirmation. The words contain braille for both grades and the hyphenation if they exist.
 SELECT words.*,
        (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling,
+       doc.title AS document_title,
        hyphenation.hyphenation AS hyphenated
 FROM
   (SELECT DISTINCT w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation, w.document_id, BIT_OR(w.isLocal) AS isLocal

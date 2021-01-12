@@ -174,7 +174,7 @@
       :else (tr [:unknown]))))
 
 (defn word [id]
-  (let [{:keys [uuid untranslated type homograph-disambiguation hyphenated spelling]} @(rf/subscribe [::word id])]
+  (let [{:keys [uuid untranslated type homograph-disambiguation hyphenated spelling document-title]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
      [:td [input-field uuid :uncontracted validation/braille-valid?]]
@@ -184,6 +184,7 @@
      [:td spelling]
      [:td {:width "8%"} [type-field uuid]]
      [:td {:width "8%"} homograph-disambiguation]
+     [:td [:abbr {:title document-title } (str (subs document-title 0 3) "...")]]
      [:td [local-field uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
 
@@ -206,6 +207,7 @@
            [:th (tr [:spelling])]
            [:th (tr [:type])]
            [:th (tr [:homograph-disambiguation])]
+           [:th (tr [:book])]
            [:th (tr [:local])]
            [:th (tr [:action])]]]
          [:tbody

@@ -30,6 +30,7 @@
                     :documents "Documents"
                     :confirm "Confirm"
                     :words "Words"
+                    :book "Book"
                     ;;
                     :new "New"
                     :in-production "In Production"
@@ -92,6 +93,7 @@
                     :documents "Dokumente"
                     :confirm "Bestätigen"
                     :words "Globale Wörter"
+                    :book "Buch"
                     ;;
                     :new "Neu"
                     :in-production "In Produktion"
