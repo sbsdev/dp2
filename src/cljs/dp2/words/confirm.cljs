@@ -82,7 +82,7 @@
 (rf/reg-sub
   ::words
   (fn [db _]
-    (->> db :words :confirm vals (sort-by :untranslated))))
+    (->> db :words :confirm vals (sort-by (juxt :document-id :untranslated)))))
 
 (rf/reg-sub
  ::word
