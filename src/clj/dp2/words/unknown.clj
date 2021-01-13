@@ -135,6 +135,7 @@
             (get-plain xml document-id))})
   (->>
    (db/get-all-unknown-words {:document-id document-id :grade grade :limit limit :offset offset})
+   (map words/islocal-to-boolean)
    (map words/complement-braille)
    (map words/complement-ellipsis-braille)
    (map words/complement-hyphenation)

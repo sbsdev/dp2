@@ -113,3 +113,10 @@
       (select-keys keys)
       (rename-keys mapping)))
 
+(defn islocal-to-boolean
+  ;; MySQL doesn't always seem to return the right type for boolean
+  ;; values. This function should fix that problem.
+  [{:keys [islocal] :as word}]
+  (cond-> word
+    (= islocal 1) (assoc :islocal true)
+    (= islocal 0) (assoc :islocal false)))

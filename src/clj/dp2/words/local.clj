@@ -10,7 +10,9 @@
         words (if (= grade 0)
                 (db/get-local-words-aggregated {:id id :limit limit :offset offset})
                 (db/get-local-words {:id id :grade grade :limit limit :offset offset}))]
-    (map words/complement-hyphenation words)))
+    (->> words
+         (map words/islocal-to-boolean)
+         (map words/complement-hyphenation))))
 
 (defn put-word
   "Persist a `word` in the db. Upsert all braille translations and the
