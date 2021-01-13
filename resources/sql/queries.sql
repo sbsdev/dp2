@@ -213,13 +213,9 @@ VALUES :tuple*:words
 -- grade.This assumes that the new words contained in this document
 -- have been inserted into the `dictionary_unknownword` table.
 /*~ (if (= (:grade params) 0) */
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        COALESCE(l1.braille, g1.braille) AS uncontracted,
        COALESCE(l2.braille, g2.braille) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
@@ -236,13 +232,9 @@ LEFT JOIN hyphenation_test.words AS hyphenation
 WHERE unknown.type = 0
 AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
 UNION
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        COALESCE(l1.braille, g1.braille) AS uncontracted,
        COALESCE(l2.braille, g2.braille) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
@@ -259,13 +251,9 @@ LEFT JOIN hyphenation_test.words AS hyphenation
 WHERE unknown.type = 2
 AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
 UNION
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        COALESCE(l1.braille, g1.braille) AS uncontracted,
        COALESCE(l2.braille, g2.braille) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
@@ -282,13 +270,9 @@ LEFT JOIN hyphenation_test.words AS hyphenation
 WHERE unknown.type = 4
 AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
 UNION
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        COALESCE(l1.braille, g1.braille) AS uncontracted,
        COALESCE(l2.braille, g2.braille) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
@@ -305,13 +289,9 @@ LEFT JOIN hyphenation_test.words AS hyphenation
 WHERE unknown.type = 5
 AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
 /*~*/
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
        IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
@@ -326,13 +306,9 @@ LEFT JOIN hyphenation_test.words AS hyphenation
 WHERE unknown.type = 0
 AND (g.id IS NULL AND l.id IS NULL))
 UNION
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
        IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
@@ -347,13 +323,9 @@ LEFT JOIN hyphenation_test.words AS hyphenation
 WHERE unknown.type = 2
 AND (g.id IS NULL AND l.id IS NULL))
 UNION
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
        IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
@@ -368,13 +340,9 @@ LEFT JOIN hyphenation_test.words AS hyphenation
 WHERE unknown.type = 4
 AND (g.id IS NULL AND l.id IS NULL))
 UNION
-(SELECT unknown.untranslated,
+(SELECT unknown.*,
        IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
        IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       unknown.type,
-       unknown.homograph_disambiguation,
-       FALSE AS isLocal,
-       unknown.document_id,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
