@@ -43,15 +43,15 @@
 (defn pagination [id event]
   (let [has-previous? @(rf/subscribe [::has-previous? id])
         has-next? @(rf/subscribe [::has-next? id])]
-    [:div.field.is-grouped
-     [:p.control
-      [:button.button
-       {:disabled (not has-previous?)
-        :on-click (fn [e] (rf/dispatch [::previous-page id event]))}
-       (tr [:previous])]]
-     [:p.control
-      [:button.button
-       {:disabled (not has-next?)
-        :on-click (fn [e] (rf/dispatch [::next-page id event]))}
-       (tr [:next])]]]))
+    [:nav.pagination.is-right {:role "navigation" :arial-label "pagination"}
+     [:a.pagination-previous
+      {:disabled (not has-previous?)
+       :on-click (fn [e] (rf/dispatch [::previous-page id event]))}
+      (tr [:previous])]
+     [:a.pagination-next
+      {:disabled (not has-next?)
+       :on-click (fn [e] (rf/dispatch [::next-page id event]))}
+      (tr [:next])]
+     ;; we have to add an empty pagination list to make the rest of the pagination nav work
+     [:ul.pagination-list]]))
 
