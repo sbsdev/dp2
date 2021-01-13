@@ -18,8 +18,9 @@
   "Persist a `word` in the db. Upsert all braille translations and the
   hyphenation. Returns the number of insertions/updates."
   [word]
-  (db/insert-hyphenation
-   (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
+  (when (:hyphenated word)
+    (db/insert-hyphenation
+     (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
   (let [insertions
         (->> word
              words/separate-word
@@ -52,7 +53,7 @@
     ;; braille entry for it (we can have multiple entries for a word
     ;; in the braille db (for the two grades, for names etc) but we
     ;; only have one entry, per spelling in the hyphenation db)
-    (when (= (ref-count word) 0)
+    (when (and (:hyphenated word) (= (ref-count word) 0))
       (db/delete-hyphenation
        (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
     (whitelists/export-local-tables (:document-id word))

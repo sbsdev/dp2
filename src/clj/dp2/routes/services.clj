@@ -187,7 +187,8 @@
                                 :contracted (spec/maybe string?)
                                 :homograph-disambiguation string?
                                 :document-id int? :islocal boolean?
-                                :hyphenated string? :spelling int?}}
+                                :hyphenated (spec/maybe string?)
+                                :spelling int?}}
             :handler (fn [{{word :body} :parameters}]
                        (local/put-word word)
                        (no-content))}
@@ -200,7 +201,8 @@
                                    :contracted (spec/maybe string?)
                                    :homograph-disambiguation string?
                                    :document-id int?
-                                   :hyphenated string? :spelling int?}}
+                                   :hyphenated (spec/maybe string?)
+                                   :spelling int?}}
                :handler (fn [{{word :body} :parameters}]
                           (let [deleted (local/delete-word word)]
                             (if (>= deleted 1)
