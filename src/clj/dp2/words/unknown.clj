@@ -138,5 +138,4 @@
    (map words/islocal-to-boolean)
    (map words/complement-braille)
    (map words/complement-ellipsis-braille)
-   (map words/complement-hyphenation)
-   (sort-by :untranslated)))
+   (map words/complement-hyphenation)))
