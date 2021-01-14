@@ -204,8 +204,8 @@
      [:td (when hyphenated
             [input-field uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
      [:td spelling]
-     [:td {:width "8%"} [type-field uuid]]
-     [:td {:width "8%"} homograph-disambiguation]
+     [:td [type-field uuid]]
+     [:td homograph-disambiguation]
      [:td [:abbr {:title document-title } (str (subs document-title 0 3) "...")]]
      [:td [local-field uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
@@ -226,11 +226,11 @@
            [:th (tr [:uncontracted])]
            [:th (tr [:contracted])]
            [:th (tr [:hyphenated])]
-           [:th (tr [:spelling])]
-           [:th (tr [:type])]
-           [:th (tr [:homograph-disambiguation])]
+           [:th [:abbr {:title (tr [:spelling])} (subs (tr [:spelling]) 0 1)]]
+           [:th [:abbr {:title (tr [:type])} (subs (tr [:type]) 0 1)]]
+           [:th [:abbr {:title (tr [:homograph-disambiguation])} (subs (tr [:homograph-disambiguation]) 0 1)]]
            [:th (tr [:book])]
-           [:th (tr [:local])]
+           [:th [:abbr {:title (tr [:local])} (subs (tr [:local]) 0 1)]]
            [:th (tr [:action])]]]
          [:tbody
           (for [{:keys [uuid]} @(rf/subscribe [::words-sorted])]
