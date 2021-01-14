@@ -3,6 +3,7 @@
             [dp2.auth :as auth]
             [dp2.i18n :refer [tr]]
             [dp2.pagination :as pagination]
+            [dp2.submit-all :as submit-all]
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.notifications :as notifications]
@@ -53,6 +54,12 @@
                     }})))
 
 (rf/reg-event-fx
+  ::save-all-words
+  (fn [{:keys [db]} _]
+    (let [ids (keys (get-in db [:words :confirm]))]
+      {:dispatch-n (map (fn [id] [::save-word id]) ids)})))
+
+(rf/reg-event-fx
   ::delete-word
   (fn [{:keys [db]} [_ id]]
     (let [word (get-in db [:words :confirm id])
@@ -82,7 +89,22 @@
 (rf/reg-sub
   ::words
   (fn [db _]
-    (->> db :words :confirm vals (sort-by (juxt :document-id :untranslated)))))
+    (->> db :words :confirm vals)))
+
+(rf/reg-sub
+ ::words-sorted
+ :<- [::words]
+ (fn [words] (->> words (sort-by (juxt :document-id :untranslated)))))
+
+(rf/reg-sub
+ ::has-words?
+ :<- [::words]
+ (fn [words] (->> words seq some?)))
+
+(rf/reg-sub
+ ::words-valid?
+ :<- [::words]
+ (fn [words] (every? validation/word-valid? words)))
 
 (rf/reg-sub
  ::word
@@ -211,6 +233,7 @@
            [:th (tr [:local])]
            [:th (tr [:action])]]]
          [:tbody
-          (for [{:keys [uuid]} @(rf/subscribe [::words])]
+          (for [{:keys [uuid]} @(rf/subscribe [::words-sorted])]
             ^{:key uuid} [word uuid])]]
+        [submit-all/buttons (tr [:approve-all]) [::words-valid?] [::has-words?] [::save-all-words]]
         [pagination/pagination :confirm [::fetch-words]]])]))

@@ -3,6 +3,7 @@
             [dp2.auth :as auth]
             [dp2.i18n :refer [tr]]
             [dp2.pagination :as pagination]
+            [dp2.submit-all :as submit-all]
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.grade :as grade]
@@ -57,6 +58,12 @@
                     :on-success      [::ack-save id]
                     }})))
 
+(rf/reg-event-fx
+  ::save-all-words
+  (fn [{:keys [db]} _]
+    (let [ids (keys (get-in db [:words :unknown]))]
+      {:dispatch-n (map (fn [id] [::save-word id]) ids)})))
+
 (rf/reg-event-db
   ::ack-save
   (fn [db [_ uuid]]
@@ -70,7 +77,22 @@
 (rf/reg-sub
  ::words
  (fn [db _]
-   (->> db :words :unknown vals (sort-by :untranslated))))
+   (->> db :words :unknown vals)))
+
+(rf/reg-sub
+ ::words-sorted
+ :<- [::words]
+ (fn [words] (->> words (sort-by (juxt :document-id :untranslated)))))
+
+(rf/reg-sub
+ ::has-words?
+ :<- [::words]
+ (fn [words] (->> words seq some?)))
+
+(rf/reg-sub
+ ::words-valid?
+ :<- [::words]
+ (fn [words] (every? validation/word-valid? words)))
 
 (rf/reg-sub
  ::word
@@ -155,7 +177,7 @@
      [:td {:width "8%"} [buttons uuid]]]))
 
 (defn unknown-words []
-  (let [words @(rf/subscribe [::words])
+  (let [words @(rf/subscribe [::words-sorted])
         document @(rf/subscribe [:current-document])
         spelling (:spelling (first words))
         grade @(rf/subscribe [::grade/grade])
@@ -181,4 +203,5 @@
          (for [{:keys [uuid]} words]
            ^{:key uuid}
            [word uuid])]]
+       [submit-all/buttons (tr [:save-all]) [::words-valid?] [::has-words?] [::save-all-words]]
        [pagination/pagination :unknown [::fetch-words (:id document)]]])))

@@ -4,7 +4,9 @@
 (def translations {:en
                    {:missing "missing translation"
                     :approve "Approve"
+                    :approve-all "Approve all"
                     :save "Save"
+                    :save-all "Save all"
                     :delete "Delete"
                     :ignore "Ignore"
                     :input-not-valid "Input not valid"
@@ -67,7 +69,9 @@
                    :de
                    {:missing "Fehlende Übersetzung"
                     :approve "Bestätigen"
+                    :approve-all "Alle Bestätigen"
                     :save "Speichern"
+                    :save-all "Alle Speichern"
                     :delete "Löschen"
                     :ignore "Ignorieren"
                     :input-not-valid "Eingabe ungültig"
