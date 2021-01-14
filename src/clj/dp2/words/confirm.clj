@@ -13,15 +13,15 @@
        (map words/complement-hyphenation)))
 
 (defn put-word [word]
-  (cond (:islocal word)
-        ;; if a word is local then just save it in the local db with
-        ;; confirmed = true
-        (-> word (assoc :isconfirmed true) (local/put-word))
-        :else
-        ;; otherwise move the word to the global dict
-        (conman/with-transaction [db/*db*]
-          (local/delete-word word)
-          (db/insert-hyphenation
-           (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
-          (global/put-word word))))
+  (if (:islocal word)
+    ;; if a word is local then just save it in the local db with
+    ;; confirmed = true
+    (-> word (assoc :isconfirmed true) (local/put-word))
+    ;; otherwise move the word to the global dict
+    (conman/with-transaction [db/*db*]
+      (local/delete-word word)
+      (when (:hyphenated word)
+        (db/insert-hyphenation
+         (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
+      (global/put-word word))))
 

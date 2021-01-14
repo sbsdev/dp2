@@ -259,7 +259,8 @@
                                :contracted (spec/maybe string?)
                                :homograph-disambiguation string?
                                :document-id int? :islocal boolean?
-                               :hyphenated string? :spelling int?}}
+                               :hyphenated (spec/maybe string?)
+                               :spelling int?}}
            :handler (fn [{{word :body} :parameters}]
                       (confirm/put-word word)
                       (no-content))}}]
