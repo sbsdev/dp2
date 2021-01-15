@@ -1,11 +1,9 @@
 (ns dp2.words.unknown
   (:require [clojure.java.io :as io]
-            [clojure.set :refer [difference]]
-            [clojure.string :as string]
             [clojure.set :refer [union]]
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [dp2.db.core :as db]
-            [dp2.hyphenate :as hyphenate]
-            [dp2.louis :as louis]
             [dp2.words :as words]
             [sigel.xpath.core :as xpath]
             [sigel.xslt.core :as xslt]))
@@ -133,6 +131,9 @@
             (get-places xml document-id)
             (get-homographs xml document-id)
             (get-plain xml document-id))})
+  (when (= offset 0)
+    (let [deleted (db/delete-non-existing-unknown-words-from-local-words {:document-id document-id})]
+      (log/infof "Deleted %s local words that were not in unknown words for book %s" deleted document-id)))
   (->>
    (db/get-all-unknown-words {:document-id document-id :grade grade :limit limit :offset offset})
    (map words/islocal-to-boolean)

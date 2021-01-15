@@ -206,6 +206,16 @@ DELETE FROM dictionary_unknownword
 INSERT INTO dictionary_unknownword (untranslated, type, homograph_disambiguation, document_id)
 VALUES :tuple*:words
 
+-- :name delete-non-existing-unknown-words-from-local-words :! :n
+-- :doc delete words that are not in the list of unknown words from
+-- the local words for given `:document-id`
+DELETE l
+FROM dictionary_localword l
+LEFT JOIN dictionary_unknownword u
+ON u.untranslated = l.untranslated AND u.type = l.type AND u.document_id = l.document_id
+WHERE u.untranslated IS NULL
+AND l.document_id = :document-id
+
 -- :name get-all-unknown-words :? :*
 -- :doc given a `document-id` and a `:grade` retrieve all unknown
 -- words for it. If `:grade` is 0 then return words for both grade 1
