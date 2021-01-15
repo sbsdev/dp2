@@ -7,16 +7,12 @@
 (defn offset [db id]
   (get-in db [:pagination id :offset] 0))
 
-(defn update-next-prev [db id next? prev?]
-  (-> db
-      (assoc-in [:pagination id :next?] next?)
-      (assoc-in [:pagination id :prev?] prev?)))
+(defn update-next [db id next?]
+  (assoc-in db [:pagination id :next?] next?))
 
-(defn- inc-offset [db id]
-  (update-in db [:pagination id :offset] (fnil inc 0)))
-
-(defn- dec-offset [db id]
-  (update-in db [:pagination id :offset] (fnil dec 0)))
+(defn- update-prev [db id]
+  (let [prev? (-> db (offset id) pos?)]
+    (assoc-in db [:pagination id :prev?] prev?)))
 
 (defn- has-next? [db id]
   (get-in db [:pagination id :next?]))
@@ -33,14 +29,18 @@
  ::next-page
  (fn [{:keys [db]} [_ id fetch-event]]
    (when (has-next? db id)
-     {:db (inc-offset db id)
+     {:db (-> db
+              (update-in [:pagination id :offset] (fnil inc 0))
+              (update-prev id))
       :dispatch fetch-event})))
 
 (rf/reg-event-fx
  ::previous-page
  (fn [{:keys [db]} [_ id fetch-event]]
    (when (has-previous? db id)
-     {:db (dec-offset db id)
+     {:db (-> db
+              (update-in [:pagination id :offset] (fnil dec 0))
+              (update-prev id))
       :dispatch fetch-event})))
 
 (rf/reg-sub

@@ -27,11 +27,10 @@
  (fn [db [_ words]]
    (let [words (->> words
                     (map #(assoc % :uuid (str (random-uuid)))))
-         next? (-> words count (= pagination/page-size))
-         prev? (-> db (pagination/offset :confirm) pos?)]
+         next? (-> words count (= pagination/page-size))]
      (-> db
          (assoc-in [:words :confirm] (zipmap (map :uuid words) words))
-         (pagination/update-next-prev :confirm next? prev?)
+         (pagination/update-next :confirm next?)
          (assoc-in [:loading :confirm] false)))))
 
 (rf/reg-event-db
