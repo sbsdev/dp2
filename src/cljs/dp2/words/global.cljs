@@ -13,7 +13,7 @@
   ::fetch-words
   (fn [{:keys [db]} [_]]
     (let [search (get db :words-search)
-          offset (get-in db [:pagination :global] 0)]
+          offset (pagination/offset db :global)]
       {:db (assoc-in db [:loading :global] true)
        :http-xhrio {:method          :get
                     :uri             "/api/words"
@@ -28,9 +28,12 @@
  ::fetch-words-success
  (fn [db [_ words]]
    (let [words (->> words
-                    (map #(assoc % :uuid (str (random-uuid)))))]
+                    (map #(assoc % :uuid (str (random-uuid)))))
+         next? (-> words count (= pagination/page-size))
+         prev? (-> db (pagination/offset :global) pos?)]
      (-> db
          (assoc-in [:words :global] (zipmap (map :uuid words) words))
+         (pagination/update-next-prev :global next? prev?)
          (assoc-in [:loading :global] false)))))
 
 (rf/reg-event-db

@@ -12,11 +12,12 @@
 (rf/reg-event-fx
   ::fetch-words
   (fn [{:keys [db]} [_]]
-    (let [offset (get-in db [:pagination :confirm] 0)]
+    (let [offset (pagination/offset db :confirm)]
       {:db (assoc-in db [:loading :confirm] true)
        :http-xhrio {:method          :get
                     :uri             "/api/confirmable"
-                    :params          {:offset (* offset pagination/page-size) :limit pagination/page-size}
+                    :params          {:offset (* offset pagination/page-size)
+                                      :limit pagination/page-size}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]
                     :on-failure      [::fetch-words-failure :fetch-confirm-words]}})))
@@ -25,9 +26,12 @@
  ::fetch-words-success
  (fn [db [_ words]]
    (let [words (->> words
-                    (map #(assoc % :uuid (str (random-uuid)))))]
+                    (map #(assoc % :uuid (str (random-uuid)))))
+         next? (-> words count (= pagination/page-size))
+         prev? (-> db (pagination/offset :confirm) pos?)]
      (-> db
          (assoc-in [:words :confirm] (zipmap (map :uuid words) words))
+         (pagination/update-next-prev :confirm next? prev?)
          (assoc-in [:loading :confirm] false)))))
 
 (rf/reg-event-db

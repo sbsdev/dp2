@@ -4,30 +4,43 @@
 
 (def page-size 20)
 
+(defn offset [db id]
+  (get-in db [:pagination id :offset] 0))
+
+(defn update-next-prev [db id next? prev?]
+  (-> db
+      (assoc-in [:pagination id :next?] next?)
+      (assoc-in [:pagination id :prev?] prev?)))
+
+(defn- inc-offset [db id]
+  (update-in db [:pagination id :offset] (fnil inc 0)))
+
+(defn- dec-offset [db id]
+  (update-in db [:pagination id :offset] (fnil dec 0)))
+
 (defn- has-next? [db id]
-  (->> db :words id count (= page-size)))
+  (get-in db [:pagination id :next?]))
 
 (defn- has-previous? [db id]
-  ;; clojurescript doesn't seem to mind (pos? nil), so (fnil pos? 0) is not needed
-  (->> db :pagination id pos?))
+  (get-in db [:pagination id :prev?]))
 
 (rf/reg-event-db
  ::reset
  (fn [db [_ id]]
-   (assoc-in db [:pagination id] 0)))
+   (assoc-in db [:pagination id :offset] 0)))
 
 (rf/reg-event-fx
  ::next-page
  (fn [{:keys [db]} [_ id fetch-event]]
    (when (has-next? db id)
-     {:db (update-in db [:pagination id] (fnil inc 0))
+     {:db (inc-offset db id)
       :dispatch fetch-event})))
 
 (rf/reg-event-fx
  ::previous-page
  (fn [{:keys [db]} [_ id fetch-event]]
    (when (has-previous? db id)
-     {:db (update-in db [:pagination id] (fnil dec 0))
+     {:db (dec-offset db id)
       :dispatch fetch-event})))
 
 (rf/reg-sub
