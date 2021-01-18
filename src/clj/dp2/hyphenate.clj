@@ -5,7 +5,9 @@
   hyphenation dictionaries in the file system the hyphenators list
   needs to be reloaded."
   (:require [clojure.java.io :as io]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [dp2.metrics :as metrics]
+            [iapetos.collector.fn :as prometheus])
   (:import ch.sbs.jhyphen.Hyphenator))
 
 (def hyphen-dictionaries
@@ -39,3 +41,5 @@
   (let [default (get hyphenators 1)
         hyphenator (get hyphenators spelling default)]
     (hyphenate* text hyphenator)))
+
+(prometheus/instrument! metrics/registry #'hyphenate)

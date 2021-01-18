@@ -2,6 +2,8 @@
   (:require [clj-ldap.client :as ldap]
             [clojure.tools.logging :as log]
             [dp2.config :refer [env]]
+            [dp2.metrics :as metrics]
+            [iapetos.collector.fn :as prometheus]
             [mount.core :refer [defstate]]))
 
 (defstate ldap-pool
@@ -31,4 +33,4 @@
             (select-keys [:uid :mail :initials :displayName :telephoneNumber])))
       (finally (ldap/release-connection ldap-pool conn)))))
 
-
+(prometheus/instrument! metrics/registry #'authenticate)

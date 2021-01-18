@@ -1,4 +1,6 @@
 (ns dp2.louis
+  (:require [dp2.metrics :as metrics]
+            [iapetos.collector.fn :as prometheus])
   (:import org.liblouis.Translator))
 
 (def base-tables ["sbs-wordsplit.dis" "sbs-de-core6.cti" "sbs-de-accents.cti",
@@ -30,3 +32,6 @@
         inter-character-attributes (int-array (repeat (- length 1) 0))
         translator (Translator. ^String tables-string)]
     (.getBraille (.translate translator word nil nil inter-character-attributes))))
+
+(prometheus/instrument! metrics/registry #'translate)
+
