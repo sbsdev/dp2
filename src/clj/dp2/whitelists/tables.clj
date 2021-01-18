@@ -1,11 +1,13 @@
 (ns dp2.whitelists.tables
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [dp2.config :refer [env]]
-            [dp2.louis :as louis]
-            [dp2.words :as words]
             [dp2.db.core :as db]
-            [clojure.tools.logging :as log]))
+            [dp2.louis :as louis]
+            [dp2.metrics :as metrics]
+            [dp2.words :as words]
+            [iapetos.collector.fn :as prometheus]))
 
 (def ascii-to-dots
   {\A "1"
@@ -233,3 +235,6 @@
   (log/info "Exporting global tables")
   (write-global-tables (db/get-global-words))
   (log/info "Finished exporting global tables"))
+
+(prometheus/instrument! metrics/registry #'export-local-tables)
+(prometheus/instrument! metrics/registry #'export-global-tables)

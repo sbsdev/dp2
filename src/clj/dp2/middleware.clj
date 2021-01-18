@@ -17,7 +17,9 @@
     [buddy.auth.accessrules :refer [restrict]]
     [buddy.auth :refer [authenticated?]]
     [buddy.auth.backends.token :refer [jws-backend]]
-    [buddy.auth.backends.session :refer [session-backend]])
+    [buddy.auth.backends.session :refer [session-backend]]
+    [iapetos.collector.ring :as prometheus]
+    [dp2.metrics :as metrics])
   )
 
 (defn wrap-internal-error [handler]
@@ -70,4 +72,6 @@
         (-> site-defaults
             (assoc-in [:security :anti-forgery] false)
             (dissoc :session)))
+      (prometheus/wrap-metrics
+       metrics/registry {:path "/metrics"})
       wrap-internal-error))
