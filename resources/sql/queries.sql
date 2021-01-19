@@ -52,6 +52,28 @@ SELECT untranslated,
        IF(grade = 2, braille, NULL) AS contracted,
         type, homograph_disambiguation
 FROM dictionary_globalword
+ORDER BY untranslated
+
+-- :name get-global-words-aggregated :? :*
+-- :doc retrieve all global words
+(SELECT t1.untranslated, t2.braille as uncontracted, t1.braille as contracted, t1.type, t1.homograph_disambiguation
+FROM dictionary_globalword t1
+LEFT JOIN dictionary_globalword t2
+ON t1.untranslated = t2.untranslated
+AND t1.type = t2.type
+AND t1.homograph_disambiguation = t2.homograph_disambiguation
+AND t1.grade <> t2.grade
+WHERE t1.grade = 2)
+UNION DISTINCT
+(SELECT t1.untranslated, t1.braille as uncontracted, t2.braille as contracted, t1.type, t1.homograph_disambiguation
+FROM dictionary_globalword t1
+LEFT JOIN dictionary_globalword t2
+ON t1.untranslated = t2.untranslated
+AND t1.type = t2.type
+AND t1.homograph_disambiguation = t2.homograph_disambiguation
+AND t1.grade <> t2.grade
+WHERE t1.grade = 1)
+ORDER BY untranslated
 
 -- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for `untranslated`, a `limit` and an `offset`
