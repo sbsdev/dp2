@@ -18,6 +18,17 @@
   (when ldap-pool
     (ldap/close ldap-pool)))
 
+(defn- extract-group [s]
+  (->> s
+   (re-matches #"cn=(\w+),cn=groups,cn=accounts,dc=sbszh,dc=ch")
+   second))
+
+(defn- add-roles [{groups :memberOf :as user}]
+  (let [roles (->> groups
+                   (map extract-group)
+                   (remove nil?))]
+    (assoc user :roles roles)))
+
 (defn authenticate [username password & [attributes]]
   (let [conn           (ldap/get-connection ldap-pool)
         qualified-name (str "uid=" username ",cn=users,cn=accounts,dc=sbszh,dc=ch")]
@@ -28,7 +39,6 @@
                          {:filter (str "uid=" username)
                           :attributes (or attributes [])})
             first
-            (select-keys [:uid :mail :initials :displayName :telephoneNumber])))
+            add-roles
+            (select-keys [:uid :mail :initials :displayName :telephoneNumber :roles])))
       (finally (ldap/release-connection ldap-pool conn)))))
-
-
