@@ -3,6 +3,7 @@
             [dp2.events]
             [dp2.words.notifications :as notifications]
             [dp2.i18n :refer [tr]]
+            [dp2.utils :as utils]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
@@ -27,7 +28,10 @@
  (fn [{:keys [db]} [_ {:keys [token user]}]]
    {:db (-> db
             (assoc-in [:credentials :token] token)
-            (assoc-in [:credentials :user] user))
+            (assoc-in [:credentials :user] user)
+            ;; since JSON converts sets into arrays we have to convert
+            ;; it back to a set
+            (update-in [:credentials :user :roles] #(apply hash-set %)))
     :common/navigate-fx! [:documents]}))
 
 (rf/reg-event-db
@@ -37,18 +41,24 @@
 
 (rf/reg-sub
  ::authenticated?
- (fn [db [_ id]]
-   (->> db :credentials some?)))
+ (fn [db [_ _]]
+   (-> db :credentials some?)))
 
 (rf/reg-sub
-  ::token
-  (fn [db _]
-    (->> db :credentials :token)))
+ ::is-admin?
+ (fn [db [_ _]]
+   (-> db :credentials :user utils/is-admin?)))
+
+(rf/reg-sub
+ ::user
+ (fn [db [_ _]]
+   (-> db :credentials :user)))
 
 (rf/reg-sub
  ::user-initials
- (fn [db [_ id]]
-   (->> db :credentials :user :initials)))
+ :<- [::user]
+ (fn [user] (-> user :initials)))
+
 
 (defn auth-header [db]
   (let [token (get-in db [:credentials :token])]

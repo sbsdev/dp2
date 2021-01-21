@@ -20,8 +20,7 @@
 (rf/reg-sub
  ::errors?
  :<- [::errors]
-  (fn [errors _]
-    (seq errors)))
+ (fn [errors] (seq errors)))
 
 (defn loading-spinner []
   [:div.block

@@ -28,25 +28,26 @@
     :class (when (= page @(rf/subscribe [:common/page-id])) :is-active)}
    title])
 
-(defn navbar [] 
+(defn navbar []
   (r/with-let [expanded? (r/atom false)]
-              [:nav.navbar.is-info>div.container
-               [:div.navbar-brand
-                [:a.navbar-item {:href "/" :style {:font-weight :bold}} "dp2"]
-                [:span.navbar-burger.burger
-                 {:data-target :nav-menu
-                  :on-click #(swap! expanded? not)
-                  :class (when @expanded? :is-active)}
-                 [:span][:span][:span]]]
-               [:div#nav-menu.navbar-menu
-                {:class (when @expanded? :is-active)}
-                [:div.navbar-start
-                 [nav-link "#/" (tr [:documents]) :documents]
-                 [nav-link "#/confirm" (tr [:confirm]) :confirm]
-                 [nav-link "#/words" (tr [:words]) :words]]
-                [:div.navbar-end
-                 [:div.navbar-item
-                  (auth/user-buttons)]]]]))
+    (let [is-admin? @(rf/subscribe [::auth/is-admin?])]
+      [:nav.navbar.is-info>div.container
+       [:div.navbar-brand
+        [:a.navbar-item {:href "/" :style {:font-weight :bold}} "dp2"]
+        [:span.navbar-burger.burger
+         {:data-target :nav-menu
+          :on-click #(swap! expanded? not)
+          :class (when @expanded? :is-active)}
+         [:span][:span][:span]]]
+       [:div#nav-menu.navbar-menu
+        {:class (when @expanded? :is-active)}
+        [:div.navbar-start
+         [nav-link "#/" (tr [:documents]) :documents]
+         (when is-admin? [nav-link "#/confirm" (tr [:confirm]) :confirm])
+         (when is-admin? [nav-link "#/words" (tr [:words]) :words])]
+        [:div.navbar-end
+         [:div.navbar-item
+          (auth/user-buttons)]]]])))
 
 (def state-mapping {1 (tr [:new]) 4 (tr [:in-production]) 6 (tr [:finished])})
 
