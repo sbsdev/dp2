@@ -8,6 +8,10 @@
             [mount.core :refer [defstate]])
   (:import [java.time Duration Instant]))
 
+(def clock-interval
+  "Time interval at which writes to the local tables happen in miliseconds"
+  (* 10 1000)) ; every 10 seconds
+
 (defstate local-dict-chan
   :start (let [input-ch (async/chan (async/buffer 20))
                clock-ch (async/chan (async/dropping-buffer 1))]
@@ -20,7 +24,7 @@
            ;; every 2 minutes. If the bucket is full the token is
            ;; dropped since the bucket channel uses a dropping buffer.
            (go (while (>! clock-ch :token)
-                 (<! (async/timeout (* 2 60 1000)))))
+                 (<! (async/timeout clock-interval))))
 
            (go-loop [document-ids #{}]
              ;; listen to both the clock and the input channel
