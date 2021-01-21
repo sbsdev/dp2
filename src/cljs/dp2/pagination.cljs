@@ -56,7 +56,7 @@
 (defn pagination [id event]
   (let [has-previous? @(rf/subscribe [::has-previous? id])
         has-next? @(rf/subscribe [::has-next? id])]
-    [:nav.pagination.is-right {:role "navigation" :arial-label "pagination"}
+    [:nav.pagination.is-right {:role "navigation" :aria-label "pagination"}
      [:a.pagination-previous
       {:disabled (not has-previous?)
        :on-click (fn [e] (rf/dispatch [::previous-page id event]))}
