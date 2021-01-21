@@ -13,7 +13,7 @@
   (* 10 1000)) ; every 10 seconds
 
 (defstate local-dict-chan
-  :start (let [input-ch (async/chan (async/buffer 20))
+  :start (let [input-ch (async/chan (async/buffer 50))
                clock-ch (async/chan (async/dropping-buffer 1))]
 
            ;; throttle the write of the local tables to once every two
