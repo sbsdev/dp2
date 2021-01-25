@@ -13,8 +13,9 @@
   (* 10 1000)) ; every 10 seconds
 
 (defstate local-dict-chan
-  :start (let [input-ch (async/chan (async/buffer 50))
-               clock-ch (async/chan (async/dropping-buffer 1))]
+  :start (let [input-ch (async/chan (async/buffer 20))
+               clock-ch (async/chan (async/dropping-buffer 1))
+               write-ch (async/chan (async/buffer 20))]
 
            ;; throttle the write of the local tables to once every two
            ;; minutes at most by using a clock channel to trigger the
@@ -26,6 +27,12 @@
            (go (while (>! clock-ch :token)
                  (<! (async/timeout clock-interval))))
 
+           ;; the actual worker thread that writes the tables
+           (go (loop []
+                 (when-let [document-id (<! write-ch)]
+                   (tables/export-local-tables document-id)
+                   (recur))))
+
            (go-loop [document-ids #{}]
              ;; listen to both the clock and the input channel
              (let [[v ch] (async/alts! [input-ch clock-ch])]
@@ -35,13 +42,15 @@
                  ;; depupes the document-ids
                  input-ch (if (some? v)
                             (recur (conj document-ids v))
-                            (async/close! clock-ch))
+                            (do
+                              (async/close! clock-ch)
+                              (async/close! write-ch)))
                  ;; at regular intervals we get an event from the
                  ;; clock channel. Then it's time to actually do the
                  ;; export
                  clock-ch (do
                             (doseq [id document-ids]
-                              (tables/export-local-tables id))
+                              (>! write-ch id))
                             (recur #{})))))
            input-ch)
   :stop (when local-dict-chan
