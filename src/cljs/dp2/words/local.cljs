@@ -50,12 +50,15 @@
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :islocal :hyphenated :spelling]))
           document-id (:document-id word)]
-      {:http-xhrio {:method          :put
+      {:db (notifications/set-button-state db :local id :save)
+       :http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
                     :uri             (str "/api/documents/" document-id "/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::ack-save id]
+                    :on-failure      [::ack-failure id :save]
                     }})))
 
 (rf/reg-event-fx
@@ -66,19 +69,37 @@
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling]))
           document-id (:document-id word)]
-      {:http-xhrio {:method          :delete
+      {:db (notifications/set-button-state db :local id :delete)
+       :http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
                     :uri             (str "/api/documents/" document-id "/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::ack-delete id]
+                    :on-failure      [::ack-failure id :delete]
                     }})))
+
+(rf/reg-event-db
+  ::ack-save
+  (fn [db [_ id]]
+    (-> db
+        (notifications/clear-button-state :local id :save))))
 
 (rf/reg-event-db
   ::ack-delete
   (fn [db [_ id]]
-    (update-in db [:words :local] dissoc id)))
+    (-> db
+        (update-in [:words :local] dissoc id)
+        (notifications/clear-button-state :local id :delete))))
+
+(rf/reg-event-db
+ ::ack-failure
+ (fn [db [_ id request-type response]]
+   (-> db
+       (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
+                                            (get response :status-text)))
+       (notifications/clear-button-state :local id request-type))))
 
 (rf/reg-sub
  ::words
@@ -134,18 +155,21 @@
   (let [valid? @(rf/subscribe [::valid? id])
         authenticated? @(rf/subscribe [::auth/authenticated?])]
     [:div.buttons.has-addons
-     [:button.button.is-success.has-tooltip-arrow
-      {:disabled (not (and valid? authenticated?))
-       :data-tooltip (tr [:save])
-       :on-click (fn [e] (rf/dispatch [::save-word id]))}
-      [:span.icon [:i.mi.mi-done]]
-      #_[:span (tr [:save])]]
-     [:button.button.is-danger.has-tooltip-arrow
-      {:disabled (not authenticated?)
-       :data-tooltip (tr [:delete])
-       :on-click (fn [e] (rf/dispatch [::delete-word id]))}
-      [:span.icon [:i.mi.mi-cancel]]
-      #_[:span (tr [:delete])]]]))
+     (if @(rf/subscribe [::notifications/button-loading? :local id :save])
+       [:button.button.is-success.is-loading]
+       [:button.button.is-success.has-tooltip-arrow
+        {:disabled (not (and valid? authenticated?))
+         :data-tooltip (tr [:save])
+         :on-click (fn [e] (rf/dispatch [::save-word id]))}
+        [:span.icon [:i.mi.mi-done]]])
+     (if @(rf/subscribe [::notifications/button-loading? :local id :delete])
+       [:button.button.is-danger.is-loading]
+       [:button.button.is-danger.has-tooltip-arrow
+        {:disabled (not authenticated?)
+         :data-tooltip (tr [:delete])
+         :on-click (fn [e] (rf/dispatch [::delete-word id]))}
+        [:span.icon [:i.mi.mi-cancel]]
+        #_[:span (tr [:delete])]])]))
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])

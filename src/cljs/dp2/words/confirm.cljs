@@ -47,7 +47,7 @@
           cleaned (-> word
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling :islocal]))]
-      {:db (assoc-in db [:loading :confirm] true)
+      {:db (notifications/set-button-state db :confirm id :save)
        :http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
@@ -55,7 +55,7 @@
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::ack-save id]
-                    :on-failure      [::ack-failure :save-word]
+                    :on-failure      [::ack-failure id :save]
                     }})))
 
 (rf/reg-event-fx
@@ -72,7 +72,7 @@
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling]))
           document-id (:document-id word)]
-      {:db (assoc-in db [:loading :confirm] true)
+      {:db (notifications/set-button-state db :confirm id :delete)
        :http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
@@ -80,7 +80,7 @@
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::ack-delete id]
-                    :on-failure      [::ack-failure :delete-word]
+                    :on-failure      [::ack-failure id :delete]
                     }})))
 
 (rf/reg-event-db
@@ -88,27 +88,27 @@
   (fn [db [_ id]]
     (-> db
         (update-in [:words :confirm] dissoc id)
-        (assoc-in [:loading :confirm] false))))
+        (notifications/clear-button-state :confirm id :save))))
 
 (rf/reg-event-db
  ::ack-failure
- (fn [db [_ request-type response]]
+ (fn [db [_ id request-type response]]
    (-> db
        (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
                                             (get response :status-text)))
-       (assoc-in [:loading :confirm] false))))
+       (notifications/clear-button-state :confirm id request-type))))
 
 (rf/reg-event-db
   ::ack-delete
   (fn [db [_ id]]
     (-> db
         (update-in [:words :confirm] dissoc id)
-        (assoc-in [:loading :confirm] false))))
+        (notifications/clear-button-state :confirm id :delete))))
 
 (rf/reg-sub
   ::words
   (fn [db _]
-    (->> db :words :confirm vals)))
+    (-> db :words :confirm vals)))
 
 (rf/reg-sub
  ::words-sorted
@@ -174,18 +174,21 @@
   (let [valid? @(rf/subscribe [::valid? id])
         authenticated? @(rf/subscribe [::auth/authenticated?])]
     [:div.buttons.has-addons
-     [:button.button.is-success.has-tooltip-arrow
-      {:disabled (not (and valid? authenticated?))
-       :data-tooltip (tr [:approve])
-       :on-click (fn [e] (rf/dispatch [::save-word id]))}
-      [:span.icon [:i.mi.mi-done]]
-      #_[:span (tr [:approve])]]
-     [:button.button.is-danger.has-tooltip-arrow
-      {:disabled (not authenticated?)
-       :data-tooltip (tr [:delete])
-       :on-click (fn [e] (rf/dispatch [::delete-word id]))}
-      [:span.icon [:i.mi.mi-cancel]]
-      #_[:span (tr [:delete])]]]))
+     (if @(rf/subscribe [::notifications/button-loading? :confirm id :save])
+       [:button.button.is-success.is-loading]
+       [:button.button.is-success.has-tooltip-arrow
+        {:disabled (not (and valid? authenticated?))
+         :data-tooltip (tr [:approve])
+         :on-click (fn [e] (rf/dispatch [::save-word id]))}
+        [:span.icon [:i.mi.mi-done]]])
+     (if @(rf/subscribe [::notifications/button-loading? :confirm id :delete])
+       [:button.button.is-danger.is-loading]
+       [:button.button.is-danger.has-tooltip-arrow
+        {:disabled (not authenticated?)
+         :data-tooltip (tr [:delete])
+         :class (when  "is-loading")
+         :on-click (fn [e] (rf/dispatch [::delete-word id]))}
+        [:span.icon [:i.mi.mi-cancel]]])]))
 
 (defn type-field [id]
   (let [type @(rf/subscribe [::word-field id :type])
