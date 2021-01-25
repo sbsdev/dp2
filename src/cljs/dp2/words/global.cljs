@@ -48,12 +48,15 @@
     (let [word (get-in db [:words :global id])
           cleaned (-> word
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation]))]
-      {:http-xhrio {:method          :put
+      {:db (assoc-in db [:loading :global] true)
+       :http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
                     :uri             (str "/api/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::ack-save id]
+                    :on-failure      [::ack-failure :save-word]
                     }})))
 
 (rf/reg-event-fx
@@ -62,20 +65,38 @@
     (let [word (get-in db [:words :global id])
           cleaned (-> word
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation]))]
-      {:http-xhrio {:method          :delete
+      {:db (assoc-in db [:loading :global] true)
+       :http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
                     :uri             (str "/api/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::ack-delete id]
+                    :on-failure      [::ack-failure :delete-word]
                     }})))
+
+(rf/reg-event-db
+  ::ack-save
+  (fn [db [_ id]]
+    (-> db
+        (assoc-in [:loading :global] false))))
 
 (rf/reg-event-db
   ::ack-delete
   (fn [db [_ id]]
-    (update-in db [:words :global] dissoc id)))
+    (-> db
+        (update-in [:words :global] dissoc id)
+        (assoc-in [:loading :global] false))))
 
+
+(rf/reg-event-db
+ ::ack-failure
+ (fn [db [_ request-type response]]
+   (-> db
+       (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
+                                            (get response :status-text)))
+       (assoc-in [:loading :global] false))))
 
 (rf/reg-sub
   ::words
