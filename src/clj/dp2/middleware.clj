@@ -10,7 +10,9 @@
     [dp2.middleware.formats :as formats]
     [muuntaja.middleware :refer [wrap-format wrap-params]]
     [dp2.config :refer [env]]
+    [dp2.auth :as auth]
     [ring.middleware.flash :refer [wrap-flash]]
+    [ring.util.http-response :refer [unauthorized forbidden]]
     [immutant.web.middleware :refer [wrap-session]]
     [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
     [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
@@ -48,14 +50,21 @@
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
 
-(defn on-error [request response]
-  (error-page
-    {:status 403
-     :title (tr [:not-authorized] [(:uri request)])}))
+(defn on-unauthenticated [request response]
+  (unauthorized
+   {:status-text (tr [:not-authenticated] [(:uri request)])}))
+
+(defn on-unauthorized [request response]
+  (forbidden
+   {:status-text (tr [:not-authorized] [(:uri request)])}))
 
 (defn wrap-restricted [handler]
   (restrict handler {:handler authenticated?
-                     :on-error on-error}))
+                     :on-error on-unauthenticated}))
+
+(defn wrap-authorized [handler]
+  (restrict handler {:handler auth/is-admin?
+                     :on-error on-unauthorized}))
 
 (defn wrap-auth [handler]
   (let [backend (jws-backend {:secret (env :jwt-secret)})]

@@ -10,7 +10,7 @@
     [reitit.ring.middleware.parameters :as parameters]
     [spec-tools.data-spec :as spec]
     [clojure.spec.alpha :as s]
-    [dp2.middleware :as middleware]
+    [dp2.middleware :refer [wrap-restricted wrap-authorized]]
     [dp2.middleware.formats :as formats]
     [dp2.middleware.exception :as exception]
     [ring.util.http-response :refer :all]
@@ -126,7 +126,7 @@
                        (ok (global/get-words {:untranslated untranslated :limit limit :offset offset})))}
 
       :put {:summary "Update or create a global word"
-            :middleware [middleware/wrap-restricted]
+            :middleware [wrap-restricted wrap-authorized]
             :swagger {:security [{:apiAuth []}]}
             :parameters {:body {:untranslated string?
                                 :type int?
@@ -138,7 +138,7 @@
                        (no-content))}
 
       :delete {:summary "Delete a global word"
-               :middleware [middleware/wrap-restricted]
+               :middleware [wrap-restricted wrap-authorized]
                :swagger {:security [{:apiAuth []}]}
                :parameters {:body {:untranslated string?
                                    :type int?
@@ -180,7 +180,7 @@
                          (not-found)))}
 
       :put {:summary "Update or create a local word for a given document"
-            :middleware [middleware/wrap-restricted]
+            :middleware [wrap-restricted]
             :swagger {:security [{:apiAuth []}]}
             :parameters {:body {:untranslated string? :type int?
                                 :uncontracted (spec/maybe string?)
@@ -194,7 +194,7 @@
                        (no-content))}
 
       :delete {:summary "Delete a local word for a given document"
-               :middleware [middleware/wrap-restricted]
+               :middleware [wrap-restricted]
                :swagger {:security [{:apiAuth []}]}
                :parameters {:body {:untranslated string? :type int?
                                    :uncontracted (spec/maybe string?)
@@ -252,7 +252,7 @@
                       (ok (confirm/get-words limit offset)))}
 
      :put {:summary "Confirm a local word"
-           :middleware [middleware/wrap-restricted]
+           :middleware [wrap-restricted wrap-authorized]
            :swagger {:security [{:apiAuth []}]}
            :parameters {:body {:untranslated string? :type int?
                                :uncontracted (spec/maybe string?)
@@ -280,7 +280,7 @@
                                                 :limit limit :offset offset})))}
 
       :put {:summary "Update or create a hyphenation"
-            :middleware [middleware/wrap-restricted]
+            :middleware [wrap-restricted]
             :swagger {:security [{:apiAuth []}]}
             :parameters {:body {:word string? :hyphenation string? :spelling int?}}
             :handler (fn [{{{:keys [word hyphenation spelling]} :body} :parameters}]
@@ -288,7 +288,7 @@
                        (no-content))}
 
       :delete {:summary "Delete a hyphenation"
-               :middleware [middleware/wrap-restricted]
+               :middleware [wrap-restricted]
                :swagger {:security [{:apiAuth []}]}
                :parameters {:body {:word string? :spelling int? :hyphenation string?}}
                :handler (fn [{{{:keys [word spelling]} :body} :parameters}]

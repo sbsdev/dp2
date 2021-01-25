@@ -61,6 +61,7 @@
                     :something-bad-happened "Something very bad has happened!"
                     :something-bad-happened-message "We've dispatched a team of highly trained gnomes to take care of the problem."
                     :invalid-anti-forgery-token "Invalid anti-forgery token"
+                    :not-authenticated "Access to %1 only for logged-in users"
                     :not-authorized "Access to %1 is not authorized"
                     ;;
                     :previous "Previous"
@@ -126,6 +127,7 @@
                     :something-bad-happened "Ein Problem ist aufgetreten!"
                     :something-bad-happened-message "Die IT ist informiert und arbeitet an der Behebung."
                     :invalid-anti-forgery-token "Invalid anti-forgery token"
+                    :not-authenticated "Zugriff auf %1 nur für angemeldete Benutzer"
                     :not-authorized "Zugriff auf %1 nicht gestattet"
                     ;;
                     :previous "Vorherige"
