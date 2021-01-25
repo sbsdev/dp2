@@ -6,12 +6,13 @@
             [dp2.utils :as utils]))
 
 (defn login [username password]
-  (when-let [user (ldap/authenticate username password)]
+  (if-let [user (ldap/authenticate username password)]
     (let [claims {:user user}
           token (jwt/sign claims (env :jwt-secret))]
-      (log/debug "User logged in" user)
+      (log/debug "Login success" user)
       {:token token
-       :user user})))
+       :user user})
+    (log/debug "Login failed for" username)))
 
 (defn is-admin? [{{user :user} :identity :as req}]
   (utils/is-admin? user))
