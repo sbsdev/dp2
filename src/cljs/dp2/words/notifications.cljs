@@ -9,8 +9,8 @@
 
 (rf/reg-sub
   ::button-loading?
-  (fn [db [_ page id which]]
-    (-> db :loading :buttons page (get id) which)))
+  (fn [db [_ id which]]
+    (-> db :loading :buttons (get id) which)))
 
 (rf/reg-event-db
  ::ack-error
@@ -27,11 +27,11 @@
  :<- [::errors]
  (fn [errors] (seq errors)))
 
-(defn set-button-state [db page id which]
-  (assoc-in db [:loading :buttons page id which] true))
+(defn set-button-state [db id which]
+  (assoc-in db [:loading :buttons id which] true))
 
-(defn clear-button-state [db page id which]
-  (update-in db [:loading :buttons page id] dissoc which))
+(defn clear-button-state [db id which]
+  (update-in db [:loading :buttons id] dissoc which))
 
 (defn loading-spinner []
   [:div.block

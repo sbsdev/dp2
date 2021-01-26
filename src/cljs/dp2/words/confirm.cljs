@@ -47,7 +47,7 @@
           cleaned (-> word
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling :islocal]))]
-      {:db (notifications/set-button-state db :confirm id :save)
+      {:db (notifications/set-button-state db id :save)
        :http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
@@ -72,7 +72,7 @@
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                     :document-id :hyphenated :spelling]))
           document-id (:document-id word)]
-      {:db (notifications/set-button-state db :confirm id :delete)
+      {:db (notifications/set-button-state db id :delete)
        :http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
@@ -88,7 +88,7 @@
   (fn [db [_ id]]
     (-> db
         (update-in [:words :confirm] dissoc id)
-        (notifications/clear-button-state :confirm id :save))))
+        (notifications/clear-button-state id :save))))
 
 (rf/reg-event-db
  ::ack-failure
@@ -96,14 +96,14 @@
    (-> db
        (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
                                             (get response :status-text)))
-       (notifications/clear-button-state :confirm id request-type))))
+       (notifications/clear-button-state id request-type))))
 
 (rf/reg-event-db
   ::ack-delete
   (fn [db [_ id]]
     (-> db
         (update-in [:words :confirm] dissoc id)
-        (notifications/clear-button-state :confirm id :delete))))
+        (notifications/clear-button-state id :delete))))
 
 (rf/reg-sub
   ::words
@@ -174,14 +174,14 @@
   (let [valid? @(rf/subscribe [::valid? id])
         authenticated? @(rf/subscribe [::auth/authenticated?])]
     [:div.buttons.has-addons
-     (if @(rf/subscribe [::notifications/button-loading? :confirm id :save])
+     (if @(rf/subscribe [::notifications/button-loading? id :save])
        [:button.button.is-success.is-loading]
        [:button.button.is-success.has-tooltip-arrow
         {:disabled (not (and valid? authenticated?))
          :data-tooltip (tr [:approve])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
         [:span.icon [:i.mi.mi-done]]])
-     (if @(rf/subscribe [::notifications/button-loading? :confirm id :delete])
+     (if @(rf/subscribe [::notifications/button-loading? id :delete])
        [:button.button.is-danger.is-loading]
        [:button.button.is-danger.has-tooltip-arrow
         {:disabled (not authenticated?)

@@ -48,7 +48,7 @@
     (let [word (get-in db [:words :global id])
           cleaned (-> word
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation]))]
-      {:db (notifications/set-button-state db :global id :save)
+      {:db (notifications/set-button-state db id :save)
        :http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
@@ -65,7 +65,7 @@
     (let [word (get-in db [:words :global id])
           cleaned (-> word
                       (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation]))]
-      {:db (notifications/set-button-state db :global id :delete)
+      {:db (notifications/set-button-state db id :delete)
        :http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
@@ -79,14 +79,14 @@
 (rf/reg-event-db
   ::ack-save
   (fn [db [_ id]]
-    (notifications/clear-button-state db :global id :save)))
+    (notifications/clear-button-state db id :save)))
 
 (rf/reg-event-db
   ::ack-delete
   (fn [db [_ id]]
     (-> db
         (update-in [:words :global] dissoc id)
-        (notifications/clear-button-state :global id :delete))))
+        (notifications/clear-button-state id :delete))))
 
 
 (rf/reg-event-db
@@ -95,7 +95,7 @@
    (-> db
        (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
                                             (get response :status-text)))
-       (notifications/clear-button-state :global id request-type))))
+       (notifications/clear-button-state id request-type))))
 
 (rf/reg-sub
   ::words
@@ -175,14 +175,14 @@
   (let [valid? @(rf/subscribe [::valid? id])
         authenticated? @(rf/subscribe [::auth/authenticated?])]
     [:div.buttons.has-addons
-     (if @(rf/subscribe [::notifications/button-loading? :global id :save])
+     (if @(rf/subscribe [::notifications/button-loading? id :save])
        [:button.button.is-success.is-loading]
        [:button.button.is-success.has-tooltip-arrow
         {:disabled (not (and valid? authenticated?))
          :data-tooltip (tr [:save])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
         [:span.icon [:i.mi.mi-done]]])
-     (if @(rf/subscribe [::notifications/button-loading? :global id :delete])
+     (if @(rf/subscribe [::notifications/button-loading? id :delete])
        [:button.button.is-danger.is-loading]
        [:button.button.is-danger.has-tooltip-arrow
         {:disabled (not authenticated?)

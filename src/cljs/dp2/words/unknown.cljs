@@ -51,7 +51,7 @@
                    (select-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                                  :document-id :islocal :hyphenated :spelling]))
           document-id (:document-id word)]
-      {:db (notifications/set-button-state db :unknown id :save)
+      {:db (notifications/set-button-state db id :save)
        :http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
@@ -73,7 +73,7 @@
   (fn [db [_ id]]
     (-> db
         (update-in [:words :unknown] dissoc id)
-        (notifications/clear-button-state :unknown id :save))))
+        (notifications/clear-button-state id :save))))
 
 (rf/reg-event-db
  ::ack-failure
@@ -81,7 +81,7 @@
    (-> db
        (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
                                             (get response :status-text)))
-       (notifications/clear-button-state :unknown id request-type))))
+       (notifications/clear-button-state id request-type))))
 
 (rf/reg-event-db
   ::ignore-word
@@ -157,7 +157,7 @@
   (let [valid? @(rf/subscribe [::valid? id])
         authenticated? @(rf/subscribe [::auth/authenticated?])]
     [:div.buttons.has-addons
-     (if @(rf/subscribe [::notifications/button-loading? :unknown id :save])
+     (if @(rf/subscribe [::notifications/button-loading? id :save])
        [:button.button.is-success.is-loading]
        [:button.button.is-success.has-tooltip-arrow
         {:disabled (not (and valid? authenticated?))
