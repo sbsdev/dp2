@@ -112,11 +112,15 @@
 (rf/reg-event-fx
    ::set-search
    (fn [{:keys [db]} [_ new-search-value]]
-     {:db (assoc db :words-search new-search-value)
-      :dispatch-n ; when searching for a new word reset the pagination
-      (list
-       [::pagination/reset :global]
-       [::fetch-words])}))
+     (cond-> {:db (assoc db :words-search new-search-value)}
+       (> (count new-search-value) 2)
+       ;; if the string has more than 2 characters fetch the words
+       ;; from the server
+       (assoc :dispatch-n
+              (list
+               ;; when searching for a new word reset the pagination
+               [::pagination/reset :global]
+               [::fetch-words])))))
 
 
 (defn words-search []
