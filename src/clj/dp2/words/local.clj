@@ -2,7 +2,8 @@
   (:require [dp2.db.core :as db]
             [dp2.hyphenate :as hyphenate]
             [dp2.words :as words]
-            [dp2.whitelists.async :as whitelists]))
+            [dp2.whitelists.async :as whitelists]
+            [clojure.tools.logging :as log]))
 
 (defn get-words [id grade limit offset]
   (let [document (db/get-document {:id id})
@@ -18,6 +19,7 @@
   "Persist a `word` in the db. Upsert all braille translations and the
   hyphenation. Returns the number of insertions/updates."
   [word]
+  (log/debug "Add local word" word)
   (when (:hyphenated word)
     (db/insert-hyphenation
      (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
@@ -43,6 +45,7 @@
   for this word then it is also removed from the hyphenations db.
   Returns the number of deletions."
   [word]
+  (log/debug "Delete local word" word)
   (let [deletions
         (->> word
              words/separate-word
