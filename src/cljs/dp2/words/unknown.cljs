@@ -34,7 +34,9 @@
      (-> db
          (assoc-in [:words :unknown] (zipmap (map :uuid words) words))
          (pagination/update-next :unknown next?)
-         (assoc-in [:loading :unknown] false)))))
+         (assoc-in [:loading :unknown] false)
+         ;; clear all button loading states
+         (update-in [:loading] dissoc :buttons)))))
 
 (rf/reg-event-db
  ::fetch-words-failure
