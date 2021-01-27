@@ -13,20 +13,12 @@
 
 (defn put-word [word]
   (log/debug "Add global word" word)
-  (let [insertions
-        (->> word
-             words/separate-word
-             (map #(db/insert-global-word (words/to-db % dictionary-keys words/dictionary-mapping)))
-             (reduce +))]
-    (whitelists/export-global-tables)
-    insertions))
+  (->> word
+       words/separate-word
+       (map #(db/insert-global-word (words/to-db % dictionary-keys words/dictionary-mapping)))
+       (reduce +)))
 
 (defn delete-word [word]
   (log/debug "Delete global word" word)
-  (let [deletions
-        (db/delete-global-word
-         (words/to-db word
-                      [:untranslated :type :homograph-disambiguation]
-                      words/dictionary-mapping))]
-    (whitelists/export-global-tables)
-    deletions))
+  (db/delete-global-word
+   (words/to-db word [:untranslated :type :homograph-disambiguation] words/dictionary-mapping)))

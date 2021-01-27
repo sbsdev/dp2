@@ -1,18 +1,16 @@
 (ns dp2.whitelists.async
   "Asynchronous interface to writing whitelist tables. Refer
   to [[dp2.whitelists.tables]] for the synchronous API."
-  (:require [clojure.core.async :as async
+  (:require [chime.core :as chime]
+            [clojure.core.async :as async
              :refer [<! >! >!! alts! buffer chan close! go go-loop timeout]]
             [dp2.whitelists.tables :as tables]
-            [mount.core :refer [defstate]]))
+            [mount.core :refer [defstate]])
+  (:import [java.time LocalTime Period ZonedDateTime ZoneId]))
 
 (def local-clock-interval
   "Time interval at which writes to the local tables happen in miliseconds"
   (* 10 1000)) ; every 10 seconds
-
-(def global-clock-interval
-  "Time interval at which writes to the global tables happen in miliseconds"
-  (* 5 60 1000)) ; every 15 minutes
 
 (defstate local-dict-chan
   :start (let [input-ch (chan (buffer 20))
@@ -54,31 +52,18 @@
   :stop (when local-dict-chan
           (close! local-dict-chan)))
 
-(defstate global-dict-chan
-  :start (let [input-ch (chan (async/dropping-buffer 1))
-               clock-ch (chan (async/dropping-buffer 1))]
-
-           ;; throttle the write of the global tables to once every 15
-           ;; minutes at most
-
-           ;; The clock thread.
-           (go (while (>! clock-ch :token)
-                 (<! (timeout global-clock-interval))))
-
-           ;; the actual worker thread that writes the tables
-           (go
-             (while (<! clock-ch)
-               (let [v (<! input-ch)]
-                 (if (some? v)
-                   (tables/export-global-tables)
-                   (close! clock-ch)))))
-
-           input-ch)
-  :stop (when global-dict-chan
-          (close! global-dict-chan)))
+(defstate global-dict-cron
+  ;; write the global tables every day at 21:00
+  :start (chime/chime-at
+          (chime/periodic-seq
+           (-> (LocalTime/of 21 0 0)
+               (.adjustInto (ZonedDateTime/now (ZoneId/of "UTC")))
+               .toInstant)
+           (Period/ofDays 1))
+          (fn [_] (tables/export-global-tables)))
+  :stop (when global-dict-cron
+          (.close global-dict-cron)))
 
 (defn export-local-tables [document-id]
   (>!! local-dict-chan document-id))
 
-(defn export-global-tables []
-  (>!! global-dict-chan true))

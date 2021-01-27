@@ -23,6 +23,7 @@
                  [expound "0.8.5"]
                  [funcool/struct "1.4.0"]
                  [io.prometheus/simpleclient_hotspot "0.9.0"]
+                 [jarohen/chime "0.3.2"]
                  [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.6.7"]
                  [luminus-transit "0.1.2"]
