@@ -18,6 +18,7 @@
     [clojure.string :refer [blank?]]
     [dp2.documents :as docs]
     [dp2.auth :as auth]
+    [dp2.validation :as validation]
     [dp2.words.unknown :as unknown]
     [dp2.words.local :as local]
     [dp2.words.confirm :as confirm]
@@ -25,6 +26,7 @@
 
 (s/def ::grade (s/and int? #(<= 0 % 2)))
 (s/def ::spelling (s/and int? #{0 1}))
+(s/def ::braille (s/and string? validation/braille-valid?))
 
 (def default-limit 100)
 
@@ -131,8 +133,8 @@
             :swagger {:security [{:apiAuth []}]}
             :parameters {:body {:untranslated string?
                                 :type int?
-                                :uncontracted (spec/maybe string?)
-                                :contracted (spec/maybe string?)
+                                :uncontracted (spec/maybe ::braille)
+                                :contracted (spec/maybe ::braille)
                                 :homograph-disambiguation string?}}
             :handler (fn [{{word :body} :parameters}]
                        (global/put-word word)
@@ -143,8 +145,8 @@
                :swagger {:security [{:apiAuth []}]}
                :parameters {:body {:untranslated string?
                                    :type int?
-                                   :uncontracted (spec/maybe string?)
-                                   :contracted (spec/maybe string?)
+                                   :uncontracted (spec/maybe ::braille)
+                                   :contracted (spec/maybe ::braille)
                                    :homograph-disambiguation string?}}
                :handler (fn [{{word :body} :parameters}]
                           (let [deleted (global/delete-word word)]
@@ -184,8 +186,8 @@
             :middleware [wrap-restricted]
             :swagger {:security [{:apiAuth []}]}
             :parameters {:body {:untranslated string? :type int?
-                                :uncontracted (spec/maybe string?)
-                                :contracted (spec/maybe string?)
+                                :uncontracted (spec/maybe ::braille)
+                                :contracted (spec/maybe ::braille)
                                 :homograph-disambiguation string?
                                 :document-id int? :islocal boolean?
                                 :hyphenated (spec/maybe string?)
@@ -198,8 +200,8 @@
                :middleware [wrap-restricted]
                :swagger {:security [{:apiAuth []}]}
                :parameters {:body {:untranslated string? :type int?
-                                   :uncontracted (spec/maybe string?)
-                                   :contracted (spec/maybe string?)
+                                   :uncontracted (spec/maybe ::braille)
+                                   :contracted (spec/maybe ::braille)
                                    :homograph-disambiguation string?
                                    :document-id int?
                                    :hyphenated (spec/maybe string?)
@@ -256,8 +258,8 @@
            :middleware [wrap-restricted wrap-authorized]
            :swagger {:security [{:apiAuth []}]}
            :parameters {:body {:untranslated string? :type int?
-                               :uncontracted (spec/maybe string?)
-                               :contracted (spec/maybe string?)
+                               :uncontracted (spec/maybe ::braille)
+                               :contracted (spec/maybe ::braille)
                                :homograph-disambiguation string?
                                :document-id int? :islocal boolean?
                                :hyphenated (spec/maybe string?)
