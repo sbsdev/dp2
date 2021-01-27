@@ -24,6 +24,7 @@
     [dp2.words.global :as global]))
 
 (s/def ::grade (s/and int? #(<= 0 % 2)))
+(s/def ::spelling (s/and int? #{0 1}))
 
 (def default-limit 100)
 
@@ -188,7 +189,7 @@
                                 :homograph-disambiguation string?
                                 :document-id int? :islocal boolean?
                                 :hyphenated (spec/maybe string?)
-                                :spelling int?}}
+                                :spelling ::spelling}}
             :handler (fn [{{word :body} :parameters}]
                        (local/put-word word)
                        (no-content))}
@@ -202,7 +203,7 @@
                                    :homograph-disambiguation string?
                                    :document-id int?
                                    :hyphenated (spec/maybe string?)
-                                   :spelling int?}}
+                                   :spelling ::spelling}}
                :handler (fn [{{word :body} :parameters}]
                           (let [deleted (local/delete-word word)]
                             (if (>= deleted 1)
@@ -260,7 +261,7 @@
                                :homograph-disambiguation string?
                                :document-id int? :islocal boolean?
                                :hyphenated (spec/maybe string?)
-                               :spelling int?}}
+                               :spelling ::spelling}}
            :handler (fn [{{word :body} :parameters}]
                       (confirm/put-word word)
                       (no-content))}}]
@@ -270,7 +271,7 @@
 
     [""
      {:get {:summary "Get hyphenations by spelling. Optionally filter the results by using a search string, a limit and an offset."
-            :parameters {:query {:spelling int?
+            :parameters {:query {:spelling ::spelling
                                  (spec/opt :search) string?
                                  (spec/opt :limit) int?
                                  (spec/opt :offset) int?}}
@@ -282,7 +283,9 @@
       :put {:summary "Update or create a hyphenation"
             :middleware [wrap-restricted]
             :swagger {:security [{:apiAuth []}]}
-            :parameters {:body {:word string? :hyphenation string? :spelling int?}}
+            :parameters {:body {:word string?
+                                :hyphenation string?
+                                :spelling ::spelling}}
             :handler (fn [{{{:keys [word hyphenation spelling]} :body} :parameters}]
                        (db/insert-hyphenation {:word word :hyphenation hyphenation :spelling spelling})
                        (no-content))}
@@ -290,7 +293,9 @@
       :delete {:summary "Delete a hyphenation"
                :middleware [wrap-restricted]
                :swagger {:security [{:apiAuth []}]}
-               :parameters {:body {:word string? :spelling int? :hyphenation string?}}
+               :parameters {:body {:word string?
+                                   :spelling ::spelling
+                                   :hyphenation string?}}
                :handler (fn [{{{:keys [word spelling]} :body} :parameters}]
                           (let [deleted (db/delete-hyphenation {:word word :spelling spelling})]
                             (if (> deleted 0)
