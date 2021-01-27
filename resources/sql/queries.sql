@@ -46,12 +46,18 @@ AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_i
 ------------------
 
 -- :name get-global-words :? :*
--- :doc retrieve all global words
+-- :doc retrieve all global words of given `:grade` and optionally any of `:types`
 SELECT untranslated,
-       IF(grade = 1, braille, NULL) AS uncontracted,
-       IF(grade = 2, braille, NULL) AS contracted,
-        type, homograph_disambiguation
+/*~ (if (= (:grade params) 1) */
+       braille AS uncontracted,
+/*~*/
+       braille AS contracted,
+/*~ ) ~*/
+        type,
+	homograph_disambiguation
 FROM dictionary_globalword
+WHERE grade = :grade
+--~ (when (:types params) "AND type IN (:v*:types)")
 
 -- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for `untranslated`, a `limit` and an `offset`
@@ -172,7 +178,7 @@ WHERE document_id = :id
 AND untranslated = :untranslated
 
 -- :name insert-local-word :! :n
--- :doc Insert or update a word in the local dictionary. Optionaly specify `isconfirmed`.
+-- :doc Insert or update a word in the local dictionary. Optionally specify `isconfirmed`.
 INSERT INTO dictionary_localword (untranslated, braille, type, grade, homograph_disambiguation, document_id, isLocal, isConfirmed)
 /*~ (if (:isconfirmed params) */
 VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal, :isconfirmed)

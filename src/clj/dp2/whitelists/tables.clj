@@ -220,12 +220,11 @@
     (write-local-table document-id 2 {:name true} (filter words/is-name? contracted-words))
     (write-local-table document-id 2 {:place true} (filter words/is-place? contracted-words))))
 
-(defn write-global-tables [words]
-  (let [contracted-words (filter :contracted words)]
-    (write-global-table 1 {} (filter :uncontracted words))
-    (write-global-table 2 {} (filter is-plain? contracted-words))
-    (write-global-table 2 {:name true} (filter words/is-name? contracted-words))
-    (write-global-table 2 {:place true} (filter words/is-place? contracted-words))))
+(defn write-global-tables []
+  (write-global-table 1 {} (db/get-global-words {:grade 1}))
+  (write-global-table 2 {} (db/get-global-words {:grade 2 :types [0 1 3 5]}))
+  (write-global-table 2 {:name true} (db/get-global-words {:grade 2 :types [1 2]}))
+  (write-global-table 2 {:place true} (db/get-global-words {:grade 2 :types [3 4]})))
 
 (defn export-local-tables [document-id]
   (log/infof "Exporting local tables for %s" document-id)
@@ -233,7 +232,7 @@
 
 (defn export-global-tables []
   (log/info "Exporting global tables")
-  (write-global-tables (db/get-global-words))
+  (write-global-tables)
   (log/info "Finished exporting global tables"))
 
 (prometheus/instrument! metrics/registry #'export-local-tables)
