@@ -27,6 +27,7 @@
 (s/def ::grade (s/and int? #(<= 0 % 2)))
 (s/def ::spelling (s/and int? #{0 1}))
 (s/def ::braille (s/and string? validation/braille-valid?))
+(s/def ::hyphenation (s/and string? validation/hyphenation-valid?))
 
 (def default-limit 100)
 
@@ -190,7 +191,7 @@
                                 :contracted (spec/maybe ::braille)
                                 :homograph-disambiguation string?
                                 :document-id int? :islocal boolean?
-                                :hyphenated (spec/maybe string?)
+                                :hyphenated (spec/maybe ::hyphenation)
                                 :spelling ::spelling}}
             :handler (fn [{{word :body} :parameters}]
                        (local/put-word word)
@@ -204,7 +205,7 @@
                                    :contracted (spec/maybe ::braille)
                                    :homograph-disambiguation string?
                                    :document-id int?
-                                   :hyphenated (spec/maybe string?)
+                                   :hyphenated (spec/maybe ::hyphenation)
                                    :spelling ::spelling}}
                :handler (fn [{{word :body} :parameters}]
                           (let [deleted (local/delete-word word)]
@@ -262,7 +263,7 @@
                                :contracted (spec/maybe ::braille)
                                :homograph-disambiguation string?
                                :document-id int? :islocal boolean?
-                               :hyphenated (spec/maybe string?)
+                               :hyphenated (spec/maybe ::hyphenation)
                                :spelling ::spelling}}
            :handler (fn [{{word :body} :parameters}]
                       (confirm/put-word word)
