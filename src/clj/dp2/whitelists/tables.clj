@@ -174,17 +174,15 @@
    (string/join "-")))
 
 (defn table-filename
-  ([grade opts]
-   (table-filename grade nil opts))
-  ([grade document-id opts]
-   (let [tables-dir (env :tables-dir)
-         key (cond
-               (= grade 1) "g1"
-               (and (= grade 2) (:name opts)) "g2-name"
-               (and (= grade 2) (:place opts)) "g2-place"
-               :else "g2")
-         document-extension (if document-id (str "-" document-id) "")]
-     (format "%s/sbs-de-%s-white%s.mod" tables-dir key document-extension))))
+  [grade {:keys [identifier] :as document} {:keys [name? place?] :as opts}]
+  (let [tables-dir (env :tables-dir)
+        key (cond
+              (= grade 1) "g1"
+              (and (= grade 2) name?) "g2-name"
+              (and (= grade 2) place?) "g2-place"
+              :else "g2")
+        document-extension (if identifier (str "-" identifier) "")]
+    (format "%s/sbs-de-%s-white%s.mod" tables-dir key document-extension)))
 
 (defn write-table [w grade translator words]
   (doseq [{:keys [untranslated uncontracted contracted homograph-disambiguation] :as word} words]
@@ -197,15 +195,15 @@
           (.write w line)
           (.newLine w))))))
 
-(defn write-local-table [document-id grade opts words]
-  (let [filename (table-filename grade document-id opts)
+(defn write-local-table [document grade opts words]
+  (let [filename (table-filename grade document opts)
         tables (louis/get-tables grade opts)
         translator #(louis/translate % tables)]
     (with-open [w (io/writer filename)]
       (write-table w grade translator words))))
 
 (defn write-global-table [grade opts words]
-  (let [filename (table-filename grade opts)
+  (let [filename (table-filename grade {} opts)
         tables (louis/get-tables grade opts)
         translator #(louis/translate % tables)]
     (with-open [w (io/writer filename)]
@@ -213,22 +211,23 @@
 
 (defn is-plain? [{:keys [type]}] (some? (#{0 1 3 5} type)))
 
-(defn write-local-tables [document-id words]
+(defn write-local-tables [document words]
   (let [contracted-words (filter :contracted words)]
-    (write-local-table document-id 1 {} (filter :uncontracted words))
-    (write-local-table document-id 2 {} (filter is-plain? contracted-words))
-    (write-local-table document-id 2 {:name true} (filter words/is-name? contracted-words))
-    (write-local-table document-id 2 {:place true} (filter words/is-place? contracted-words))))
+    (write-local-table document 1 {} (filter :uncontracted words))
+    (write-local-table document 2 {} (filter is-plain? contracted-words))
+    (write-local-table document 2 {:name? true} (filter words/is-name? contracted-words))
+    (write-local-table document 2 {:place? true} (filter words/is-place? contracted-words))))
 
 (defn write-global-tables []
   (write-global-table 1 {} (db/get-global-words {:grade 1}))
   (write-global-table 2 {} (db/get-global-words {:grade 2 :types [0 1 3 5]}))
-  (write-global-table 2 {:name true} (db/get-global-words {:grade 2 :types [1 2]}))
-  (write-global-table 2 {:place true} (db/get-global-words {:grade 2 :types [3 4]})))
+  (write-global-table 2 {:name? true} (db/get-global-words {:grade 2 :types [1 2]}))
+  (write-global-table 2 {:place? true} (db/get-global-words {:grade 2 :types [3 4]})))
 
 (defn export-local-tables [document-id]
   (log/infof "Exporting local tables for %s" document-id)
-  (write-local-tables document-id (db/get-local-words-aggregated {:id document-id})))
+  (let [document (db/get-document {:id document-id})]
+    (write-local-tables document (db/get-local-words-aggregated {:id document-id}))))
 
 (defn export-global-tables []
   (log/info "Exporting global tables")
