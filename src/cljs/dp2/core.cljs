@@ -161,8 +161,7 @@
                   :view #'confirm/words-page
                   :controllers [{:start (fn [_] (rf/dispatch [::confirm/fetch-words]))}]}]
      ["/words" {:name :words
-                :view #'global/words-page
-                :controllers [{:start (fn [_] (rf/dispatch [::global/fetch-words]))}]}]]))
+                :view #'global/words-page}]]))
 
 (defn start-router! []
   (rfe/start!
