@@ -68,7 +68,7 @@ ON t1.untranslated = t2.untranslated
 AND t1.type = t2.type
 AND t1.homograph_disambiguation = t2.homograph_disambiguation
 AND t1.grade <> t2.grade
-WHERE t1.untranslated like :untranslated
+WHERE t1.untranslated LIKE :untranslated
 AND t1.grade = 2)
 UNION DISTINCT
 (SELECT t1.untranslated, t1.braille as uncontracted, t2.braille as contracted, t1.type, t1.homograph_disambiguation
