@@ -6,7 +6,7 @@
             [dp2.pagination :as pagination]
             [dp2.validation :as validation]
             [dp2.words :as words]
-            [dp2.words.input-field :as input]
+            [dp2.words.input-fields :as fields]
             [dp2.words.notifications :as notifications]
             [re-frame.core :as rf]))
 
@@ -171,8 +171,8 @@
   (let [{:keys [uuid untranslated type homograph-disambiguation]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [input/input-field :global uuid :uncontracted validation/braille-valid?]]
-     [:td [input/input-field :global uuid :contracted validation/braille-valid?]]
+     [:td [fields/input-field :global uuid :uncontracted validation/braille-valid?]]
+     [:td [fields/input-field :global uuid :contracted validation/braille-valid?]]
      [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
      [:td {:width "8%"} homograph-disambiguation]
      [:td {:width "8%"} [buttons uuid]]]))

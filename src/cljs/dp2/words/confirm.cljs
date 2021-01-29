@@ -6,7 +6,7 @@
             [dp2.submit-all :as submit-all]
             [dp2.validation :as validation]
             [dp2.words :as words]
-            [dp2.words.input-field :as input]
+            [dp2.words.input-fields :as fields]
             [dp2.words.notifications :as notifications]
             [re-frame.core :as rf]))
 
@@ -138,12 +138,6 @@
  (fn [db [_ id]]
    (validation/word-valid? (get-in db [:words :confirm id]))))
 
-(defn local-field [id]
-  (let [value @(rf/subscribe [::word-field id :islocal])]
-    [:input {:type "checkbox"
-             :checked value
-             :on-change #(rf/dispatch [::set-word-field id :islocal (not value)])}]))
-
 (defn buttons [id]
   (let [valid? @(rf/subscribe [::valid? id])
         authenticated? @(rf/subscribe [::auth/authenticated?])]
@@ -165,9 +159,9 @@
         [:span.icon [:i.mi.mi-cancel]]])]))
 
 (defn type-field [id]
-  (let [type @(rf/subscribe [::word-field id :type])
+  (let [type @(rf/subscribe [::fields/word-field :confirm id :type])
         set-type-fn (fn [type]
-                      (fn [e] (rf/dispatch [::set-word-field id :type type])))]
+                      (fn [e] (rf/dispatch [::fields/set-word-field :confirm id :type type])))]
     (case type
       0 nil
       (1 2)
@@ -195,16 +189,16 @@
   (let [{:keys [uuid untranslated type homograph-disambiguation hyphenated spelling document-title]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [input/input-field :confirm uuid :uncontracted validation/braille-valid?]]
-     [:td [input/input-field :confirm uuid :contracted validation/braille-valid?]]
+     [:td [fields/input-field :confirm uuid :uncontracted validation/braille-valid?]]
+     [:td [fields/input-field :confirm uuid :contracted validation/braille-valid?]]
      [:td (when hyphenated
-            [input/input-field :confirm uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
+            [fields/input-field :confirm uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
      (let [spelling-string (words/spelling-brief-string spelling)]
        [:td [:abbr {:title spelling-string} (subs spelling-string 0 1)]])
      [:td [type-field uuid]]
      [:td homograph-disambiguation]
      [:td [:abbr {:title document-title } (str (subs document-title 0 3) "...")]]
-     [:td [local-field uuid]]
+     [:td [fields/local-field :confirm uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
 
 (defn words-page []

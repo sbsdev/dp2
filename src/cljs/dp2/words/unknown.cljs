@@ -7,7 +7,7 @@
             [dp2.validation :as validation]
             [dp2.words :as words]
             [dp2.words.grade :as grade]
-            [dp2.words.input-field :as input]
+            [dp2.words.input-fields :as fields]
             [dp2.words.notifications :as notifications]
             [re-frame.core :as rf]))
 
@@ -121,12 +121,6 @@
  (fn [db [_ id]]
    (validation/word-valid? (get-in db [:words :unknown id]))))
 
-(defn local-field [id]
-  (let [value @(rf/subscribe [::word-field id :islocal])]
-    [:input {:type "checkbox"
-             :checked value
-             :on-change #(rf/dispatch [::set-word-field id :islocal (not value)])}]))
-
 (defn buttons [id]
   (let [valid? @(rf/subscribe [::valid? id])
         authenticated? @(rf/subscribe [::auth/authenticated?])]
@@ -153,17 +147,17 @@
      [:td untranslated]
      (when (#{0 1} grade)
        (if uncontracted
-         [:td [input/input-field :unknown uuid :uncontracted validation/braille-valid?]]
+         [:td [fields/input-field :unknown uuid :uncontracted validation/braille-valid?]]
          [:td]))
      (when (#{0 2} grade)
        (if contracted
-         [:td [input/input-field :unknown uuid :contracted validation/braille-valid?]]
+         [:td [fields/input-field :unknown uuid :contracted validation/braille-valid?]]
          [:td]))
      [:td (when hyphenated
-            [input/input-field :unknown uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
+            [fields/input-field :unknown uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
      [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
      [:td {:width "8%"} homograph-disambiguation]
-     [:td [local-field uuid]]
+     [:td [fields/local-field :unknown uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
 
 (defn unknown-words []

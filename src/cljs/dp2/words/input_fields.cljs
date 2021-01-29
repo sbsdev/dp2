@@ -1,4 +1,4 @@
-(ns dp2.words.input-field
+(ns dp2.words.input-fields
   (:require [dp2.i18n :refer [tr]]
             [re-frame.core :as rf]))
 
@@ -11,6 +11,12 @@
  ::set-word-field
  (fn [db [_ page id field-id value]]
    (assoc-in db [:words page id field-id] value)))
+
+(defn local-field [page id]
+  (let [value @(rf/subscribe [::word-field page id :islocal])]
+    [:input {:type "checkbox"
+             :checked value
+             :on-change #(rf/dispatch [::set-word-field page id :islocal (not value)])}]))
 
 (defn input-field [page id field-id validator]
   (let [initial-value @(rf/subscribe [::word-field page id field-id])
