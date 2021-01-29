@@ -5,7 +5,7 @@
             [dp2.pagination :as pagination]
             [dp2.submit-all :as submit-all]
             [dp2.validation :as validation]
-            [dp2.words :as words]
+            [dp2.words.input-field :as input]
             [dp2.words.notifications :as notifications]
             [re-frame.core :as rf]))
 
@@ -133,38 +133,9 @@
    (get-in db [:words :confirm id])))
 
 (rf/reg-sub
- ::word-field
- (fn [db [_ id field-id]]
-   (get-in db [:words :confirm id field-id])))
-
-(rf/reg-event-db
- ::set-word-field
- (fn [db [_ id field-id value]]
-   (assoc-in db [:words :confirm id field-id] value)))
-
-(rf/reg-sub
  ::valid?
  (fn [db [_ id]]
    (validation/word-valid? (get-in db [:words :confirm id]))))
-
-(defn input-field [id field-id validator]
-  (let [initial-value @(rf/subscribe [::word-field id field-id])
-        get-value (fn [e] (-> e .-target .-value))
-        reset! #(rf/dispatch [::set-word-field id field-id initial-value])
-        save! #(rf/dispatch [::set-word-field id field-id %])]
-    (fn []
-      (let [value @(rf/subscribe [::word-field id field-id])
-            valid? (validator value)
-            changed? (not= initial-value value)]
-        [:div.field
-         [:input.input {:type "text"
-                        :class (cond (not valid?) "is-danger"
-                                     changed? "is-warning")
-                        :value value
-                        :on-change #(save! (get-value %))
-                        :on-key-down #(when (= (.-which %) 27) (reset!))}]
-         (when-not valid?
-           [:p.help.is-danger (tr [:input-not-valid])])]))))
 
 (defn local-field [id]
   (let [value @(rf/subscribe [::word-field id :islocal])]
@@ -223,10 +194,10 @@
   (let [{:keys [uuid untranslated type homograph-disambiguation hyphenated spelling document-title]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [input-field uuid :uncontracted validation/braille-valid?]]
-     [:td [input-field uuid :contracted validation/braille-valid?]]
+     [:td [input/input-field :confirm uuid :uncontracted validation/braille-valid?]]
+     [:td [input/input-field :confirm uuid :contracted validation/braille-valid?]]
      [:td (when hyphenated
-            [input-field uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
+            [input/input-field :confirm uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
      [:td spelling]
      [:td [type-field uuid]]
      [:td homograph-disambiguation]

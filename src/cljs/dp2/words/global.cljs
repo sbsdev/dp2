@@ -6,6 +6,7 @@
             [dp2.pagination :as pagination]
             [dp2.validation :as validation]
             [dp2.words :as words]
+            [dp2.words.input-field :as input]
             [dp2.words.notifications :as notifications]
             [re-frame.core :as rf]))
 
@@ -90,7 +91,6 @@
         (update-in [:words :global] dissoc id)
         (notifications/clear-button-state id :delete))))
 
-
 (rf/reg-event-db
  ::ack-failure
  (fn [db [_ id request-type response]]
@@ -144,38 +144,9 @@
    (get-in db [:words :global id])))
 
 (rf/reg-sub
- ::word-field
- (fn [db [_ id field-id]]
-   (get-in db [:words :global id field-id])))
-
-(rf/reg-event-db
- ::set-word-field
- (fn [db [_ id field-id value]]
-   (assoc-in db [:words :global id field-id] value)))
-
-(rf/reg-sub
  ::valid?
  (fn [db [_ id]]
    (validation/word-valid? (get-in db [:words :global id]))))
-
-(defn input-field [id field-id validator]
-  (let [initial-value @(rf/subscribe [::word-field id field-id])
-        get-value (fn [e] (-> e .-target .-value))
-        reset! #(rf/dispatch [::set-word-field id field-id initial-value])
-        save! #(rf/dispatch [::set-word-field id field-id %])]
-    (fn []
-      (let [value @(rf/subscribe [::word-field id field-id])
-            valid? (validator value)
-            changed? (not= initial-value value)]
-        [:div.field
-         [:input.input {:type "text"
-                        :class (cond (not valid?) "is-danger"
-                                     changed? "is-warning")
-                        :value value
-                        :on-change #(save! (get-value %))
-                        :on-key-down #(when (= (.-which %) 27) (reset!))}]
-         (when-not valid?
-           [:p.help.is-danger (tr [:input-not-valid])])]))))
 
 (defn buttons [id]
   (let [valid? @(rf/subscribe [::valid? id])
@@ -200,8 +171,8 @@
   (let [{:keys [uuid untranslated type homograph-disambiguation]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
-     [:td [input-field uuid :uncontracted validation/braille-valid?]]
-     [:td [input-field uuid :contracted validation/braille-valid?]]
+     [:td [input/input-field :global uuid :uncontracted validation/braille-valid?]]
+     [:td [input/input-field :global uuid :contracted validation/braille-valid?]]
      [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
      [:td {:width "8%"} homograph-disambiguation]
      [:td {:width "8%"} [buttons uuid]]]))

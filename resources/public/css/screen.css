@@ -33,3 +33,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+input.braille {
+    font-family: monospace;
+}
