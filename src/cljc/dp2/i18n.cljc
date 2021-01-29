@@ -16,7 +16,6 @@
                     :contracted "Contracted"
                     :hyphenated "Hyphenated"
                     :hyphenated-with-spelling "Hyphenated (%1)"
-                    :spelling "Spelling"
                     :type "Type"
                     :homograph-disambiguation "Homograph disambiguation"
                     :local "Local"
@@ -47,9 +46,15 @@
                     :unknown-words "Unknown Words"
                     :local-words "Local Words"
                     ;;
-                    :old-spelling "Old spelling"
-                    :new-spelling "New spelling"
-                    :unknown-spelling "Unknown spelling"
+                    :spelling
+                    {:title "Spelling"
+                     :old "Old spelling"
+                     :new "New spelling"
+                     :unknown "Unknown spelling"
+                     :old-brief "Old"
+                     :new-brief "New"
+                     :unknown-brief "Unknown"
+                     }
                     ;;
                     :type-none "None"
                     :type-name "Name"
@@ -82,7 +87,6 @@
                     :contracted "Kurzschrift"
                     :hyphenated "Trennung"
                     :hyphenated-with-spelling "Trennung (%1)"
-                    :spelling "Rechtschreibung"
                     :type "Markup"
                     :homograph-disambiguation "Homograph Präzisierung"
                     :local "Lokal"
@@ -113,9 +117,15 @@
                     :unknown-words "Unbekannte Wörter"
                     :local-words "Lokale Wörter"
                     ;;
-                    :old-spelling "Alte Rechtschreibung"
-                    :new-spelling "Neue Rechtschreibung"
-                    :unknown-spelling "Rechtschreibung unbekannt"
+                    :spelling
+                    {:title "Rechtschreibung"
+                     :old "Alte Rechtschreibung"
+                     :new "Neue Rechtschreibung"
+                     :unknown "Rechtschreibung unbekannt"
+                     :old-brief "Alt"
+                     :new-brief "Neu"
+                     :unknown-brief "Unbekannt"
+                     }
                     ;;
                     :type-none ""
                     :type-name "Name"

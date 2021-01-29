@@ -5,6 +5,7 @@
             [dp2.pagination :as pagination]
             [dp2.submit-all :as submit-all]
             [dp2.validation :as validation]
+            [dp2.words :as words]
             [dp2.words.input-field :as input]
             [dp2.words.notifications :as notifications]
             [re-frame.core :as rf]))
@@ -198,7 +199,8 @@
      [:td [input/input-field :confirm uuid :contracted validation/braille-valid?]]
      [:td (when hyphenated
             [input/input-field :confirm uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
-     [:td spelling]
+     (let [spelling-string (words/spelling-brief-string spelling)]
+       [:td [:abbr {:title spelling-string} (subs spelling-string 0 1)]])
      [:td [type-field uuid]]
      [:td homograph-disambiguation]
      [:td [:abbr {:title document-title } (str (subs document-title 0 3) "...")]]
@@ -221,7 +223,7 @@
            [:th (tr [:uncontracted])]
            [:th (tr [:contracted])]
            [:th (tr [:hyphenated])]
-           [:th [:abbr {:title (tr [:spelling])} (subs (tr [:spelling]) 0 1)]]
+           [:th [:abbr {:title (tr [:spelling/title])} (subs (tr [:spelling/title]) 0 1)]]
            [:th [:abbr {:title (tr [:type])} (subs (tr [:type]) 0 1)]]
            [:th [:abbr {:title (tr [:homograph-disambiguation])} (subs (tr [:homograph-disambiguation]) 0 1)]]
            [:th (tr [:book])]
