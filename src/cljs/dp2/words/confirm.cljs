@@ -86,12 +86,16 @@
                     :on-failure      [::ack-failure id :delete]
                     }})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   ::ack-save
-  (fn [db [_ id]]
-    (-> db
-        (update-in [:words :confirm] dissoc id)
-        (notifications/clear-button-state id :save))))
+  (fn [{:keys [db]} [_ id]]
+    (let [db (-> db
+                 (update-in [:words :confirm] dissoc id)
+                 (notifications/clear-button-state id :save))
+          empty? (-> db (get-in [:words :confirm]) count (< 1))]
+      (if empty?
+        {:db db :dispatch [::fetch-words]}
+        {:db db}))))
 
 (rf/reg-event-db
  ::ack-failure
@@ -101,12 +105,16 @@
                                             (get response :status-text)))
        (notifications/clear-button-state id request-type))))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   ::ack-delete
-  (fn [db [_ id]]
-    (-> db
-        (update-in [:words :confirm] dissoc id)
-        (notifications/clear-button-state id :delete))))
+  (fn [{:keys [db]} [_ id]]
+    (let [db (-> db
+                 (update-in [:words :confirm] dissoc id)
+                 (notifications/clear-button-state id :delete))
+          empty? (-> db (get-in [:words :confirm]) count (< 1))]
+      (if empty?
+        {:db db :dispatch [::fetch-words]}
+        {:db db}))))
 
 (rf/reg-sub
   ::words

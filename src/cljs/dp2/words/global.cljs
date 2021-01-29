@@ -84,12 +84,16 @@
   (fn [db [_ id]]
     (notifications/clear-button-state db id :save)))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   ::ack-delete
-  (fn [db [_ id]]
-    (-> db
-        (update-in [:words :global] dissoc id)
-        (notifications/clear-button-state id :delete))))
+  (fn [{:keys [db]} [_ id]]
+    (let [db (-> db
+                 (update-in [:words :global] dissoc id)
+                 (notifications/clear-button-state id :delete))
+          empty? (-> db (get-in [:words :global]) count (< 1))]
+      (if empty?
+        {:db db :dispatch [::fetch-words]}
+        {:db db}))))
 
 (rf/reg-event-db
  ::ack-failure

@@ -61,7 +61,7 @@
                     :uri             (str "/api/documents/" document-id "/words")
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::ack-save id]
+                    :on-success      [::ack-save id document-id]
                     :on-failure      [::ack-failure id :save]
                     }})))
 
@@ -71,12 +71,16 @@
     (let [ids (keys (get-in db [:words :unknown]))]
       {:dispatch-n (map (fn [id] [::save-word id]) ids)})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   ::ack-save
-  (fn [db [_ id]]
-    (-> db
-        (update-in [:words :unknown] dissoc id)
-        (notifications/clear-button-state id :save))))
+  (fn [{:keys [db]} [_ id document-id]]
+    (let [db (-> db
+                 (update-in [:words :unknown] dissoc id)
+                 (notifications/clear-button-state id :save))
+          empty? (-> db (get-in [:words :unknown]) count (< 1))]
+      (if empty?
+        {:db db :dispatch [::fetch-words document-id]}
+        {:db db}))))
 
 (rf/reg-event-db
  ::ack-failure
