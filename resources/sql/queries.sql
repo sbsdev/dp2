@@ -12,7 +12,7 @@ LIMIT :limit OFFSET :offset
 -- :doc retrieve all documents given a `search` term, a `limit` and an `offset`
 SELECT *, (CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling
 FROM documents_document
-WHERE title LIKE :search
+WHERE LOWER(title) LIKE LOWER(:search)
 LIMIT :limit OFFSET :offset
 
 -- :name get-document :? :1
