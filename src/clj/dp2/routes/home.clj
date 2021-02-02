@@ -2,15 +2,17 @@
   (:require
    [dp2.layout :as layout]
    [dp2.db.core :as db]
-   [clojure.edn :as edn]
    [clojure.java.io :as io]
    [dp2.middleware :as middleware]
    [ring.util.response]
-   [ring.util.http-response :as response]))
+   [ring.util.http-response :as response]
+   [trptcolin.versioneer.core :as version]))
 
 (defn home-page [request]
-  (let [version-info (-> "dp2/version.edn" io/resource slurp edn/read-string)]
-    (layout/render request "home.html" version-info)))
+  (let [group "ch.sbs"
+        artifact "dp2"]
+    (layout/render request "home.html" {:version (version/get-version group artifact)
+                                        :revision (version/get-revision group artifact)})))
 
 (defn home-routes []
   [""

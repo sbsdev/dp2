@@ -1,4 +1,4 @@
-(defproject dp2 :project/git-ref-short
+(defproject ch.sbs/dp2 "0.8.1-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -54,7 +54,8 @@
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.8.1"]
                  [ring/ring-defaults "0.3.2"]
-                 [selmer "1.12.27"]]
+                 [selmer "1.12.27"]
+                 [trptcolin/versioneer "0.2.0"]]
 
   :min-lein-version "2.0.0"
   
@@ -65,12 +66,18 @@
   :main ^:skip-aot dp2.core
 
   :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-immutant "2.1.0"]
-            [me.arrdem/lein-git-version "2.0.8"]]
+            [lein-immutant "2.1.0"]]
 
-  ;; see https://github.com/arrdem/lein-git-version
-  :git-version {:version-file "resources/dp2/version.edn"
-                :version-file-keys [:ref-short :timestamp :tag :ahead :branch :dirty?]}
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version"
+                   "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag"]
+                  #_["deploy"]
+                  #_["uberjar"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]]
 
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
