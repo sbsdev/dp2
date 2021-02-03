@@ -117,7 +117,7 @@
   [xml document-id]
   (let [filtered (-> xml filter-braille-and-names)
         special-words (-> filtered extract-special-words) ; ellipsis and hyphen
-        plain-words (-> filtered filter-special-words extract-words)
+        plain-words (-> filtered extract-words)
         all-words (union plain-words special-words)
         tuples (map (fn [w] [w 0 "" document-id]) all-words)]
     tuples))
