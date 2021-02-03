@@ -189,7 +189,11 @@
     (let [untranslated (if (words/is-homograph? word)
                          (string/replace homograph-disambiguation "|" words/braille-dummy-text)
                          untranslated)
-          braille (if (= grade 1) uncontracted contracted)]
+          braille (if (= grade 1) uncontracted contracted)
+          ;; Remove the braille dummy text from the braille as
+          ;; liblouis does not produce braille with dummy text
+          ;; FIXME: Why are we keeping the dummy text in the db? If it is just trown away anyway?
+          braille (string/replace braille words/braille-dummy-text "")]
       (when (not= braille (translator untranslated))
         (let [line (format "word %s\t%s" untranslated (to-dots braille))]
           (.write w line)
