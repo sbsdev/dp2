@@ -27,3 +27,5 @@
       (is (= (extract-words "...HĘllo Leute ...wie gehts'... euch hEute... wahrlich gross- äh, nein gross-artig")
              #{"wahrlich" "gross" "artig" "euch" "leute" "nein"}))
 
+      (is (= (extract-words "worta-wortb- und -wortc-wortd")
+             #{"und" "worta" "wortd"})))))
