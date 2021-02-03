@@ -88,7 +88,7 @@
    str
    filter-special-words
    filter-text
-   (string/split #"(?U)\W")
+   (string/split #"(?U)[^\w']")
    (->>
     ;; drop words shorter than 3 chars
     (remove (fn [word] (< (count word) 3)))

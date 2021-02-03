@@ -28,4 +28,12 @@
              #{"wahrlich" "gross" "artig" "euch" "leute" "nein"}))
 
       (is (= (extract-words "worta-wortb- und -wortc-wortd")
-             #{"und" "worta" "wortd"})))))
+             #{"und" "worta" "wortd"})))
+
+    (testing "Words with apos"
+      (is (= (extract-words "hat's noch was schön's?")
+             #{"hat's" "noch" "was" "schön's"}))
+
+      (is (= (extract-words
+              "fort's hentong's l'avalanche s'indeer s'baldio'z 'opkins kön'ge")
+             #{"s'indeer" "s'baldio'z" "l'avalanche" "kön'ge" "'opkins" "hentong's" "fort's"})))))
