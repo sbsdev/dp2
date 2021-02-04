@@ -33,7 +33,7 @@
     (let [is-admin? @(rf/subscribe [::auth/is-admin?])]
       [:nav.navbar.is-info>div.container
        [:div.navbar-brand
-        [:a.navbar-item {:href "/" :style {:font-weight :bold}} "dp2"]
+        [:span.navbar-item {:style {:font-weight :bold}} "dp2"]
         [:span.navbar-burger.burger
          {:data-target :nav-menu
           :on-click #(swap! expanded? not)
