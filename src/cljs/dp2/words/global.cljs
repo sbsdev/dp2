@@ -1,6 +1,5 @@
 (ns dp2.words.global
   (:require [ajax.core :as ajax]
-            [clojure.string :as string]
             [dp2.auth :as auth]
             [dp2.i18n :refer [tr]]
             [dp2.pagination :as pagination]
@@ -18,7 +17,7 @@
       {:db (assoc-in db [:loading :global] true)
        :http-xhrio {:method          :get
                     :uri             "/api/words"
-                    :params          {:untranslated (if (string/blank? search) "" (str search "%"))
+                    :params          {:untranslated (if (nil? search) "" search)
                                       :offset (* offset pagination/page-size)
                                       :limit pagination/page-size}
                     :response-format (ajax/json-response-format {:keywords? true})

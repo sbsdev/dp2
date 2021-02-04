@@ -95,7 +95,7 @@
                              :or {limit default-limit offset 0}} :query} :parameters}]
                        (ok (if (blank? search)
                              (db/get-documents {:limit limit :offset offset})
-                             (db/find-documents {:limit limit :offset offset :search search}))))}}]
+                             (db/find-documents {:limit limit :offset offset :search (db/search-to-sql search)}))))}}]
 
     ["/:id"
      {:get {:summary "Get a document by ID"

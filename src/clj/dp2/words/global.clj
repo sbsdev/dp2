@@ -6,7 +6,7 @@
             [dp2.words :as words]))
 
 (defn get-words [{:keys [untranslated limit offset]}]
-  (-> (db/find-global-words {:untranslated (if (string/blank? untranslated) "%" untranslated)
+  (-> (db/find-global-words {:untranslated (db/search-to-sql untranslated)
                              :limit limit :offset offset})))
 
 (def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation])

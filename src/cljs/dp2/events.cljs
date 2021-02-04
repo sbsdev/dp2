@@ -38,16 +38,13 @@
 (rf/reg-event-fx
   :fetch-documents
   (fn [{:keys [db]} [_ search]]
-    (let [request {:method          :get
-                   :uri             "/api/documents"
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :on-success      [:fetch-documents-success]
-                   :on-failure      [:fetch-documents-failure :fetch-documents]}]
-
-      {:db (assoc-in db [:loading :documents] true)
-       :http-xhrio (if (string/blank? search)
-                     request
-                     (assoc request :params {:search (str "%" search "%")}))})))
+    {:db (assoc-in db [:loading :documents] true)
+     :http-xhrio {:method          :get
+                  :uri             "/api/documents"
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :params          {:search (if (nil? search) "" search)}
+                  :on-success      [:fetch-documents-success]
+                  :on-failure      [:fetch-documents-failure :fetch-documents]}}))
 
 (rf/reg-event-db
  :fetch-documents-success

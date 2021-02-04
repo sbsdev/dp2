@@ -2,6 +2,7 @@
   (:require
     [next.jdbc.date-time]
     [next.jdbc.result-set]
+    [clojure.string :as string]
     [clojure.tools.logging :as log]
     [conman.core :as conman]
     [camel-snake-kebab.extras :refer [transform-keys]]
@@ -28,6 +29,19 @@
   :stop (conman/disconnect! *hyphenation-db*))
 
 (conman/bind-connection *hyphenation-db* "sql/hyphenation-queries.sql")
+
+(defn search-to-sql
+  "Prepare given search string `s` for search in SQL. If the string
+  neither starts with '^' nor ends with '$' then it is simply wrapped
+  in '%'. If it starts with '^' or ends with '$' then the respective
+  '%' is not added."
+  [s]
+  (let [prepend #(str %2 %1)
+        append #(str %1 %2)]
+    (cond-> s
+      (not (string/starts-with? s "^")) (prepend "%")
+      (not (string/ends-with? s "$")) (append "%")
+      true (string/replace #"[$^]" ""))))
 
 (extend-protocol next.jdbc.result-set/ReadableColumn
   java.sql.Timestamp
