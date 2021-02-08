@@ -24,15 +24,3 @@ AND word IN (:v*:words)
 AND false
 /*~ ) ~*/
 
--- :name insert-hyphenation :! :n
--- :doc Insert or update a hyphenation.
-INSERT INTO words (word, hyphenation, spelling)
-VALUES (:word, :hyphenation, :spelling)
-ON DUPLICATE KEY UPDATE
-hyphenation = VALUES(hyphenation)
-
--- :name delete-hyphenation :! :n
--- :doc Delete a hyphenation given a `word` and a `spelling`.
-DELETE FROM words
-WHERE word = :word
-AND spelling = :spelling

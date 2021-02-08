@@ -32,12 +32,6 @@
     (whitelists/export-local-tables (:document-id word))
     insertions))
 
-(defn- ref-count
-  "Return the number of translations for a given `word` in a given document."
-  [{id :document-id untranslated :untranslated}]
-  (-> (db/get-local-word-count {:id id :untranslated untranslated})
-      vals first))
-
 (defn delete-word
   "Remove a `word` from the db. If the word contains `:uncontracted`
   remove the db record for `:grade` 1 and likewise if the word
@@ -56,7 +50,7 @@
     ;; braille entry for it (we can have multiple entries for a word
     ;; in the braille db (for the two grades, for names etc) but we
     ;; only have one entry, per spelling in the hyphenation db)
-    (when (and (:hyphenated word) (= (ref-count word) 0))
+    (when (:hyphenated word)
       (db/delete-hyphenation
        (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
     (whitelists/export-local-tables (:document-id word))

@@ -420,3 +420,32 @@ AND hyphenation.spelling = (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" TH
 where doc.state_id = (SELECT id FROM documents_state WHERE sort_order = (SELECT MAX(sort_order) FROM documents_state))
 ORDER BY words.document_id, words.untranslated
 LIMIT :limit OFFSET :offset
+
+------------------
+-- Hyphenations --
+------------------
+
+-- :name insert-hyphenation :! :n
+-- :doc Insert or update a hyphenation.
+INSERT INTO hyphenation_words (word, hyphenation, spelling)
+VALUES (:word, :hyphenation, :spelling)
+ON DUPLICATE KEY UPDATE
+hyphenation = VALUES(hyphenation)
+
+-- :name delete-hyphenation :! :n
+-- :doc Delete a hyphenation word `:word` and `:spelling` if there are no more references to it from either the local words, if `:document-id` is given, or the global words otherwise.
+DELETE FROM hyphenation_words
+WHERE word = :word
+AND spelling = :spelling
+/*~ (if (:document-id params) */
+AND NOT EXISTS (
+    SELECT * FROM dictionary_localword
+    WHERE untranslated = :word
+    AND document_id = :document-id
+)
+/*~*/
+AND NOT EXISTS (
+    SELECT * FROM dictionary_globalword
+    WHERE untranslated = :word
+)
+/*~ ) ~*/
