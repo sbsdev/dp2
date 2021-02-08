@@ -34,8 +34,9 @@
     (.hyphenate hyphenator text \- nil)))
 
 (defn hyphenate
-  "Hyphenate the given `text` for given `spelling`."
+  "Hyphenate the given `text` for given `spelling` against the base
+  upstream dictionaries which contain no exceptions"
   [text spelling]
-  (let [default (get hyphenators 1)
+  (let [default (get hyphenators 1) ;; new spelling
         hyphenator (get hyphenators spelling default)]
     (hyphenate* text hyphenator)))
