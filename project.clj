@@ -44,6 +44,7 @@
                  [org.clojure/tools.logging "1.1.0"]
                  [org.daisy.bindings/jhyphen "1.0.2"]
                  [org.liblouis/liblouis-java "4.3.0"]
+                 [org.tobereplaced/nio.file "0.4.0"]
                  [org.webjars.npm/bulma "0.9.0"]
                  [org.webjars.npm/creativebulma__bulma-tooltip "1.0.2"]
                  [org.webjars.npm/material-icons "0.3.1"]
