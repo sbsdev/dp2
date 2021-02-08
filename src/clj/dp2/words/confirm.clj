@@ -20,8 +20,5 @@
     ;; otherwise move the word to the global dict
     (conman/with-transaction [db/*db*]
       (local/delete-word word)
-      (when (:hyphenated word)
-        (db/insert-hyphenation
-         (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
       (global/put-word word))))
 

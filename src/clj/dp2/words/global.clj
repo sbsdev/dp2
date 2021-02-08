@@ -13,6 +13,9 @@
 
 (defn put-word [word]
   (log/debug "Add global word" word)
+  (when (:hyphenated word)
+    (db/insert-hyphenation
+     (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
   (->> word
        words/separate-word
        (map #(db/insert-global-word (words/to-db % dictionary-keys words/dictionary-mapping)))
