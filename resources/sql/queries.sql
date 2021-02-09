@@ -425,6 +425,14 @@ LIMIT :limit OFFSET :offset
 -- Hyphenations --
 ------------------
 
+-- :name get-hyphenation :? :*
+-- :doc retrieve hyphenations given a `spelling` and optionally s `search` term, a `limit` and an `offset`
+SELECT * FROM hyphenation_words
+WHERE spelling = :spelling
+--~ (when (:search params) "AND word LIKE :search")
+--~ (when (:limit params) "LIMIT :limit")
+--~ (when (:offset params) "OFFSET :offset")
+
 -- :name insert-hyphenation :! :n
 -- :doc Insert or update a hyphenation.
 INSERT INTO hyphenation_words (word, hyphenation, spelling)

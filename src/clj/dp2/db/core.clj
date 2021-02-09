@@ -20,16 +20,6 @@
 
 (conman/bind-connection *db* "sql/queries.sql")
 
-(defstate ^:dynamic *hyphenation-db*
-  :start (if-let [jdbc-url (env :hyphenation-db-url)]
-           (conman/connect! {:jdbc-url jdbc-url})
-           (do
-             (log/warn "hyphenation database connection URL was not found, please set :hyphenation-db-url in your config, e.g: dev-config.edn")
-             *hyphenation-db*))
-  :stop (conman/disconnect! *hyphenation-db*))
-
-(conman/bind-connection *hyphenation-db* "sql/hyphenation-queries.sql")
-
 (defn search-to-sql
   "Prepare given search string `s` for search in SQL. If the string
   neither starts with '^' nor ends with '$' then it is simply wrapped
