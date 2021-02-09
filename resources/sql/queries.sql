@@ -116,7 +116,7 @@ SELECT words.untranslated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = 644) AS spelling,
        hyphenation.hyphenation AS hyphenated
 FROM dictionary_localword words
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
 ON words.untranslated = hyphenation.word
 AND hyphenation.spelling =
   (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -161,7 +161,7 @@ FROM
     ) AS w
   GROUP BY w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation
   ) AS words
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
 ON words.untranslated = hyphenation.word
 AND hyphenation.spelling =
   (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -239,7 +239,7 @@ LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND 
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (0,1,3)
 LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (0,1,3)
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (0,1,3)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -258,7 +258,7 @@ LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND 
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (1,2)
 LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (1,2)
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (1,2)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -277,7 +277,7 @@ LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND 
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (3,4)
 LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (3,4)
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (3,4)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -296,7 +296,7 @@ LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND 
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (5)
 LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (5)
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (5)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -313,7 +313,7 @@ AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
 FROM dictionary_unknownword unknown
 LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (0,1,3)
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (0,1,3)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -330,7 +330,7 @@ UNION
 FROM dictionary_unknownword unknown
 LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (1,2)
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (1,2)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -347,7 +347,7 @@ UNION
 FROM dictionary_unknownword unknown
 LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (3,4)
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (3,4)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -364,7 +364,7 @@ UNION
 FROM dictionary_unknownword unknown
 LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (5)
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (5)
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
      	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
@@ -413,7 +413,7 @@ FROM
   GROUP BY w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation
   ) AS words
 JOIN documents_document doc ON words.document_id = doc.id
-LEFT JOIN hyphenation_test.words AS hyphenation
+LEFT JOIN hyphenation_words AS hyphenation
 ON words.untranslated = hyphenation.word
 AND hyphenation.spelling = (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END)
 -- only get words from finished productions
