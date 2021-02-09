@@ -3,6 +3,7 @@
             [dp2.hyphenate :as hyphenate]
             [dp2.words :as words]
             [dp2.whitelists.async :as whitelists]
+            [dp2.whitelists.hyphenation :as hyphenations]
             [clojure.tools.logging :as log]))
 
 (defn get-words [id grade limit offset]
@@ -22,7 +23,8 @@
   (log/debug "Add local word" word)
   (when (:hyphenated word)
     (db/insert-hyphenation
-     (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
+     (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
+    (hyphenations/export))
   (let [insertions
         (->> word
              words/separate-word
@@ -46,12 +48,10 @@
              (map #(db/delete-local-word
                     (words/to-db % words/dictionary-keys words/dictionary-mapping)))
              (reduce +))]
-    ;; delete the hyphenation for this word only if there is no other
-    ;; braille entry for it (we can have multiple entries for a word
-    ;; in the braille db (for the two grades, for names etc) but we
-    ;; only have one entry, per spelling in the hyphenation db)
+
     (when (:hyphenated word)
       (db/delete-hyphenation
-       (words/to-db word words/hyphenation-keys words/hyphenation-mapping)))
+       (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
+      (hyphenations/export))
     (whitelists/export-local-tables (:document-id word))
     deletions))
