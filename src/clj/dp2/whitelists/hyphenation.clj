@@ -74,13 +74,14 @@
      spelling
      get-hyphenations
      (write-file whitelist original))
-    (log/infof "Wrote the whitelist %s" whitelist)
-    (let [tmp-file (nio/absolute-path (nio/create-temp-file! "hyphen-" ".dic"))]
-      (sh substrings-program whitelist (str tmp-file))
-      (log/infof "Ran substrings.pl on %s producing %s" whitelist tmp-file)
+    (log/info "Exporting hyphenation whitelist for" dictionary)
+    (log/debug "Wrote the whitelist" whitelist)
+    (let [tmp-file (nio/absolute-path (nio/create-temp-file! "hyphen-" ".dic"))
+          result (sh substrings-program whitelist (str tmp-file))]
+      (log/debugf "substrings.pl %s %s returned %s" whitelist tmp-file result)
       (set-file-permissions! tmp-file)
       (nio/move! tmp-file dictionary StandardCopyOption/REPLACE_EXISTING)
-      (log/infof "Move %s to %s" tmp-file dictionary))))
+      (log/debugf "Move %s to %s" tmp-file dictionary))))
 
 (defn- exporter
   "Create a channel and attach a listener to it so that events can be
