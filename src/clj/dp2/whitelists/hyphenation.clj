@@ -6,6 +6,8 @@
             [clojure.tools.logging :as log]
             [dp2.db.core :as db]
             [dp2.hyphenate :as hyphenate]
+            [dp2.metrics :as metrics]
+            [iapetos.collector.fn :as prometheus]
             [mount.core :refer [defstate]]
             [org.tobereplaced.nio.file :as nio])
   (:import java.nio.file.StandardCopyOption))
@@ -109,3 +111,6 @@
   "Like [export*] but with debouncing"
   []
   (async/>!! export-chan true))
+
+(prometheus/instrument! metrics/registry #'export*)
+
