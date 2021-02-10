@@ -39,13 +39,7 @@
   (mount/stop #'dp2.db.core/*db*)
   (mount/start #'dp2.db.core/*db*)
   (binding [*ns* 'dp2.db.core]
-    (conman/bind-connection dp2.db.core/*db* "sql/queries.sql"))
-
-  (mount/stop #'dp2.db.core/*hyphenation-db*)
-  (mount/start #'dp2.db.core/*hyphenation-db*)
-  (binding [*ns* 'dp2.db.core]
-    (conman/bind-connection dp2.db.core/*hyphenation-db* "sql/hyphenation-queries.sql"))
-  )
+    (conman/bind-connection dp2.db.core/*db* "sql/queries.sql")))
 
 (defn reset-db
   "Resets database."
