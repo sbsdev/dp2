@@ -1,4 +1,4 @@
-(defproject ch.sbs/dp2 "0.8.1-SNAPSHOT"
+(defproject ch.sbs/dp2 "0.8.1"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
