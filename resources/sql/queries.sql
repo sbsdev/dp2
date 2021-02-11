@@ -102,10 +102,6 @@ AND homograph_disambiguation = :homograph_disambiguation
 -----------------
 
 -- :name get-local-words :? :*
--- :doc retrieve local words for a given document `id` and an optional `grade`
-SELECT * FROM dictionary_localword
-WHERE document_id = :id
---~ (when (:grade params) "AND grade = :grade")
 
 -- :name get-local-words :? :*
 -- :doc retrieve local words for a given document `id` and grade `grade`. The words contain  the hyphenation if it exists.
