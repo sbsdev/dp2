@@ -102,9 +102,7 @@ AND homograph_disambiguation = :homograph_disambiguation
 -----------------
 
 -- :name get-local-words :? :*
-
--- :name get-local-words :? :*
--- :doc retrieve local words for a given document `id` and grade `grade`. The words contain  the hyphenation if it exists.
+-- :doc retrieve local words for a given document `id` and grade `grade`. Optionally you can only get local words that match a `search` term. The words contain  the hyphenation if it exists.
 SELECT words.untranslated,
        IF(:grade = 1, words.braille, NULL) AS uncontracted,
        IF(:grade = 2, words.braille, NULL) AS contracted,
@@ -121,6 +119,7 @@ AND hyphenation.spelling =
 WHERE words.document_id = :id
 AND words.isConfirmed = FALSE
 AND words.grade = :grade
+--~ (when (:search params) "AND words.untranslated LIKE :search")
 ORDER BY words.untranslated
 LIMIT :limit OFFSET :offset
 
