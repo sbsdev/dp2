@@ -28,20 +28,27 @@
 (rf/reg-event-fx
  ::next-page
  (fn [{:keys [db]} [_ id fetch-event]]
-   (when (has-next? db id)
-     {:db (-> db
-              (update-in [:pagination id :offset] (fnil inc 0))
-              (update-prev id))
-      :dispatch fetch-event})))
+   (let [inc-offset (->
+                     (fn [offset window-size] (+ offset window-size))
+                     (fnil 0))
+         window-size (-> db (get-in [:words id]) count)]
+     (when (has-next? db id)
+       {:db (-> db
+                (update-in [:pagination id :offset] inc-offset window-size)
+                (update-prev id))
+        :dispatch fetch-event}))))
 
 (rf/reg-event-fx
  ::previous-page
  (fn [{:keys [db]} [_ id fetch-event]]
-   (when (has-previous? db id)
-     {:db (-> db
-              (update-in [:pagination id :offset] (fnil dec 0))
-              (update-prev id))
-      :dispatch fetch-event})))
+   (let [dec-offset (->
+                     (fn [offset] (-> offset (- page-size) (max 0)))
+                     (fnil 0))]
+     (when (has-previous? db id)
+       {:db (-> db
+                (update-in [:pagination id :offset] dec-offset)
+                (update-prev id))
+        :dispatch fetch-event}))))
 
 (rf/reg-sub
  ::has-next?

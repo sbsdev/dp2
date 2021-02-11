@@ -18,7 +18,7 @@
        :http-xhrio {:method          :get
                     :uri             "/api/words"
                     :params          {:untranslated (if (nil? search) "" search)
-                                      :offset (* offset pagination/page-size)
+                                      :offset offset
                                       :limit pagination/page-size}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]

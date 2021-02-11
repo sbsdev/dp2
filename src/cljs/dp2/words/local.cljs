@@ -19,7 +19,7 @@
        :http-xhrio {:method          :get
                     :uri             (str "/api/documents/" id "/words")
                     :params          {:grade grade
-                                      :offset (* offset pagination/page-size)
+                                      :offset offset
                                       :limit pagination/page-size}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]

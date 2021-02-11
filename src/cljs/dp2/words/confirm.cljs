@@ -17,7 +17,7 @@
       {:db (assoc-in db [:loading :confirm] true)
        :http-xhrio {:method          :get
                     :uri             "/api/confirmable"
-                    :params          {:offset (* offset pagination/page-size)
+                    :params          {:offset offset
                                       :limit pagination/page-size}
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]
