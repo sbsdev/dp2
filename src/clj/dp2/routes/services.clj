@@ -171,15 +171,16 @@
 
     ["/words"
      {:swagger {:tags ["Local Words"]}
-      :get {:summary "Get all local words for a given document"
+      :get {:summary "Get all local words for a given document. Optionally filter the results by using a search string, a limit and an offset."
             :parameters {:path {:id int?}
                          :query {:grade ::grade
                                  (spec/opt :limit) int?
-                                 (spec/opt :offset) int?}}
+                                 (spec/opt :offset) int?
+                                 (spec/opt :search) string?}}
             :handler (fn [{{{:keys [id]} :path
-                            {:keys [grade limit offset]
+                            {:keys [grade search limit offset]
                              :or {limit default-limit offset 0}} :query} :parameters}]
-                       (if-let [words (local/get-words id grade limit offset)]
+                       (if-let [words (local/get-words id grade search limit offset)]
                          (ok words)
                          (not-found)))}
 
