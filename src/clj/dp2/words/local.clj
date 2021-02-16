@@ -1,17 +1,23 @@
 (ns dp2.words.local
-  (:require [dp2.db.core :as db]
-            [dp2.hyphenate :as hyphenate]
-            [dp2.words :as words]
+  (:require [clojure.string :as string]
+            [clojure.tools.logging :as log]
+            [dp2.db.core :as db]
             [dp2.whitelists.async :as whitelists]
             [dp2.whitelists.hyphenation :as hyphenations]
-            [clojure.tools.logging :as log]))
+            [dp2.words :as words]))
 
-(defn get-words [id grade limit offset]
+(defn get-words
+  "Retrieve all local words for given document-id `id`, `grade` and
+  a (possibly nil) `search` term. Limit the result set by `limit` and
+  `offset`."
+  [id grade search limit offset]
   (let [document (db/get-document {:id id})
         spelling (:spelling document)
+        params (cond-> {:id id :limit limit :offset offset}
+                 (not (string/blank? search)) (assoc :search (db/search-to-sql search)))
         words (if (= grade 0)
-                (db/get-local-words-aggregated {:id id :limit limit :offset offset})
-                (db/get-local-words {:id id :grade grade :limit limit :offset offset}))]
+                (db/get-local-words-aggregated params)
+                (db/get-local-words (assoc params :grade grade)))]
     (->> words
          (map words/islocal-to-boolean)
          (map words/complement-hyphenation))))
