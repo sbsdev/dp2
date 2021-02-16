@@ -1,5 +1,6 @@
 (ns dp2.words.local
   (:require [ajax.core :as ajax]
+            [clojure.string :as string]
             [dp2.auth :as auth]
             [dp2.i18n :refer [tr]]
             [dp2.pagination :as pagination]
@@ -14,13 +15,15 @@
   ::fetch-words
   (fn [{:keys [db]} [_ id]]
     (let [grade @(rf/subscribe [::grade/grade])
-          offset (pagination/offset db :local)]
+          offset (pagination/offset db :local)
+          search @(rf/subscribe [::search id])]
       {:db (assoc-in db [:loading :local] true)
        :http-xhrio {:method          :get
                     :uri             (str "/api/documents/" id "/words")
-                    :params          {:grade grade
-                                      :offset offset
-                                      :limit pagination/page-size}
+                    :params          (cond-> {:grade grade
+                                              :offset offset
+                                              :limit pagination/page-size}
+                                       (not (string/blank? search)) (assoc :search search))
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::fetch-words-success]
                     :on-failure      [::fetch-words-failure :fetch-words]}})))
@@ -109,6 +112,38 @@
        (notifications/clear-button-state id request-type))))
 
 (rf/reg-sub
+  ::search
+  (fn [db [_ document-id]]
+    (get-in db [:search :local document-id])))
+
+(rf/reg-event-fx
+   ::set-search
+   (fn [{:keys [db]} [_ document-id new-search-value]]
+     {:db (assoc-in db [:search :local document-id] new-search-value)
+      :dispatch-n (list
+                   ;; when searching for a new word reset the pagination
+                   [::pagination/reset :local]
+                   [::fetch-words document-id])}))
+
+
+(defn words-search [document-id]
+  (let [get-value (fn [e] (-> e .-target .-value))
+        reset!    #(rf/dispatch [::set-search document-id ""])
+        save!     #(rf/dispatch [::set-search document-id %])]
+    [:div.field
+     [:div.control
+      [:input.input {:type "text"
+                     :placeholder (tr [:search])
+                     :value @(rf/subscribe [::search document-id])
+                     :on-change #(save! (get-value %))
+                     :on-key-down #(when (= (.-which %) 27) (reset!))}]]]))
+
+(defn words-filter [document-id]
+  [:div.field.is-horizontal
+   [:div.field-body
+    [words-search document-id]]])
+
+(rf/reg-sub
  ::words
  (fn [db _]
    (->> db :words :local vals (sort-by :untranslated))))
@@ -170,24 +205,26 @@
         grade @(rf/subscribe [::grade/grade])
         loading? @(rf/subscribe [::notifications/loading? :local])
         errors? @(rf/subscribe [::notifications/errors?])]
-    (cond
-      errors? [notifications/error-notification]
-      loading? [notifications/loading-spinner]
-      :else
-      [:<>
-       [:table.table.is-striped
-        [:thead
-         [:tr
-          [:th (tr [:untranslated])]
-          (when (#{0 1} grade) [:th (tr [:uncontracted])])
-          (when (#{0 2} grade) [:th (tr [:contracted])])
-          [:th (tr [:hyphenated-with-spelling] [(words/spelling-string spelling)])]
-          [:th (tr [:type])]
-          [:th (tr [:homograph-disambiguation])]
-          [:th (tr [:local])]
-          [:th (tr [:action])]]]
-        [:tbody
-         (for [{:keys [uuid]} words]
-           ^{:key uuid}
-           [word uuid])]]
-       [pagination/pagination :local [::fetch-words (:id document)]]])))
+    [:<>
+     [words-filter (:id document)]
+     (cond
+       errors? [notifications/error-notification]
+       loading? [notifications/loading-spinner]
+       :else
+       [:<>
+        [:table.table.is-striped
+         [:thead
+          [:tr
+           [:th (tr [:untranslated])]
+           (when (#{0 1} grade) [:th (tr [:uncontracted])])
+           (when (#{0 2} grade) [:th (tr [:contracted])])
+           [:th (tr [:hyphenated-with-spelling] [(words/spelling-string spelling)])]
+           [:th (tr [:type])]
+           [:th (tr [:homograph-disambiguation])]
+           [:th (tr [:local])]
+           [:th (tr [:action])]]]
+         [:tbody
+          (for [{:keys [uuid]} words]
+            ^{:key uuid}
+            [word uuid])]]
+        [pagination/pagination :local [::fetch-words (:id document)]]])]))
