@@ -1,19 +1,19 @@
 {
         "calva.customREPLCommandSnippets": [
         {
-            "name": "Start dp2 Server",
+            "name": "Start daisyproducer2 Server",
             "ns": "user",
             "repl": "clj",
             "snippet": "(start)"
         },
         {
-            "name": "Stop dp2 Server",
+            "name": "Stop daisyproducer2 Server",
             "ns": "user",
             "repl": "clj",
             "snippet": "(stop)"
         },
         {
-            "name": "Restart dp2 Server",
+            "name": "Restart daisyproducer2 Server",
             "ns": "user",
             "repl": "clj",
             "snippet": "(restart)"
@@ -21,7 +21,7 @@
     ],
     "calva.replConnectSequences": [
                 {
-            "name": "Server only - dp2",
+            "name": "Server only - daisyproducer2",
             "projectType": "Leiningen",
             "afterCLJReplJackInCode": "(start)",
             "cljsType": "none",
@@ -32,7 +32,7 @@
             }
         },
         {
-            "name": "Server + Client – dp2",
+            "name": "Server + Client – daisyproducer2",
             "projectType": "Leiningen",
             "afterCLJReplJackInCode": "(start)",
             "cljsType": {

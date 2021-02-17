@@ -1,4 +1,4 @@
-(defproject ch.sbs/dp2 "0.8.2-SNAPSHOT"
+(defproject ch.sbs/daisyproducer2 "0.8.2-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -64,7 +64,7 @@
   :test-paths ["test/clj"]
   :resource-paths ["resources" "target/cljsbuild"]
   :target-path "target/%s/"
-  :main ^:skip-aot dp2.core
+  :main ^:skip-aot daisyproducer2.core
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-immutant "2.1.0"]]
@@ -108,7 +108,7 @@
                  :externs ["react/externs/react.js"]}}}}
              
              :aot :all
-             :uberjar-name "dp2.jar"
+             :uberjar-name "daisyproducer2.jar"
              :source-paths ["env/prod/clj" ]
              :resource-paths ["env/prod/resources"]}
 
@@ -132,7 +132,7 @@
                   :cljsbuild{:builds
                    {:app
                     {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-                     :figwheel {:on-jsload "dp2.core/mount-components"}
+                     :figwheel {:on-jsload "daisyproducer2.core/mount-components"}
                      :compiler
                      {:output-dir "target/cljsbuild/public/js/out"
                       :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}
@@ -141,7 +141,7 @@
                       :output-to "target/cljsbuild/public/js/app.js"
                       :asset-path "/js/out"
                       :source-map true
-                      :main "dp2.app"
+                      :main "daisyproducer2.app"
                       :pretty-print true}}}}
                   
                   
@@ -160,7 +160,7 @@
                     {:source-paths ["src/cljc" "src/cljs" "test/cljs"]
                      :compiler
                      {:output-to "target/test.js"
-                      :main "dp2.doo-runner"
+                      :main "daisyproducer2.doo-runner"
                       :optimizations :whitespace
                       :pretty-print true}}}}
                   
