@@ -146,7 +146,8 @@
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])
-        {:keys [uuid untranslated uncontracted contracted type homograph-disambiguation hyphenated]} @(rf/subscribe [::word id])]
+        {:keys [uuid untranslated uncontracted contracted type homograph-disambiguation
+                hyphenated invalid-hyphenated]} @(rf/subscribe [::word id])]
     [:tr
      [:td untranslated]
      (when (#{0 1} grade)
@@ -157,8 +158,9 @@
        (if contracted
          [:td [fields/input-field :unknown uuid :contracted validation/braille-valid?]]
          [:td]))
-     [:td (when hyphenated
-            [fields/input-field :unknown uuid :hyphenated #(validation/hyphenation-valid? % untranslated)])]
+     [:td (if hyphenated
+            [fields/input-field :unknown uuid :hyphenated #(validation/hyphenation-valid? % untranslated)]
+            [fields/disabled-field invalid-hyphenated])]
      [:td {:width "8%"} (get words/type-mapping type (tr [:unknown]))]
      [:td {:width "8%"} homograph-disambiguation]
      [:td [fields/local-field :unknown uuid]]

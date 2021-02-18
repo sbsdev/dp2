@@ -39,3 +39,7 @@
                         :on-key-down #(when (= (.-which %) 27) (reset!))}]
          (when-not valid?
            [:p.help.is-danger (tr [:input-not-valid])])]))))
+
+(defn disabled-field [value]
+  [:div.field
+   [:input.input {:type "text" :value value :disabled "disabled"}]])

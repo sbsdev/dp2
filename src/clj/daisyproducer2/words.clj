@@ -10,15 +10,16 @@
 (defn is-homograph? [{:keys [type]}] (some? (#{5} type)))
 
 (defn suggested-hyphenation [{:keys [untranslated spelling]}]
-  (when (re-matches validation/valid-hyphenation-re untranslated)
-    (hyphenate/hyphenate untranslated spelling)))
+  (hyphenate/hyphenate untranslated spelling))
 
 (defn complement-hyphenation
   "Add hyphenation to a `word` if it is missing"
   [{:keys [hyphenated] :as word}]
-  (let [hyphenation (suggested-hyphenation word)]
+  (let [hyphenation (suggested-hyphenation word)
+        valid? (validation/hyphenation-valid? hyphenation)]
     (cond-> word
-      (and (nil? hyphenated) hyphenation) (assoc :hyphenated hyphenation))))
+      (and (nil? hyphenated) valid?) (assoc :hyphenated hyphenation)
+      (and (nil? hyphenated) (not valid?)) (assoc :invalid-hyphenated hyphenation))))
 
 (def braille-dummy-text "┊")
 
