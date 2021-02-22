@@ -30,8 +30,8 @@
     <logger name="io.undertow.websockets.core.request" level="warn" />
     <logger name="io.undertow.request" level="warn" />
     <logger name="io.undertow.session" level="warn" />
-    <logger name="io.undertow.request" level="warn" />
     <logger name="org.liblouis.Louis" level="warn" />
+    <logger name="ring.logger" level="info" />
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />

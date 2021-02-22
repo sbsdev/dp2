@@ -11,6 +11,7 @@
     [muuntaja.middleware :refer [wrap-format wrap-params]]
     [daisyproducer2.config :refer [env]]
     [daisyproducer2.auth :as auth]
+    [ring.logger :refer [wrap-with-logger]]
     [ring.middleware.flash :refer [wrap-flash]]
     [ring.util.http-response :refer [unauthorized forbidden]]
     [immutant.web.middleware :refer [wrap-session]]
@@ -77,6 +78,7 @@
       wrap-auth
       wrap-flash
       (wrap-session {:cookie-attrs {:http-only true}})
+      wrap-with-logger
       (wrap-defaults
         (-> site-defaults
             (assoc-in [:security :anti-forgery] false)
