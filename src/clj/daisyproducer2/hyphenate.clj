@@ -5,12 +5,11 @@
   hyphenation dictionaries in the file system the hyphenators list
   needs to be reloaded."
   (:require [clojure.java.io :as io]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [clojure.tools.logging :as log]
+            [daisyproducer2.config :refer [env]]
+            [mount.core :refer [defstate]])
   (:import ch.sbs.jhyphen.Hyphenator))
-
-(def hyphen-dictionaries
-  {0 "/usr/share/hyphen/hyph_de_DE_OLDSPELL_base.dic"
-   1 "/usr/share/hyphen/hyph_de_DE_base.dic"})
 
 (defn- load-hyphenators
   "Given a map of keys for spelling and paths to hyphenation
@@ -21,10 +20,15 @@
     (keys dics)
     (map #(new Hyphenator (io/file %)) (vals dics))))
 
-(def hyphenators
-  "The \"base hyphenators\" that use the hyphen tables as they are
-  provided by upstream without the exceptions from the database"
-  (load-hyphenators hyphen-dictionaries))
+(defstate hyphenators
+  :start
+  (if-let [hyphen-dictionaries (env :hyphen-dictionaries)]
+    (load-hyphenators hyphen-dictionaries)
+    (log/warn "Hyphen dictionaries not found, please set :hyphen-dictionaries in the config file"))
+  :stop
+  (when hyphenators
+    (doseq [[_ hyphenator] hyphenators]
+      (.close hyphenator))))
 
 (defn- hyphenate*
   "Hyphenate given `text` using a given `hyphenator`"
