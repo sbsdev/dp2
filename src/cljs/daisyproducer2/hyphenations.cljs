@@ -312,12 +312,25 @@
         [corrected-hyphenation]
         [hyphenation-add-button]])]))
 
+(defn tab-link [uri title page on-click]
+  (if-let [is-active (= page @(rf/subscribe [:common/page-id]))]
+    [:li.is-active [:a title]]
+    [:li [:a {:href uri :on-click on-click} title]]))
+
+(defn tabs []
+  [:div.block
+   [:div.tabs.is-boxed
+    [:ul
+     [tab-link "#/hyphenations" (tr [:insert]) :hyphenations]
+     [tab-link "#/hyphenations/edit" (tr [:edit]) :hyphenations-edit]]]])
+
 (defn add-page []
   (let [spelling @(rf/subscribe [::spelling])
         loading? @(rf/subscribe [::notifications/loading? :hyphenation])
         errors? @(rf/subscribe [::notifications/errors?])]
     [:section.section>div.container>div.content
      [spelling-selector]
+     [tabs]
      [hyphenation-form]
      [lookup]
      (cond
@@ -340,8 +353,42 @@
      ]))
 
 (defn edit-page []
-  (let [spelling @(rf/subscribe [::spelling])]
+  (let [spelling @(rf/subscribe [::spelling])
+        loading? @(rf/subscribe [::notifications/loading? :hyphenation])
+        errors? @(rf/subscribe [::notifications/errors?])]
     [:section.section>div.container>div.content
      [spelling-selector]
+     [tabs]
      [search]
-     ]))
+     (cond
+       errors? [notifications/error-notification]
+       loading? [notifications/loading-spinner]
+       :else
+       [:<>
+        [:table.table.is-striped
+         [:thead
+          [:tr
+           [:th (tr [:hyphenation/word])]
+           [:th (tr [:hyphenation/hyphenation])]
+           [:th ""]]]
+         [:tbody
+          (for [{:keys [word hyphenation]} @(rf/subscribe [::hyphenations-sorted])]
+            ^{:key word}
+            [:tr
+             [:td word]
+             [:td hyphenation]
+             [:td
+              [:div.field.has-addons
+               [:p.control
+                [:button.button.is-success.has-tooltip-arrow
+                 {:data-tooltip (tr [:edit])
+                  :on-click (fn [e] (rf/dispatch [::edit-hyphenation word]))}
+                 [:span.icon.is-small
+                  [:i.mi.mi-done]]]]
+               [:p.control
+                [:button.button.is-danger.has-tooltip-arrow
+                 {:data-tooltip (tr [:delete])
+                  :on-click (fn [e] (rf/dispatch [::delete-hyphenation word]))}
+                 [:span.icon.is-small
+                  [:i.mi.mi-cancel]]]]]]])]]
+        [pagination/pagination :hyphenation [::fetch-hyphenations]]])]))
