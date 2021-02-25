@@ -1,0 +1,272 @@
+(ns daisyproducer2.hyphenations
+  (:require
+   [ajax.core :as ajax]
+   [daisyproducer2.auth :as auth]
+   [re-frame.core :as rf]
+   [daisyproducer2.i18n :refer [tr]]
+   [daisyproducer2.pagination :as pagination]
+   [daisyproducer2.words.notifications :as notifications]
+   [clojure.string :as string]))
+
+(rf/reg-event-fx
+  ::fetch-hyphenations
+  (fn [{:keys [db]} [_]]
+    (let [search @(rf/subscribe [::search])
+          spelling @(rf/subscribe [::spelling])
+          offset (pagination/offset db :hyphenation)]
+      {:db (assoc-in db [:loading :hyphenation] true)
+       :http-xhrio {:method          :get
+                    :uri             "/api/hyphenations"
+                    :params          {:spelling spelling
+                                      :search (if (nil? search) "" search)
+                                      :offset offset
+                                      :limit pagination/page-size}
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-hyphenations-success]
+                    :on-failure      [::fetch-hyphenations-failure :fetch-hyphenations]}})))
+
+(rf/reg-event-db
+ ::fetch-hyphenations-success
+ (fn [db [_ hyphenations]]
+   (let [next? (-> hyphenations count (= pagination/page-size))]
+     (-> db
+         (assoc-in [:words :hyphenation] (zipmap (map :word hyphenations) hyphenations))
+         (pagination/update-next :hyphenation next?)
+         (assoc-in [:loading :hyphenation] false)
+         ;; clear all button loading states
+         (update-in [:loading] dissoc :buttons)))))
+
+(rf/reg-event-db
+ ::fetch-hyphenations-failure
+ (fn [db [_ request-type response]]
+   (-> db
+       (assoc-in [:errors request-type] (get response :status-text))
+       (assoc-in [:loading :hyphenation] false))))
+
+(rf/reg-event-fx
+  ::save-hyphenation
+  (fn [{:keys [db]} [_ id]]
+    (let [hyphenation (get-in db [:words :hyphenation id])
+          cleaned (-> hyphenation
+                      (select-keys [:word :hyphenation]))]
+      {:db (notifications/set-button-state db id :save)
+       :http-xhrio {:method          :put
+                    :format          (ajax/json-request-format)
+                    :headers 	     (auth/auth-header db)
+                    :uri             (str "/api/hyphenations")
+                    :params          cleaned
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::ack-save id]
+                    :on-failure      [::ack-failure id :save]
+                    }})))
+
+(rf/reg-event-fx
+  ::delete-hyphenation
+  (fn [{:keys [db]} [_ id]]
+    (let [hyphenation (get-in db [:words :hyphenation id])
+          cleaned (-> hyphenation
+                      (select-keys [:word :hyphenation]))]
+      {:db (notifications/set-button-state db id :delete)
+       :http-xhrio {:method          :delete
+                    :format          (ajax/json-request-format)
+                    :headers 	     (auth/auth-header db)
+                    :uri             (str "/api/hyphenations")
+                    :params          cleaned
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::ack-delete id]
+                    :on-failure      [::ack-failure id :delete]
+                    }})))
+
+(rf/reg-event-db
+  ::ack-save
+  (fn [db [_ id]]
+    (notifications/clear-button-state db id :save)))
+
+(rf/reg-event-fx
+  ::ack-delete
+  (fn [{:keys [db]} [_ id]]
+    (let [db (-> db
+                 (update-in [:words :hyphenation] dissoc id)
+                 (notifications/clear-button-state id :delete))
+          empty? (-> db (get-in [:words :hyphenation]) count (< 1))]
+      (if empty?
+        {:db db :dispatch [::fetch-hyphenations]}
+        {:db db}))))
+
+(rf/reg-event-db
+ ::ack-failure
+ (fn [db [_ id request-type response]]
+   (-> db
+       (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
+                                            (get response :status-text)))
+       (notifications/clear-button-state id request-type))))
+
+(rf/reg-sub
+  ::spelling
+  (fn [db _]
+    (get-in db [:current :spelling] 1)))
+
+(rf/reg-event-fx
+  ::set-spelling
+  (fn [{:keys [db]} [_ spelling]]
+    {:db (assoc-in db [:current :spelling] (js/parseInt spelling))
+     :dispatch-n
+     (list
+      ;; when changing the spelling reset the pagination
+      [::pagination/reset :hyphenation]
+      [::fetch-hyphenations])}))
+
+(defn spelling-selector []
+  (let [current @(rf/subscribe [::spelling])
+        getvalue (fn [e] (-> e .-target .-value))
+        emit     (fn [e] (rf/dispatch [::set-spelling (getvalue e)]))]
+    [:div.field
+     [:div.control
+      [:div.select.is-fullwidth
+       [:select
+        {:on-change emit}
+        (for [[v s] [[1 (tr [:spelling/new])]
+                     [0 (tr [:spelling/old])]]]
+          ^{:key v}
+          [:option (if (not= current v) {:value v} {:selected "selected" :value v}) s])]]]]))
+
+(rf/reg-sub
+  ::hyphenations
+  (fn [db _]
+    (get-in db [:words :hyphenation])))
+
+(rf/reg-sub
+ ::hyphenations-sorted
+ :<- [::hyphenations]
+ (fn [hyphenations] (->> hyphenations vals (sort-by :word))))
+
+(rf/reg-sub
+ ::already-defined?
+ :<- [::hyphenations]
+ :<- [::search]
+ (fn [[hyphenations search]] (contains? hyphenations search)))
+
+(rf/reg-sub
+  ::suggested
+  (fn [db _]
+    (get-in db [:current :hyphenation] "FIXME")))
+
+(rf/reg-sub
+  ::search
+  (fn [db _]
+    (get-in db [:search :hyphenation])))
+
+(rf/reg-event-fx
+   ::set-search
+   (fn [{:keys [db]} [_ new-search-value]]
+     {:db (assoc-in db [:search :hyphenation] new-search-value)
+      :dispatch-n
+      (list
+       ;; when searching for a new hyphenation reset the pagination
+       [::pagination/reset :hyphenation]
+       [::fetch-hyphenations])}))
+
+(defn search []
+  (let [get-value (fn [e] (-> e .-target .-value))
+        reset!    #(rf/dispatch [::set-search ""])
+        save!     #(rf/dispatch [::set-search %])]
+    [:div.field
+     [:div.control
+      [:input.input {:type "text"
+                     :placeholder (tr [:search])
+                     :value @(rf/subscribe [::search])
+                     :on-change #(save! (get-value %))
+                     :on-key-down #(when (= (.-which %) 27) (reset!))}]]]))
+
+(defn lookup-button [label href search]
+  (let [disabled (when (string/blank? search) "disabled")]
+    [:a.button {:href (str href search)
+                :disabled disabled
+                :target "_blank" }
+     label]))
+
+(defn lookup []
+  (let [search @(rf/subscribe [::search])
+        ]
+    [:div.block
+     [:label.label (tr [:hyphenation/lookup])]
+     [:div.buttons
+      [lookup-button "Duden" "http://www.duden.de/suchen/dudenonline/" search]
+      [lookup-button "TU Chemnitz" "http://dict.tu-chemnitz.de/?query=" search]
+      [lookup-button "PONS" "http://de.pons.eu/dict/search/results/?l=dede&q=" search]]]))
+
+(defn word []
+  (let [get-value (fn [e] (-> e .-target .-value))
+        reset! #(rf/dispatch [::set-search ""])
+        save! #(rf/dispatch [::set-search %])
+        already-defined? @(rf/subscribe [::already-defined?])
+        klass (when already-defined? "is-danger")
+        help-text (when already-defined?
+                    (tr [:hyphenation/already-defined]))]
+    [:div.field
+     [:label.label (tr [:hyphenation/word])]
+     [:div.control
+      [:input.input {:type "text"
+                     :class klass
+                     :placeholder (tr [:hyphenation/word])
+                     :value @(rf/subscribe [::search])
+                     :on-change #(save! (get-value %))
+                     :on-key-down #(when (= (.-which %) 27) (reset!))}]]
+     (when help-text
+       [:p.help.is-danger help-text])]))
+
+(defn suggested-hyphenation []
+  (let [suggested @(rf/subscribe [::suggested])]
+    [:div.field
+     [:label.label (tr [:hyphenation/suggested])]
+     [:div.control
+      [:input.input {:type "text"
+                     :disabled "disabled"
+                     :value suggested}]]]))
+
+(defn hyphenation-form []
+  (let [already-defined? @(rf/subscribe [::already-defined?])]
+    [:form.block
+     [word]
+     (when-not already-defined?
+       [:<>
+        [suggested-hyphenation]   
+        [:div.field
+         [:label.label (tr [:hyphenation/corrected])]
+         [:div.control
+          [:input.input {:type "text"}]]]
+        [:button.button (tr [:save])]])]))
+
+(defn add-page []
+  (let [spelling @(rf/subscribe [::spelling])
+        loading? @(rf/subscribe [::notifications/loading? :hyphenation])
+        errors? @(rf/subscribe [::notifications/errors?])]
+    [:section.section>div.container>div.content
+     [spelling-selector]
+     [hyphenation-form]
+     [lookup]
+     (cond
+       errors? [notifications/error-notification]
+       loading? [notifications/loading-spinner]
+       :else
+       [:<>
+        [:table.table.is-striped
+         [:thead
+          [:tr
+           [:th (tr [:hyphenation/word])]
+           [:th (tr [:hyphenation/hyphenation])]]]
+         [:tbody
+          (for [{:keys [word hyphenation]} @(rf/subscribe [::hyphenations-sorted])]
+            ^{:key word}
+            [:tr
+             [:td word]
+             [:td hyphenation]])]]
+        [pagination/pagination :hyphenation [::fetch-hyphenations]]])
+     ]))
+
+(defn edit-page []
+  (let [spelling @(rf/subscribe [::spelling])]
+    [:section.section>div.container>div.content
+     [spelling-selector]
+     [search]
+     ]))

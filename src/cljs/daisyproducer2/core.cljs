@@ -10,6 +10,7 @@
     [daisyproducer2.ajax :as ajax]
     [daisyproducer2.events]
     [daisyproducer2.auth :as auth]
+    [daisyproducer2.hyphenations :as hyphenations]
     [daisyproducer2.words :as words]
     [daisyproducer2.words.unknown :as unknown]
     [daisyproducer2.words.local :as local]
@@ -43,6 +44,7 @@
         {:class (when @expanded? :is-active)}
         [:div.navbar-start
          [nav-link "#/" (tr [:documents]) :documents]
+         [nav-link "#/hyphenations" (tr [:hyphenation/hyphenations]) :hyphenations]
          (when is-admin? [nav-link "#/confirm" (tr [:confirm]) :confirm])
          (when is-admin? [nav-link "#/words" (tr [:words]) :words])]
         [:div.navbar-end
@@ -157,6 +159,10 @@
                                 :view #'document-unknown}]
      ["/documents/:id/local" {:name :document-local
                               :view #'document-local}]
+     ["/hyphenations" {:name :hyphenations
+                       :view #'hyphenations/add-page}]
+     ["/hyphenations/edit" {:name :hyphenations-edit
+                            :view #'hyphenations/edit-page}]
      ["/confirm" {:name :confirm
                   :view #'confirm/words-page
                   :controllers [{:start (fn [_] (rf/dispatch [::confirm/fetch-words]))}]}]
