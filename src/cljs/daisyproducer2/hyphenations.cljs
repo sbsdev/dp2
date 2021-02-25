@@ -92,15 +92,13 @@
 (rf/reg-event-fx
   ::delete-hyphenation
   (fn [{:keys [db]} [_ id]]
-    (let [hyphenation (get-in db [:words :hyphenation id])
-          cleaned (-> hyphenation
-                      (select-keys [:word :hyphenation]))]
+    (let [hyphenation (get-in db [:words :hyphenation id])]
       {:db (notifications/set-button-state db id :delete)
        :http-xhrio {:method          :delete
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
                     :uri             (str "/api/hyphenations")
-                    :params          cleaned
+                    :params          hyphenation
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::ack-delete id]
                     :on-failure      [::ack-failure :delete]
