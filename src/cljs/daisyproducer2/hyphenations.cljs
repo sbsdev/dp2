@@ -70,20 +70,23 @@
 
 (rf/reg-event-fx
   ::save-hyphenation
-  (fn [{:keys [db]} [_ id]]
-    (let [hyphenation (get-in db [:words :hyphenation id])
-          cleaned (-> hyphenation
-                      (select-keys [:word :hyphenation]))]
-      {:db (notifications/set-button-state db id :save)
+  (fn [{:keys [db]} [_]]
+    (let [word @(rf/subscribe [::search])
+          hyphenation @(rf/subscribe [::corrected])
+          spelling @(rf/subscribe [::spelling])]
+      {:db (notifications/set-button-state db :hyphenation :save)
        :http-xhrio {:method          :put
                     :format          (ajax/json-request-format)
                     :headers 	     (auth/auth-header db)
                     :uri             (str "/api/hyphenations")
-                    :params          cleaned
+                    :params          {:word word
+                                      :hyphenation hyphenation
+                                      :spelling spelling}
                     :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::ack-save id]
-                    :on-failure      [::ack-failure id :save]
-                    }})))
+                    :on-success      [::ack-save]
+                    :on-failure      [::ack-failure :save]
+                    }
+       :dispatch [::set-search ""]})))
 
 (rf/reg-event-fx
   ::delete-hyphenation
