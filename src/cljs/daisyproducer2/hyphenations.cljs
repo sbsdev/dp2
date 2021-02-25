@@ -5,6 +5,7 @@
    [re-frame.core :as rf]
    [daisyproducer2.i18n :refer [tr]]
    [daisyproducer2.pagination :as pagination]
+   [daisyproducer2.validation :as validation]
    [daisyproducer2.words.notifications :as notifications]
    [clojure.string :as string]))
 
@@ -173,7 +174,7 @@
 (rf/reg-sub
   ::suggested
   (fn [db _]
-    (get-in db [:current :hyphenation] "FIXME")))
+    (get-in db [:current :hyphenation :suggested] "")))
 
 (rf/reg-sub
   ::search
@@ -188,6 +189,7 @@
       (list
        ;; when searching for a new hyphenation reset the pagination
        [::pagination/reset :hyphenation]
+       [::fetch-suggested-hyphenation]
        [::fetch-hyphenations])}))
 
 (defn search []
@@ -248,18 +250,67 @@
                      :disabled "disabled"
                      :value suggested}]]]))
 
+(rf/reg-sub
+  ::corrected
+  (fn [db _]
+    (get-in db [:current :hyphenation :corrected])))
+
+(rf/reg-event-db
+ ::set-corrected
+ (fn [db [_ value]]
+   (assoc-in db [:current :hyphenation :corrected] value)))
+
+(rf/reg-sub
+ ::same-as-suggested?
+ :<- [::suggested]
+ :<- [::corrected]
+ (fn [[suggested corrected]] (= suggested corrected)))
+
+(rf/reg-sub
+ ::valid?
+ :<- [::search]
+ :<- [::corrected]
+ (fn [[search corrected]] (validation/hyphenation-valid? corrected search)))
+
+(defn corrected-hyphenation []
+  (let [get-value (fn [e] (-> e .-target .-value))
+        save! #(rf/dispatch [::set-corrected %])]
+    (fn []
+      (let [corrected @(rf/subscribe [::corrected])
+            blank? (string/blank? corrected)
+            valid? (or blank? @(rf/subscribe [::valid?]))
+            same-as-suggested? (and (not blank?) @(rf/subscribe [::same-as-suggested?]))
+            klass (when (or (not valid?) same-as-suggested?) "is-danger")]
+        [:div.field
+         [:label.label (tr [:hyphenation/corrected])]
+         [:div.control
+          [:input.input {:type "text"
+                         :class klass
+                         :value corrected
+                         :on-change #(save! (get-value %))}]]
+         (when (or (not valid?) same-as-suggested?)
+           [:p.help.is-danger
+            (if-not valid?
+              (tr [:input-not-valid])
+              (tr [:hyphenation/same-as-suggested]))])]))))
+
+(defn hyphenation-add-button []
+  (let [valid? @(rf/subscribe [::valid?])
+        same-as-suggested? @(rf/subscribe [::same-as-suggested?])]
+    [:button.button
+     {:disabled (when (or (not valid?) same-as-suggested?) "disabled")
+      :on-click (fn [e] (rf/dispatch [::save-hyphenation]))}
+     (tr [:save])]))
+
 (defn hyphenation-form []
   (let [already-defined? @(rf/subscribe [::already-defined?])]
-    [:form.block
+    [:div.block
      [word]
      (when-not already-defined?
        [:<>
         [suggested-hyphenation]   
-        [:div.field
-         [:label.label (tr [:hyphenation/corrected])]
-         [:div.control
-          [:input.input {:type "text"}]]]
-        [:button.button (tr [:save])]])]))
+        [corrected-hyphenation]
+        [hyphenation-add-button]])]))
 
 (defn add-page []
   (let [spelling @(rf/subscribe [::spelling])
