@@ -281,7 +281,7 @@
                                  (spec/opt :offset) int?}}
             :handler (fn [{{{:keys [spelling search limit offset]
                              :or {limit default-limit offset 0}} :query} :parameters}]
-                       (ok (db/get-hyphenation {:spelling spelling :search search
+                       (ok (db/get-hyphenation {:spelling spelling :search (db/search-to-sql search)
                                                 :limit limit :offset offset})))}
 
       :put {:summary "Update or create a hyphenation"
