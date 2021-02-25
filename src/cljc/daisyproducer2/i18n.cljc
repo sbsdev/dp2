@@ -163,6 +163,6 @@
                      :same-as-suggested "Die Trennung ist gleich wie der Trenn-Vorschlag"
                      }
                     }
-                    }})
+                    })
 
 (def tr (partial tempura/tr {:dict translations :default-locale :en} [:de]))
