@@ -44,6 +44,31 @@
        (assoc-in [:loading :hyphenation] false))))
 
 (rf/reg-event-fx
+  ::fetch-suggested-hyphenation
+  (fn [{:keys [db]} [_]]
+    (let [word @(rf/subscribe [::search])
+          spelling @(rf/subscribe [::spelling])]
+      {:http-xhrio {:method          :get
+                    :uri             "/api/hyphenations/suggested"
+                    :params          {:spelling spelling
+                                      :word word}
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::fetch-suggested-hyphenation-success]
+                    :on-failure      [::fetch-suggested-hyphenation-failure :fetch-suggested-hyphenation]}})))
+
+(rf/reg-event-db
+ ::fetch-suggested-hyphenation-success
+ (fn [db [_ {suggested :hyphenation}]]
+   (-> db
+    (assoc-in [:current :hyphenation :suggested] suggested)
+    (assoc-in [:current :hyphenation :corrected] suggested))))
+
+(rf/reg-event-db
+ ::fetch-suggested-hyphenation-failure
+ (fn [db [_ request-type response]]
+   (assoc-in db [:errors request-type] (get response :status-text))))
+
+(rf/reg-event-fx
   ::save-hyphenation
   (fn [{:keys [db]} [_ id]]
     (let [hyphenation (get-in db [:words :hyphenation id])
