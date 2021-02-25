@@ -350,6 +350,43 @@
         [pagination/pagination :hyphenation [::fetch-hyphenations]]])
      ]))
 
+(rf/reg-sub
+  ::editing
+  (fn [db [_ word]]
+    (get-in db [:current :hyphenation :editing word])))
+
+(rf/reg-event-db
+ ::toggle-editing
+ (fn [db [_ word]]
+   (update-in db [:current :hyphenation :editing word] not)))
+
+(defn hyphenation-field [word hyphenation]
+  (let [editing @(rf/subscribe [::editing word])]
+    (if editing
+      [:td [:input.input {:type "text" :value hyphenation}]]
+      [:td hyphenation])))
+
+(defn button [label handler class icon]
+  [:button.button.has-tooltip-arrow
+   {:data-tooltip (tr [label])
+    :class class
+    :on-click #(handler)}
+   [:span.icon.is-small
+    [:i.mi {:class icon}]]])
+
+(defn buttons [word]
+  (let [editing @(rf/subscribe [::editing word])
+        save! #(rf/dispatch [::save-hyphenation word])
+        delete! #(rf/dispatch [::delete-hyphenation word])
+        toggle! #(rf/dispatch [::toggle-editing word])]
+    (if editing
+      [:div.buttons.has-addons
+       [button :save save! "is-success" "mi-done"]
+       [button :cancel toggle! "is-danger" "mi-cancel"]]
+      [:div.buttons.has-addons
+       [button :edit toggle! "is-success" "mi-edit"]
+       [button  :delete delete! "is-danger" "mi-delete"]])))
+
 (defn edit-page []
   (let [spelling @(rf/subscribe [::spelling])
         loading? @(rf/subscribe [::notifications/loading? :hyphenation])
@@ -374,19 +411,7 @@
             ^{:key word}
             [:tr
              [:td word]
-             [:td hyphenation]
-             [:td
-              [:div.field.has-addons
-               [:p.control
-                [:button.button.is-success.has-tooltip-arrow
-                 {:data-tooltip (tr [:edit])
-                  :on-click (fn [e] (rf/dispatch [::edit-hyphenation word]))}
-                 [:span.icon.is-small
-                  [:i.mi.mi-done]]]]
-               [:p.control
-                [:button.button.is-danger.has-tooltip-arrow
-                 {:data-tooltip (tr [:delete])
-                  :on-click (fn [e] (rf/dispatch [::delete-hyphenation word]))}
-                 [:span.icon.is-small
-                  [:i.mi.mi-cancel]]]]]]])]]
+             [hyphenation-field word hyphenation]
+             [:td {:width "8%"}
+              [buttons word]]])]]
         [pagination/pagination :hyphenation [::fetch-hyphenations]]])]))
