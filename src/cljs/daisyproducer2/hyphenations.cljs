@@ -102,32 +102,28 @@
                     :params          cleaned
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [::ack-delete id]
-                    :on-failure      [::ack-failure id :delete]
+                    :on-failure      [::ack-failure :delete]
                     }})))
 
 (rf/reg-event-db
   ::ack-save
-  (fn [db [_ id]]
-    (notifications/clear-button-state db id :save)))
+  (fn [db [_]]
+    (notifications/clear-button-state db :hyphenation :save)))
 
 (rf/reg-event-fx
   ::ack-delete
   (fn [{:keys [db]} [_ id]]
-    (let [db (-> db
-                 (update-in [:words :hyphenation] dissoc id)
-                 (notifications/clear-button-state id :delete))
-          empty? (-> db (get-in [:words :hyphenation]) count (< 1))]
-      (if empty?
-        {:db db :dispatch [::fetch-hyphenations]}
-        {:db db}))))
+    {:db (-> db
+             (update-in [:words :hyphenation] dissoc id)
+             (notifications/clear-button-state id :delete))}))
 
 (rf/reg-event-db
  ::ack-failure
- (fn [db [_ id request-type response]]
+ (fn [db [_ request-type response]]
    (-> db
        (assoc-in [:errors request-type] (or (get-in response [:response :status-text])
                                             (get response :status-text)))
-       (notifications/clear-button-state id request-type))))
+       (notifications/clear-button-state :hyphenation request-type))))
 
 (rf/reg-sub
   ::spelling
