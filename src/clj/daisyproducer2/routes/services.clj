@@ -18,6 +18,7 @@
     [clojure.string :refer [blank?]]
     [daisyproducer2.documents :as docs]
     [daisyproducer2.auth :as auth]
+    [daisyproducer2.hyphenate :as hyphenate]
     [daisyproducer2.validation :as validation]
     [daisyproducer2.words.unknown :as unknown]
     [daisyproducer2.words.local :as local]
@@ -304,5 +305,11 @@
                           (let [deleted (db/delete-hyphenation {:word word :spelling spelling})]
                             (if (> deleted 0)
                               (no-content) ; we found something and deleted it
-                              (not-found))))}}]] ; couldn't find and delete the requested resource
+                              (not-found))))}}] ; couldn't find and delete the requested resource
+    ["/suggested"
+      {:get {:summary "Get the suggested hyphenation for a given word and spelling"
+             :parameters {:query {:spelling ::spelling
+                                  :word string?}}
+             :handler (fn [{{{:keys [word spelling]} :query} :parameters}]
+                        (ok {:hyphenation (hyphenate/hyphenate word spelling)}))}}]]
    ])
