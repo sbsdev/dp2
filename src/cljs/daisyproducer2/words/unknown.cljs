@@ -193,5 +193,5 @@
          (for [{:keys [uuid]} words]
            ^{:key uuid}
            [word uuid])]]
-       [submit-all/buttons (tr [:save-all]) [::words-valid?] [::has-words?] [::save-all-words]]
+       [submit-all/buttons (tr [:approve-all]) [::words-valid?] [::has-words?] [::save-all-words]]
        [pagination/pagination :unknown [::fetch-words (:id document)]]])))
