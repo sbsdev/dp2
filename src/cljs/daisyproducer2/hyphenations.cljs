@@ -364,6 +364,12 @@
  (fn [db [_ id]]
    (get-in db [:words :hyphenation id :hyphenation])))
 
+(rf/reg-sub
+ ::hyphenation-valid?
+ (fn [db [_ id]]
+   (let [{:keys [word hyphenation]} (get-in db [:words :hyphenation id])]
+     (validation/hyphenation-valid? hyphenation word))))
+
 (rf/reg-event-db
  ::set-hyphenation
  (fn [db [_ id value]]
@@ -390,21 +396,25 @@
            [:p.help.is-danger (tr [:input-not-valid])])]))))
 
 (defn buttons [id]
-  [:div.buttons.has-addons
-   (if @(rf/subscribe [::notifications/button-loading? id :save])
-     [:button.button.is-success.is-loading]
-     [:button.button.is-success.has-tooltip-arrow
-      {:data-tooltip (tr [:save])
-       :on-click #(rf/dispatch [::save-hyphenation id])}
-      [:span.icon.is-small
-       [:i.mi.mi-save]]])
-   (if @(rf/subscribe [::notifications/button-loading? id :delete])
-     [:button.button.is-danger.is-loading]
-     [:button.button.is-danger.has-tooltip-arrow
-      {:data-tooltip (tr [:delete])
-       :on-click #(rf/dispatch [::delete-hyphenation id])}
-      [:span.icon.is-small
-       [:i.mi.mi-delete]]])])
+  (let [valid? @(rf/subscribe [::hyphenation-valid? id])
+        authenticated? @(rf/subscribe [::auth/authenticated?])]
+    [:div.buttons.has-addons
+     (if @(rf/subscribe [::notifications/button-loading? id :save])
+       [:button.button.is-success.is-loading]
+       [:button.button.is-success.has-tooltip-arrow
+        {:disabled (not (and valid? authenticated?))
+         :data-tooltip (tr [:save])
+         :on-click #(rf/dispatch [::save-hyphenation id])}
+        [:span.icon.is-small
+         [:i.mi.mi-save]]])
+     (if @(rf/subscribe [::notifications/button-loading? id :delete])
+       [:button.button.is-danger.is-loading]
+       [:button.button.is-danger.has-tooltip-arrow
+        {:disabled (not authenticated?)
+         :data-tooltip (tr [:delete])
+         :on-click #(rf/dispatch [::delete-hyphenation id])}
+        [:span.icon.is-small
+         [:i.mi.mi-delete]]])]))
 
 (defn edit-page []
   (let [spelling @(rf/subscribe [::spelling])
