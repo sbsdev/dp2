@@ -71,23 +71,25 @@
 
 (rf/reg-event-fx
   ::save-hyphenation
-  (fn [{:keys [db]} [_]]
+  (fn [{:keys [db]} [_ id]]
     (let [word @(rf/subscribe [::search])
-          hyphenation @(rf/subscribe [::corrected])
-          spelling @(rf/subscribe [::spelling])]
-      {:db (notifications/set-button-state db :hyphenation :save)
-       :http-xhrio {:method          :put
-                    :format          (ajax/json-request-format)
-                    :headers 	     (auth/auth-header db)
-                    :uri             (str "/api/hyphenations")
-                    :params          {:word word
-                                      :hyphenation hyphenation
-                                      :spelling spelling}
-                    :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::ack-save]
-                    :on-failure      [::ack-failure :save]
-                    }
-       :dispatch [::set-search ""]})))
+          params (if id
+                   (get-in db [:words :hyphenation id])
+                   {:word word
+                    :hyphenation @(rf/subscribe [::corrected])
+                    :spelling @(rf/subscribe [::spelling])})]
+      (cond-> {:db (notifications/set-button-state db (if id id word) :save)
+               :http-xhrio {:method          :put
+                            :format          (ajax/json-request-format)
+                            :headers 	     (auth/auth-header db)
+                            :uri             (str "/api/hyphenations")
+                            :params          params
+                            :response-format (ajax/json-response-format {:keywords? true})
+                            :on-success      [::ack-save (if id id word)]
+                            :on-failure      [::ack-failure :save]
+                            }}
+        ;; if the word is new re-fetch the hyphenations
+        (nil? id) (assoc :dispatch [::fetch-hyphenations])))))
 
 (rf/reg-event-fx
   ::delete-hyphenation
@@ -106,8 +108,8 @@
 
 (rf/reg-event-db
   ::ack-save
-  (fn [db [_]]
-    (notifications/clear-button-state db :hyphenation :save)))
+  (fn [db [_ id]]
+    (notifications/clear-button-state db id :save)))
 
 (rf/reg-event-fx
   ::ack-delete
@@ -294,11 +296,18 @@
 
 (defn hyphenation-add-button []
   (let [valid? @(rf/subscribe [::valid?])
-        same-as-suggested? @(rf/subscribe [::same-as-suggested?])]
-    [:button.button
-     {:disabled (when (or (not valid?) same-as-suggested?) "disabled")
-      :on-click (fn [e] (rf/dispatch [::save-hyphenation]))}
-     (tr [:save])]))
+        same-as-suggested? @(rf/subscribe [::same-as-suggested?])
+        word @(rf/subscribe [::search])
+        klass (when  @(rf/subscribe [::notifications/button-loading? word :save])
+                "is-loading")]
+    [:div.buttons.has-addons
+     [:button.button.is-success
+      {:disabled (when (or (not valid?) same-as-suggested?) "disabled")
+       :class klass
+       :on-click (fn [e] (rf/dispatch [::save-hyphenation]))}
+      [:span.icon.is-small
+       [:i.mi.mi-save]]
+      [:span (tr [:save])]]]))
 
 (defn hyphenation-form []
   (let [already-defined? @(rf/subscribe [::already-defined?])]
@@ -351,41 +360,51 @@
      ]))
 
 (rf/reg-sub
-  ::editing
-  (fn [db [_ word]]
-    (get-in db [:current :hyphenation :editing word])))
+ ::hyphenation
+ (fn [db [_ id]]
+   (get-in db [:words :hyphenation id :hyphenation])))
 
 (rf/reg-event-db
- ::toggle-editing
- (fn [db [_ word]]
-   (update-in db [:current :hyphenation :editing word] not)))
+ ::set-hyphenation
+ (fn [db [_ id value]]
+   (assoc-in db [:words :hyphenation id :hyphenation] value)))
 
 (defn hyphenation-field [word hyphenation]
-  (let [editing @(rf/subscribe [::editing word])]
-    (if editing
-      [:td [:input.input {:type "text" :value hyphenation}]]
-      [:td hyphenation])))
+  (let [initial-value hyphenation
+        get-value (fn [e] (-> e .-target .-value))
+        reset! #(rf/dispatch [::set-hyphenation word initial-value])
+        save! #(rf/dispatch [::set-hyphenation word %])]
+    (fn []
+      (let [value @(rf/subscribe [::hyphenation word])
+            valid? (validation/hyphenation-valid? value word)
+            changed? (not= initial-value value)
+            klass (list (cond (not valid?) "is-danger"
+                              changed? "is-warning"))]
+        [:div.field
+         [:input.input {:type "text"
+                        :class klass
+                        :value value
+                        :on-change #(save! (get-value %))
+                        :on-key-down #(when (= (.-which %) 27) (reset!))}]
+         (when-not valid?
+           [:p.help.is-danger (tr [:input-not-valid])])]))))
 
-(defn button [label handler class icon]
-  [:button.button.has-tooltip-arrow
-   {:data-tooltip (tr [label])
-    :class class
-    :on-click #(handler)}
-   [:span.icon.is-small
-    [:i.mi {:class icon}]]])
-
-(defn buttons [word]
-  (let [editing @(rf/subscribe [::editing word])
-        save! #(rf/dispatch [::save-hyphenation word])
-        delete! #(rf/dispatch [::delete-hyphenation word])
-        toggle! #(rf/dispatch [::toggle-editing word])]
-    (if editing
-      [:div.buttons.has-addons
-       [button :save save! "is-success" "mi-done"]
-       [button :cancel toggle! "is-danger" "mi-cancel"]]
-      [:div.buttons.has-addons
-       [button :edit toggle! "is-success" "mi-edit"]
-       [button  :delete delete! "is-danger" "mi-delete"]])))
+(defn buttons [id]
+  [:div.buttons.has-addons
+   (if @(rf/subscribe [::notifications/button-loading? id :save])
+     [:button.button.is-success.is-loading]
+     [:button.button.is-success.has-tooltip-arrow
+      {:data-tooltip (tr [:save])
+       :on-click #(rf/dispatch [::save-hyphenation id])}
+      [:span.icon.is-small
+       [:i.mi.mi-save]]])
+   (if @(rf/subscribe [::notifications/button-loading? id :delete])
+     [:button.button.is-danger.is-loading]
+     [:button.button.is-danger.has-tooltip-arrow
+      {:data-tooltip (tr [:delete])
+       :on-click #(rf/dispatch [::delete-hyphenation id])}
+      [:span.icon.is-small
+       [:i.mi.mi-delete]]])])
 
 (defn edit-page []
   (let [spelling @(rf/subscribe [::spelling])
@@ -411,7 +430,7 @@
             ^{:key word}
             [:tr
              [:td word]
-             [hyphenation-field word hyphenation]
+             [:td [hyphenation-field word hyphenation]]
              [:td {:width "8%"}
               [buttons word]]])]]
         [pagination/pagination :hyphenation [::fetch-hyphenations]]])]))
