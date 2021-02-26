@@ -162,9 +162,8 @@
        [:button.button.is-danger.has-tooltip-arrow
         {:disabled (not authenticated?)
          :data-tooltip (tr [:delete])
-         :class (when  "is-loading")
          :on-click (fn [e] (rf/dispatch [::delete-word id]))}
-        [:span.icon [:i.mi.mi-cancel]]])]))
+        [:span.icon [:i.mi.mi-delete]]])]))
 
 (defn type-field [id]
   (let [type @(rf/subscribe [::fields/word-field :confirm id :type])

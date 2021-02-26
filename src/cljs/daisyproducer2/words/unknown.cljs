@@ -133,7 +133,7 @@
        [:button.button.is-success.is-loading]
        [:button.button.is-success.has-tooltip-arrow
         {:disabled (not (and valid? authenticated?))
-         :data-tooltip (tr [:save])
+         :data-tooltip (tr [:approve])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
         [:span.icon [:i.mi.mi-done]]
         #_[:span (tr [:save])]])
