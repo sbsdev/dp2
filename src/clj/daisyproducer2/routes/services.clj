@@ -268,8 +268,10 @@
                                :hyphenated (spec/maybe ::hyphenation)
                                :spelling ::spelling}}
            :handler (fn [{{word :body} :parameters}]
-                      (confirm/put-word word)
-                      (no-content))}}]
+                      (let [modified (confirm/put-word word)]
+                        (if (> modified 0)
+                          (no-content)
+                          (not-found))))}}]
 
    ["/hyphenations"
     {:swagger {:tags ["Hyphenations"]}}
