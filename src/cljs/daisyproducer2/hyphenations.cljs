@@ -73,23 +73,22 @@
   ::save-hyphenation
   (fn [{:keys [db]} [_ id]]
     (let [word @(rf/subscribe [::search])
-          params (if id
-                   (get-in db [:words :hyphenation id])
-                   {:word word
-                    :hyphenation @(rf/subscribe [::corrected])
-                    :spelling @(rf/subscribe [::spelling])})]
-      (cond-> {:db (notifications/set-button-state db (if id id word) :save)
-               :http-xhrio {:method          :put
-                            :format          (ajax/json-request-format)
-                            :headers 	     (auth/auth-header db)
-                            :uri             (str "/api/hyphenations")
-                            :params          params
-                            :response-format (ajax/json-response-format {:keywords? true})
-                            :on-success      [::ack-save (if id id word)]
-                            :on-failure      [::ack-failure :save]
-                            }}
-        ;; if the word is new re-fetch the hyphenations
-        (nil? id) (assoc :dispatch [::fetch-hyphenations])))))
+          hyphenation (if id
+                        ;; save an existing hyphenation
+                        (get-in db [:words :hyphenation id])
+                        ;; insert a new hyphenation
+                        {:word word
+                         :hyphenation @(rf/subscribe [::corrected])
+                         :spelling @(rf/subscribe [::spelling])})]
+      {:db (notifications/set-button-state db (if id id word) :save)
+       :http-xhrio {:method          :put
+                    :format          (ajax/json-request-format)
+                    :headers 	     (auth/auth-header db)
+                    :uri             (str "/api/hyphenations")
+                    :params          hyphenation
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [::ack-save hyphenation]
+                    :on-failure      [::ack-failure :save]}})))
 
 (rf/reg-event-fx
   ::delete-hyphenation
@@ -108,8 +107,10 @@
 
 (rf/reg-event-db
   ::ack-save
-  (fn [db [_ id]]
-    (notifications/clear-button-state db id :save)))
+  (fn [db [_ {id :word :as hyphenation}]]
+    (-> db
+        (assoc-in [:words :hyphenation id] hyphenation)
+        (notifications/clear-button-state id :save))))
 
 (rf/reg-event-fx
   ::ack-delete
