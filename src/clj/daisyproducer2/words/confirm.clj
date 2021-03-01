@@ -1,9 +1,11 @@
 (ns daisyproducer2.words.confirm
   (:require [conman.core :as conman]
             [daisyproducer2.db.core :as db]
+            [daisyproducer2.metrics :as metrics]
             [daisyproducer2.words :as words]
             [daisyproducer2.words.global :as global]
-            [daisyproducer2.words.local :as local]))
+            [daisyproducer2.words.local :as local]
+            [iapetos.collector.fn :as prometheus]))
 
 (defn get-words [limit offset]
   (->> (db/get-confirmable-words-aggregated {:limit limit :offset offset})
@@ -40,3 +42,5 @@
           ;; the number of additions.
           (global/put-word word))))))
 
+(prometheus/instrument! metrics/registry #'get-words)
+(prometheus/instrument! metrics/registry #'put-word)

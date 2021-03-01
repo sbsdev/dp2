@@ -2,9 +2,11 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [daisyproducer2.db.core :as db]
+            [daisyproducer2.metrics :as metrics]
             [daisyproducer2.whitelists.async :as whitelists]
             [daisyproducer2.whitelists.hyphenation :as hyphenations]
-            [daisyproducer2.words :as words]))
+            [daisyproducer2.words :as words]
+            [iapetos.collector.fn :as prometheus]))
 
 (defn get-words
   "Retrieve all local words for given document-id `id`, `grade` and
@@ -61,3 +63,7 @@
       (hyphenations/export))
     (whitelists/export-local-tables (:document-id word))
     deletions))
+
+(prometheus/instrument! metrics/registry #'get-words)
+(prometheus/instrument! metrics/registry #'put-word)
+(prometheus/instrument! metrics/registry #'delete-word)

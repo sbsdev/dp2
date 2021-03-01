@@ -4,7 +4,9 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [daisyproducer2.db.core :as db]
+            [daisyproducer2.metrics :as metrics]
             [daisyproducer2.words :as words]
+            [iapetos.collector.fn :as prometheus]
             [sigel.xpath.core :as xpath]
             [sigel.xslt.core :as xslt]))
 
@@ -140,3 +142,5 @@
    (map words/complement-braille)
    (map words/complement-ellipsis-braille)
    (map words/complement-hyphenation)))
+
+(prometheus/instrument! metrics/registry #'get-words)
