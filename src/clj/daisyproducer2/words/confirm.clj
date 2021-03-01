@@ -13,6 +13,12 @@
        (map words/complement-hyphenation)))
 
 (defn put-word [word]
+  "Confirm the (local) `word`. If it is marked as `:islocal` then it
+  is kept in the local words and also marked as `:isconfirmed`.
+  Otherwise if is actually contained in the local words it is deleted
+  from there and added to the global words and the number of additions
+  are returned. If it is not contained in the local words 0 is
+  returned."
   (if (:islocal word)
     ;; if a word is local then just save it in the local db with
     ;; confirmed = true
@@ -21,7 +27,16 @@
     (conman/with-transaction [db/*db*]
       ;; drop the hyphenation, otherwise the hyphenation is removed
       ;; and right after added again
-      (let [word (dissoc word :hyphenated)]
-        (local/delete-word word)
-        (global/put-word word)))))
+      (let [word (dissoc word :hyphenated)
+            deletions (local/delete-word word)]
+        (if-not (> deletions 0)
+          ;; if we couldn't delete anything then presumably this word
+          ;; doesn't exist in the local words, so there is certainly
+          ;; no point in putting it in the global words. Just return 0
+          ;; as the number of modifications.
+          deletions
+          ;; if the word was in the local words we managed to delete
+          ;; it and we can savely add it to the global words. Return
+          ;; the number of additions.
+          (global/put-word word))))))
 
