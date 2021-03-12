@@ -1,3 +1,5 @@
+[![Clojure CI](https://github.com/sbsdev/daisyproducer2/actions/workflows/clojure.yml/badge.svg)](https://github.com/sbsdev/daisyproducer2/actions/workflows/clojure.yml)
+
 # Daisyproducer2
 
 Daisy Producer is a system to help you manage the production process
