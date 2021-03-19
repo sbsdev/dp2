@@ -7,6 +7,7 @@
                  [buddy/buddy-core "1.9.0"]
                  [buddy/buddy-hashers "1.7.0"]
                  [buddy/buddy-sign "3.3.0"]
+                 [ch.qos.logback/logback-classic "1.2.3"]
                  [camel-snake-kebab "0.4.2"]
                  [cheshire "5.10.0"]
                  [clj-commons/iapetos "0.1.11"]
@@ -24,7 +25,8 @@
                  [funcool/struct "1.4.0"]
                  [io.prometheus/simpleclient_hotspot "0.10.0"]
                  [jarohen/chime "0.3.2"]
-                 [luminus-immutant "0.2.5"]
+                 [luminus-undertow "0.1.10"]
+                 [luminus/ring-ttl-session "0.3.3"]
                  [luminus-migrations "0.7.1"]
                  [luminus-transit "0.1.2"]
                  [markdown-clj "1.10.5"]
@@ -66,8 +68,7 @@
   :target-path "target/%s/"
   :main ^:skip-aot daisyproducer2.core
 
-  :plugins [[lein-cljsbuild "1.1.7"]
-            [lein-immutant "2.1.0"]]
+  :plugins [[lein-cljsbuild "1.1.7"]]
 
   :release-tasks [["vcs" "assert-committed"]
                   ["change" "version"

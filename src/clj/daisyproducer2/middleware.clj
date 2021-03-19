@@ -11,7 +11,7 @@
     [daisyproducer2.auth :as auth]
     [ring.middleware.flash :refer [wrap-flash]]
     [ring.util.http-response :refer [unauthorized forbidden]]
-    [immutant.web.middleware :refer [wrap-session]]
+    [ring.adapter.undertow.middleware.session :refer [wrap-session]]
     [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
     [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
     [buddy.auth.accessrules :refer [restrict]]
