@@ -38,7 +38,7 @@
   []
   (mount/stop #'daisyproducer2.db.core/*db*)
   (mount/start #'daisyproducer2.db.core/*db*)
-  (binding [*ns* 'daisyproducer2.db.core]
+  (binding [*ns* (the-ns 'daisyproducer2.db.core)]
     (conman/bind-connection daisyproducer2.db.core/*db* "sql/queries.sql")))
 
 (defn reset-db

@@ -1,8 +1,6 @@
 (ns daisyproducer2.middleware
   (:require
     [daisyproducer2.env :refer [defaults]]
-    [cheshire.generate :as cheshire]
-    [cognitect.transit :as transit]
     [clojure.tools.logging :as log]
     [daisyproducer2.layout :refer [error-page]]
     [daisyproducer2.i18n :refer [tr]]
