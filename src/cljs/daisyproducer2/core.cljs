@@ -114,6 +114,7 @@
      [:div.control
       [:input.input {:type "text"
                      :placeholder (tr [:search])
+                     :aria-label (tr [:search])
                      :value @(rf/subscribe [:documents-search])
                      :on-change emit}]]]))
 

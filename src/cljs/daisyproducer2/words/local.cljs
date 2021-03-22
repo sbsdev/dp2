@@ -134,6 +134,7 @@
      [:div.control
       [:input.input {:type "text"
                      :placeholder (tr [:search])
+                     :aria-label (tr [:search])
                      :value @(rf/subscribe [::search document-id])
                      :on-change #(save! (get-value %))
                      :on-key-down #(when (= (.-which %) 27) (reset!))}]]]))

@@ -91,6 +91,7 @@
           [:label.label (tr [:username])]
           [:input.input
            {:type "text"
+            :aria-label (tr [:username])
             :on-change #(reset! username (-> % .-target .-value))
             :on-key-down #(case (.-which %)
                             27 (reset! username "")
@@ -100,6 +101,7 @@
           [:label.label (tr [:password])]
           [:input.input
            {:type "password"
+            :aria-label (tr [:password])
             :on-change #(reset! password (-> % .-target .-value))
             :on-key-down #(case (.-which %)
                             27 (reset! password "")

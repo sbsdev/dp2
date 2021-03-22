@@ -33,6 +33,7 @@
                         (when (#{:contracted :uncontracted} field-id) "braille"))]
         [:div.field
          [:input.input {:type "text"
+                        :aria-label (tr [field-id])
                         :class klass
                         :value value
                         :on-change #(save! (get-value %))

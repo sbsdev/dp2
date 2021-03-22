@@ -201,6 +201,7 @@
      [:div.control
       [:input.input {:type "text"
                      :placeholder (tr [:search])
+                     :aria-label (tr [:search])
                      :value @(rf/subscribe [::search])
                      :on-change #(save! (get-value %))
                      :on-key-down #(when (= (.-which %) 27) (reset!))}]]]))
@@ -236,6 +237,7 @@
       [:input.input {:type "text"
                      :class klass
                      :placeholder (tr [:hyphenation/word])
+                     :aria-label (tr [:hyphenation/word])
                      :value @(rf/subscribe [::search])
                      :on-change #(save! (get-value %))
                      :on-key-down #(when (= (.-which %) 27) (reset!))}]]
@@ -389,6 +391,7 @@
         [:div.field
          [:input.input {:type "text"
                         :class klass
+                        :aria-label (tr [:hyphenation/corrected])
                         :value value
                         :on-change #(save! (get-value %))
                         :on-key-down #(when (= (.-which %) 27) (reset!))}]
