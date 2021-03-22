@@ -64,11 +64,11 @@
   (let [has-previous? @(rf/subscribe [::has-previous? id])
         has-next? @(rf/subscribe [::has-next? id])]
     [:nav.pagination.is-right {:role "navigation" :aria-label "pagination"}
-     [:a.pagination-previous
+     [:button.pagination-previous
       {:disabled (not has-previous?)
        :on-click (fn [e] (rf/dispatch [::previous-page id event]))}
       (tr [:previous])]
-     [:a.pagination-next
+     [:button.pagination-next
       {:disabled (not has-next?)
        :on-click (fn [e] (rf/dispatch [::next-page id event]))}
       (tr [:next])]

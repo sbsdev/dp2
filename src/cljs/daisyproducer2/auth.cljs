@@ -73,9 +73,11 @@
         [:div.navbar-dropdown
          [:a.navbar-item {:on-click #(rf/dispatch [::logout])} (tr [:logout])]]]
        [:<>
-        [:a.button.is-primary initials]
-        [:a.button.is-light {:on-click #(rf/dispatch [::logout])} (tr [:logout])]]
-       [:a.button {:on-click #(rf/dispatch [:common/navigate! :login])} (tr [:login])])]))
+        [:a.button.is-primary
+         {:aria-label (tr [:user-initials])}
+         initials]
+        [:button.button.is-light {:on-click #(rf/dispatch [::logout])} (tr [:logout])]]
+       [:button.button {:on-click #(rf/dispatch [:common/navigate! :login])} (tr [:login])])]))
 
 (defn login-page []
   (let [username (r/atom "")
