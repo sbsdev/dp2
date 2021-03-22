@@ -178,8 +178,7 @@
          :data-tooltip (tr [:delete])
          :aria-label (tr [:delete])
          :on-click (fn [e] (rf/dispatch [::delete-word id]))}
-        [:span.icon {:aria-hidden true} [:i.mi.mi-delete]]
-        #_[:span (tr [:delete])]])]))
+        [:span.icon {:aria-hidden true} [:i.mi.mi-delete]]])]))
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])

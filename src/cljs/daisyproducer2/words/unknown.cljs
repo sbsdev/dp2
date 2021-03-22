@@ -136,15 +136,13 @@
          :data-tooltip (tr [:approve])
          :aria-label (tr [:approve])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
-        [:span.icon {:aria-hidden true} [:i.mi.mi-done]]
-        #_[:span (tr [:save])]])
+        [:span.icon {:aria-hidden true} [:i.mi.mi-done]]])
      [:button.button.is-danger.has-tooltip-arrow
       {:disabled (not authenticated?)
        :data-tooltip (tr [:ignore])
        :aria-label (tr [:ignore])
        :on-click (fn [e] (rf/dispatch [::ignore-word id]))}
-      [:span.icon {:aria-hidden true} [:i.mi.mi-cancel]]
-      #_[:span (tr [:ignore])]]]))
+      [:span.icon {:aria-hidden true} [:i.mi.mi-cancel]]]]))
 
 (defn word [id]
   (let [grade @(rf/subscribe [::grade/grade])
