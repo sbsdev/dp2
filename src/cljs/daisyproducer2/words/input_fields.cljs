@@ -13,10 +13,15 @@
    (assoc-in db [:words page id field-id] value)))
 
 (defn local-field [page id]
-  (let [value @(rf/subscribe [::word-field page id :islocal])]
-    [:input {:type "checkbox"
-             :checked value
-             :on-change #(rf/dispatch [::set-word-field page id :islocal (not value)])}]))
+  (let [value @(rf/subscribe [::word-field page id :islocal])
+        html-id (str "local-field-" id)]
+    [:<>
+     [:label.is-sr-only {:for html-id} (tr [:local])]
+     [:input {:type "checkbox"
+              :id html-id
+              :aria-checked value
+              :checked value
+              :on-change #(rf/dispatch [::set-word-field page id :islocal (not value)])}]]))
 
 (defn input-field [page id field-id validator]
   (let [initial-value @(rf/subscribe [::word-field page id field-id])
