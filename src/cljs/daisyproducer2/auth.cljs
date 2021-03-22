@@ -87,20 +87,26 @@
         [:section.section>div.container>div.content
          (when errors?
            [notifications/error-notification])
-         [:div.field.has-icons-left
-          [:label.label (tr [:username])]
+         [:div.field
+          [:label.label
+           {:for "username-field"}
+           (tr [:username])]
           [:input.input
            {:type "text"
+            :id "username-field"
             :aria-label (tr [:username])
             :on-change #(reset! username (-> % .-target .-value))
             :on-key-down #(case (.-which %)
                             27 (reset! username "")
                             nil)
             :value @username}]]
-         [:div.field.has-icons-left
-          [:label.label (tr [:password])]
+         [:div.field
+          [:label.label
+           {:for "password-field"}
+           (tr [:password])]
           [:input.input
            {:type "password"
+            :id "password-field"
             :aria-label (tr [:password])
             :on-change #(reset! password (-> % .-target .-value))
             :on-key-down #(case (.-which %)

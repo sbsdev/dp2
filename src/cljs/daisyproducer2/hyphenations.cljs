@@ -232,9 +232,12 @@
         help-text (when already-defined?
                     (tr [:hyphenation/already-defined]))]
     [:div.field
-     [:label.label (tr [:hyphenation/word])]
+     [:label.label
+      {:for "hyphenation-word"}
+      (tr [:hyphenation/word])]
      [:div.control
       [:input.input {:type "text"
+                     :id "hyphenation-word"
                      :class klass
                      :placeholder (tr [:hyphenation/word])
                      :aria-label (tr [:hyphenation/word])
@@ -247,9 +250,12 @@
 (defn suggested-hyphenation []
   (let [suggested @(rf/subscribe [::suggested])]
     [:div.field
-     [:label.label (tr [:hyphenation/suggested])]
+     [:label.label
+      {:for "suggested-hyphenation"}
+      (tr [:hyphenation/suggested])]
      [:div.control
       [:input.input {:type "text"
+                     :id "hyphenation-suggested"
                      :disabled "disabled"
                      :value suggested}]]]))
 
@@ -285,9 +291,12 @@
             same-as-suggested? (and (not blank?) @(rf/subscribe [::same-as-suggested?]))
             klass (when (or (not valid?) same-as-suggested?) "is-danger")]
         [:div.field
-         [:label.label (tr [:hyphenation/corrected])]
+         [:label.label
+          {:for "hyphenation-corrected"}
+          (tr [:hyphenation/corrected])]
          [:div.control
           [:input.input {:type "text"
+                         :id "hyphenation-corrected"
                          :class klass
                          :value corrected
                          :on-change #(save! (get-value %))}]]
