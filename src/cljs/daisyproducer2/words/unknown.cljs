@@ -134,12 +134,14 @@
        [:button.button.is-success.has-tooltip-arrow
         {:disabled (not (and valid? authenticated?))
          :data-tooltip (tr [:approve])
+         :aria-label (tr [:approve])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
         [:span.icon {:aria-hidden true} [:i.mi.mi-done]]
         #_[:span (tr [:save])]])
      [:button.button.is-danger.has-tooltip-arrow
       {:disabled (not authenticated?)
        :data-tooltip (tr [:ignore])
+       :aria-label (tr [:ignore])
        :on-click (fn [e] (rf/dispatch [::ignore-word id]))}
       [:span.icon {:aria-hidden true} [:i.mi.mi-cancel]]
       #_[:span (tr [:ignore])]]]))

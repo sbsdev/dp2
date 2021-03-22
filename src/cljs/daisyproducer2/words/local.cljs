@@ -167,6 +167,7 @@
        [:button.button.is-success.has-tooltip-arrow
         {:disabled (not (and valid? authenticated?))
          :data-tooltip (tr [:save])
+         :aria-label (tr [:save])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
         [:span.icon {:aria-hidden true} [:i.mi.mi-save]]])
      (if @(rf/subscribe [::notifications/button-loading? id :delete])
@@ -174,6 +175,7 @@
        [:button.button.is-danger.has-tooltip-arrow
         {:disabled (not authenticated?)
          :data-tooltip (tr [:delete])
+         :aria-label (tr [:delete])
          :on-click (fn [e] (rf/dispatch [::delete-word id]))}
         [:span.icon {:aria-hidden true} [:i.mi.mi-delete]]
         #_[:span (tr [:delete])]])]))
