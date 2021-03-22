@@ -168,14 +168,14 @@
         {:disabled (not (and valid? authenticated?))
          :data-tooltip (tr [:save])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
-        [:span.icon [:i.mi.mi-save]]])
+        [:span.icon {:aria-hidden true} [:i.mi.mi-save]]])
      (if @(rf/subscribe [::notifications/button-loading? id :delete])
        [:button.button.is-danger.is-loading]
        [:button.button.is-danger.has-tooltip-arrow
         {:disabled (not authenticated?)
          :data-tooltip (tr [:delete])
          :on-click (fn [e] (rf/dispatch [::delete-word id]))}
-        [:span.icon [:i.mi.mi-delete]]
+        [:span.icon {:aria-hidden true} [:i.mi.mi-delete]]
         #_[:span (tr [:delete])]])]))
 
 (defn word [id]

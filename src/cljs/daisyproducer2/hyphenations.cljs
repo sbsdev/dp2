@@ -306,8 +306,7 @@
       {:disabled (when (or (not valid?) same-as-suggested?) "disabled")
        :class klass
        :on-click (fn [e] (rf/dispatch [::save-hyphenation]))}
-      [:span.icon.is-small
-       [:i.mi.mi-save]]
+      [:span.icon {:aria-hidden true} [:i.mi.mi-save]]
       [:span (tr [:save])]]]))
 
 (defn hyphenation-form []
@@ -406,16 +405,14 @@
         {:disabled (not (and valid? authenticated?))
          :data-tooltip (tr [:save])
          :on-click #(rf/dispatch [::save-hyphenation id])}
-        [:span.icon.is-small
-         [:i.mi.mi-save]]])
+        [:span.icon {:aria-hidden true} [:i.mi.mi-save]]])
      (if @(rf/subscribe [::notifications/button-loading? id :delete])
        [:button.button.is-danger.is-loading]
        [:button.button.is-danger.has-tooltip-arrow
         {:disabled (not authenticated?)
          :data-tooltip (tr [:delete])
          :on-click #(rf/dispatch [::delete-hyphenation id])}
-        [:span.icon.is-small
-         [:i.mi.mi-delete]]])]))
+        [:span.icon {:aria-hidden true} [:i.mi.mi-delete]]])]))
 
 (defn edit-page []
   (let [spelling @(rf/subscribe [::spelling])

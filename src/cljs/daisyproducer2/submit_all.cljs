@@ -11,5 +11,5 @@
        [:button.button.is-success
         {:disabled (not (and authenticated? all-valid?))
          :on-click (fn [e] (rf/dispatch dispatch-event))}
-        [:span.icon [:i.mi.mi-done]]
+        [:span.icon {:aria-hidden true} [:i.mi.mi-done]]
         [:span label]]])))
