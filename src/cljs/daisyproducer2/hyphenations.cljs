@@ -251,7 +251,7 @@
   (let [suggested @(rf/subscribe [::suggested])]
     [:div.field
      [:label.label
-      {:for "suggested-hyphenation"}
+      {:for "hyphenation-suggested"}
       (tr [:hyphenation/suggested])]
      [:div.control
       [:input.input {:type "text"
