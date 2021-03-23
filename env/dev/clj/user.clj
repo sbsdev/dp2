@@ -8,7 +8,9 @@
     [mount.core :as mount]
     [daisyproducer2.figwheel :refer [start-fw stop-fw cljs]]
     [daisyproducer2.core :refer [start-app]]
-    [daisyproducer2.db.core]
+    [daisyproducer2.db.core :as db]
+    [clojure.data.csv :as csv]
+    [clojure.java.io :as io]
     [conman.core :as conman]
     [luminus-migrations.core :as migrations]))
 
@@ -62,3 +64,10 @@
   (migrations/create name (select-keys env [:database-url])))
 
 
+(defn export-homographs-as-csv [grade]
+  (let [homographs (db/get-global-words {:grade grade :types #{5}})
+        cleaned (map #(dissoc % :type) homographs)
+        sorted (sort-by :untranslated cleaned)]
+    (with-open [csv-file (io/writer (str "homographs-g" grade ".csv"))]
+      (csv/write-csv csv-file (->> sorted first keys (map name) list))
+      (csv/write-csv csv-file (map vals sorted)))))
