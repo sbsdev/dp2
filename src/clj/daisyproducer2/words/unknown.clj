@@ -70,7 +70,7 @@
 (defn extract-ellipsis-words [xml]
   (extract-re xml ellipsis-re "..."))
 
-(def supplement-hyphen-re #"(?U)\B-[\w']{2,}|[\w']{2,}-\B")
+(def supplement-hyphen-re #"(?U)\B-[\p{Alpha}']{2,}|[\p{Alpha}']{2,}-\B")
 
 (defn extract-hyphen-words [xml]
   (extract-re xml supplement-hyphen-re "-"))

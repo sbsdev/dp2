@@ -15,6 +15,12 @@
       (is (= (extract-hyphen-words "geht's- noch schneller")
              #{"geht's┊"})))
 
+    (is (= (extract-hyphen-words "30- und 40-jährige")
+           #{}))
+
+    (is (= (extract-hyphen-words "-50 Grad")
+           #{}))
+
     (testing "Extracting ellipsis words"
       (is (= (extract-ellipsis-words "...HĘllo Leute ...wie gehts'... euch hEute...")
              #{"┊hęllo" "┊wie" "gehts'┊" "heute┊"})))
