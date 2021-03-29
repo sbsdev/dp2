@@ -59,13 +59,18 @@
  :<- [::user]
  (fn [user] (-> user :initials)))
 
+(rf/reg-sub
+ ::user-given-name
+ :<- [::user]
+ (fn [user] (-> user :givenName)))
 
 (defn auth-header [db]
   (let [token (get-in db [:credentials :token])]
     {:Authorization (str "Token " token)}))
 
 (defn user-buttons []
-  (let [initials @(rf/subscribe [::user-initials])]
+  (let [initials @(rf/subscribe [::user-initials])
+        given-name @(rf/subscribe [::user-given-name])]
     [:div.buttons
      (if initials
        #_[:div.navbar-item.has-dropdown.is-hoverable
@@ -75,7 +80,9 @@
        [:<>
         [:a.button.is-primary
          {:aria-label (tr [:user-initials])}
-         initials]
+         ;; we'd like to show the initials but if they do not contain
+         ;; a sensible value just show the given name
+         (if (= initials "None") given-name initials)]
         [:button.button.is-light {:on-click #(rf/dispatch [::logout])} (tr [:logout])]]
        [:button.button {:on-click #(rf/dispatch [:common/navigate! :login])} (tr [:login])])]))
 

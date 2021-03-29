@@ -51,5 +51,5 @@
                           :attributes (or attributes [])})
             first
             add-roles
-            (select-keys [:uid :mail :initials :displayName :telephoneNumber :roles])))
+            (select-keys [:uid :mail :initials :givenName :displayName :telephoneNumber :roles])))
       (finally (ldap/release-connection ldap-pool conn)))))
