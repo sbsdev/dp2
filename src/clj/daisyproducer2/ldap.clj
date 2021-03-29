@@ -23,9 +23,20 @@
    (re-matches #"cn=(\w+),cn=groups,cn=accounts,dc=sbszh,dc=ch")
    second))
 
-(defn- add-roles [{groups :memberOf :as user}]
-  (let [roles (->> groups
+(defn- extract-role [s]
+  (->> s
+   (re-matches #"cn=([a-z_.]+),cn=roles,cn=accounts,dc=sbszh,dc=ch")
+   second))
+
+(defn- add-groups [{memberships :memberOf :as user}]
+  (let [groups (->> memberships
                    (map extract-group)
+                   (remove nil?))]
+    (assoc user :groups groups)))
+
+(defn- add-roles [{memberships :memberOf :as user}]
+  (let [roles (->> memberships
+                   (map extract-role)
                    (remove nil?))]
     (assoc user :roles roles)))
 
