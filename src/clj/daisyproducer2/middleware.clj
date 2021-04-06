@@ -64,6 +64,8 @@
   (restrict handler {:handler auth/is-admin?
                      :on-error on-unauthorized}))
 
+;; see https://adambard.com/blog/clojure-auth-with-buddy/ for some
+;; inspiration on how to do JW* Token Authentication
 (defn wrap-auth [handler]
   (let [backend (jws-backend {:secret (env :jwt-secret)})]
     (-> handler
