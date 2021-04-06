@@ -87,7 +87,7 @@
                     :uri             (str "/api/hyphenations")
                     :params          hyphenation
                     :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [::ack-save hyphenation]
+                    :on-success      [::ack-save hyphenation (nil? id)]
                     :on-failure      [::ack-failure :save]}})))
 
 (rf/reg-event-fx
@@ -105,12 +105,15 @@
                     :on-failure      [::ack-failure :delete]
                     }})))
 
-(rf/reg-event-db
+(rf/reg-event-fx
   ::ack-save
-  (fn [db [_ {id :word :as hyphenation}]]
-    (-> db
-        (assoc-in [:words :hyphenation id] hyphenation)
-        (notifications/clear-button-state id :save))))
+  (fn [{:keys [db]} [_ {id :word :as hyphenation} new?]]
+    (let [db (-> db
+                 (assoc-in [:words :hyphenation id] hyphenation)
+                 (notifications/clear-button-state id :save))]
+      (if new?
+        {:db db :dispatch [::set-search ""]}
+        {:db db}))))
 
 (rf/reg-event-fx
   ::ack-delete
