@@ -51,7 +51,7 @@
          [:div.navbar-item
           (auth/user-buttons)]]]])))
 
-(def state-mapping {1 (tr [:new]) 4 (tr [:in-production]) 6 (tr [:finished])})
+(def state-mapping {1 (tr [:new]) 7 (tr [:in-production]) 8 (tr [:finished])})
 
 (defn document-summary [{:keys [title author source-publisher state-id]}]
   (let [state (state-mapping state-id state-id)]
