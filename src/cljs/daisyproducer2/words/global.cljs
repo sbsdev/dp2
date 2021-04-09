@@ -155,12 +155,12 @@
 
 (defn buttons [id]
   (let [valid? @(rf/subscribe [::valid? id])
-        authenticated? @(rf/subscribe [::auth/authenticated?])]
+        admin? @(rf/subscribe [::auth/is-admin?])]
     [:div.buttons.has-addons
      (if @(rf/subscribe [::notifications/button-loading? id :save])
        [:button.button.is-success.is-loading]
        [:button.button.is-success.has-tooltip-arrow
-        {:disabled (not (and valid? authenticated?))
+        {:disabled (not (and valid? admin?))
          :data-tooltip (tr [:save])
          :aria-label (tr [:save])
          :on-click (fn [e] (rf/dispatch [::save-word id]))}
@@ -168,7 +168,7 @@
      (if @(rf/subscribe [::notifications/button-loading? id :delete])
        [:button.button.is-danger.is-loading]
        [:button.button.is-danger.has-tooltip-arrow
-        {:disabled (not authenticated?)
+        {:disabled (not admin?)
          :data-tooltip (tr [:delete])
          :aria-label (tr [:delete])
          :on-click (fn [e] (rf/dispatch [::delete-word id]))}

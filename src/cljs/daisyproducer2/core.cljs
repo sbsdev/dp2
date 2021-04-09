@@ -46,7 +46,7 @@
          [nav-link "#/" (tr [:documents]) :documents]
          [nav-link "#/hyphenations" (tr [:hyphenation/hyphenations]) :hyphenations]
          (when is-admin? [nav-link "#/confirm" (tr [:confirm]) :confirm])
-         (when is-admin? [nav-link "#/words" (tr [:words]) :words])]
+         [nav-link "#/words" (tr [:words]) :words]]
         [:div.navbar-end
          [:div.navbar-item
           (auth/user-buttons)]]]])))
