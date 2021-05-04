@@ -56,6 +56,8 @@ To start a web server for the application, run:
 
 ## License
 
+Copyright © 2021 Swiss Library for the Blind, Visually Impaired and Print Disabled
+
 [GNU Affero General Public License v3.0][8]
 
 [8]: https://www.gnu.org/licenses/agpl-3.0.en.html
