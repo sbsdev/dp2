@@ -136,6 +136,7 @@ FROM
       ON t1.untranslated = t2.untranslated
       AND t1.type = t2.type
       AND t1.homograph_disambiguation = t2.homograph_disambiguation
+      AND t1.document_id = t2.document_id
       AND t1.grade <> t2.grade
       WHERE t1.document_id = :id
 --~ (when (:search params) "AND t1.untranslated LIKE :search")
@@ -147,6 +148,7 @@ FROM
       ON t1.untranslated = t2.untranslated
       AND t1.type = t2.type
       AND t1.homograph_disambiguation = t2.homograph_disambiguation
+      AND t1.document_id = t2.document_id
       AND t1.grade <> t2.grade
       WHERE t1.document_id = :id
 --~ (when (:search params) "AND t1.untranslated LIKE :search")
