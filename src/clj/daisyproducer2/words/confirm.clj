@@ -2,6 +2,7 @@
   (:require [conman.core :as conman]
             [daisyproducer2.db.core :as db]
             [daisyproducer2.metrics :as metrics]
+            [daisyproducer2.whitelists.hyphenation :as hyphenations]
             [daisyproducer2.words :as words]
             [daisyproducer2.words.global :as global]
             [daisyproducer2.words.local :as local]
@@ -21,6 +22,11 @@
   from there and added to the global words and the number of additions
   are returned. If it is not contained in the local words 0 is
   returned."
+  ;; in confirm you do not typically update the hyphenation but it can happen
+  (when (:hyphenated word)
+    (db/insert-hyphenation
+     (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
+    (hyphenations/export))
   (if (:islocal word)
     ;; if a word is local then just save it in the local db with
     ;; confirmed = true
