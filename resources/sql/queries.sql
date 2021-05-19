@@ -231,9 +231,9 @@ AND l.document_id = :document-id
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (0,1,3)
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (0,1,3) AND l1.document_id = :document-id
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (0,1,3)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (0,1,3)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (0,1,3) AND l2.document_id = :document-id
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (0,1,3)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
@@ -250,9 +250,9 @@ UNION
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (1,2)
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (1,2) AND l1.document_id = :document-id
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (1,2)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (1,2)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (1,2) AND l2.document_id = :document-id
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (1,2)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
@@ -269,9 +269,9 @@ UNION
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (3,4)
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (3,4) AND l1.document_id = :document-id
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (3,4)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (3,4)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (3,4) AND l2.document_id = :document-id
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (3,4)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
@@ -288,9 +288,9 @@ UNION
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (5)
+LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (5) AND l1.document_id = :document-id
 LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (5)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (5)
+LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (5) AND l2.document_id = :document-id
 LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (5)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
@@ -307,7 +307,7 @@ AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (0,1,3)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (0,1,3) AND l.document_id = :document-id
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (0,1,3)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
@@ -324,7 +324,7 @@ UNION
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (1,2)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (1,2) AND l.document_id = :document-id
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (1,2)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
@@ -341,7 +341,7 @@ UNION
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (3,4)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (3,4) AND l.document_id = :document-id
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (3,4)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
@@ -358,7 +358,7 @@ UNION
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (5)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (5) AND l.document_id = :document-id
 LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (5)
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
