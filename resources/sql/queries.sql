@@ -117,7 +117,6 @@ AND hyphenation.spelling =
   FROM  documents_document
   WHERE id = :id)
 WHERE words.document_id = :id
-AND words.isConfirmed = FALSE
 AND words.grade = :grade
 --~ (when (:search params) "AND words.untranslated LIKE :search")
 ORDER BY words.untranslated
@@ -140,7 +139,6 @@ FROM
       AND t1.grade <> t2.grade
       WHERE t1.document_id = :id
 --~ (when (:search params) "AND t1.untranslated LIKE :search")
-      AND t1.isConfirmed = FALSE
       AND t1.grade = 2)
     UNION DISTINCT
       (SELECT t1.untranslated, t1.braille as uncontracted, t2.braille as contracted, t1.type, t1.homograph_disambiguation, t1.document_id, IFNULL(t1.isLocal OR t2.isLocal,FALSE) AS isLocal
@@ -152,7 +150,6 @@ FROM
       AND t1.grade <> t2.grade
       WHERE t1.document_id = :id
 --~ (when (:search params) "AND t1.untranslated LIKE :search")
-      AND t1.isConfirmed = FALSE
       AND t1.grade = 1)
     ORDER BY untranslated
     ) AS w
