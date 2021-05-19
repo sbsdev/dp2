@@ -126,7 +126,7 @@
 
 (defn get-words
   [xml document-id grade limit offset]
-  (db/delete-unknown-words)
+  (db/delete-unknown-words {:document-id document-id})
   (db/insert-unknown-words
    {:words (concat
             (get-names xml document-id)
