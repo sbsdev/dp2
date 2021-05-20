@@ -456,3 +456,12 @@ AND NOT EXISTS (
     WHERE untranslated = :word
 )
 /*~ ) ~*/
+
+------------------
+-- Statistics --
+------------------
+
+-- :name insert-statistics :! :n
+-- :doc Insert statistics about `total` and `unknown` words for a given `document-id` and `grade`.
+INSERT INTO statistics_documentstatistic (date, document_id, grade, total, unknown)
+VALUES (now(), :document-id, :grade, :total, :unknown)

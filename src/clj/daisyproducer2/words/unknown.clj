@@ -130,20 +130,25 @@
                    (get-names xml document-id)
                    (get-places xml document-id)
                    (get-homographs xml document-id)
-                   (get-plain xml document-id))]
-    (db/delete-unknown-words {:document-id document-id})
-    (when (seq new-words)
-      ;; only try to get unknown words if there are any words in the xml
-      (db/insert-unknown-words {:words new-words}))
+                   (get-plain xml document-id))
+        unknown-words (if (empty? new-words)
+                        [] ; if there are no new words there are no unknown words
+                        (do
+                          (db/delete-unknown-words {:document-id document-id})
+                          (db/insert-unknown-words {:words new-words})
+                          (->>
+                           (db/get-all-unknown-words
+                            {:document-id document-id :grade grade :limit limit :offset offset})
+                           (map words/islocal-to-boolean)
+                           (map words/complement-braille)
+                           (map words/complement-ellipsis-braille)
+                           (map words/complement-hyphenation))))]
     (when (= offset 0)
       (let [deleted (db/delete-non-existing-unknown-words-from-local-words {:document-id document-id})]
-        (log/infof "Deleted %s local words that were not in unknown words for book %s" deleted document-id)))
-    (when (seq new-words)
-      (->>
-       (db/get-all-unknown-words {:document-id document-id :grade grade :limit limit :offset offset})
-       (map words/islocal-to-boolean)
-       (map words/complement-braille)
-       (map words/complement-ellipsis-braille)
-       (map words/complement-hyphenation)))))
+        (log/infof "Deleted %s local words that were not in unknown words for book %s" deleted document-id))
+      ;; add number of total and unknown words to the stats table
+      (db/insert-statistics {:document-id document-id :grade grade
+                             :total (count new-words) :unknown (count unknown-words)}))
+    unknown-words))
 
 (prometheus/instrument! metrics/registry #'get-words)
