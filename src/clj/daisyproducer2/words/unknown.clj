@@ -126,7 +126,8 @@
 
 (defn get-words
   [xml document-id grade limit offset]
-  (let [new-words (concat
+  (let [limitless 10000
+        new-words (concat
                    (get-names xml document-id)
                    (get-places xml document-id)
                    (get-homographs xml document-id)
@@ -138,7 +139,9 @@
                           (db/insert-unknown-words {:words new-words})
                           (->>
                            (db/get-all-unknown-words
-                            {:document-id document-id :grade grade :limit limit :offset offset})
+                            {:document-id document-id :grade grade
+                             :limit (if (= offset 0) limitless limit)
+                             :offset offset})
                            (map words/islocal-to-boolean)
                            (map words/complement-braille)
                            (map words/complement-ellipsis-braille)
@@ -149,6 +152,6 @@
       ;; add number of total and unknown words to the stats table
       (db/insert-statistics {:document-id document-id :grade grade
                              :total (count new-words) :unknown (count unknown-words)}))
-    unknown-words))
+    (take limit unknown-words)))
 
 (prometheus/instrument! metrics/registry #'get-words)
