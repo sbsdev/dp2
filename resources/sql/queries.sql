@@ -209,8 +209,7 @@ INSERT INTO dictionary_unknownword (untranslated, type, homograph_disambiguation
 VALUES :tuple*:words
 
 -- :name delete-non-existing-unknown-words-from-local-words :! :n
--- :doc delete words that are not in the list of unknown words from
--- the local words for given `:document-id`
+-- :doc delete words that are not in the list of unknown words from the local words for given `:document-id`
 DELETE l
 FROM dictionary_localword l
 LEFT JOIN dictionary_unknownword u
@@ -219,11 +218,8 @@ WHERE u.untranslated IS NULL
 AND l.document_id = :document-id
 
 -- :name get-all-unknown-words :? :*
--- :doc given a `document-id` and a `:grade` retrieve all unknown
--- words for it. If `:grade` is 0 then return words for both grade 1
--- and 2. Otherwise just return the unknown words for the given
--- grade.This assumes that the new words contained in this document
--- have been inserted into the `dictionary_unknownword` table.
+-- :doc given a `document-id` and a `:grade` retrieve all unknown words for it. If `:grade` is 0 then return words for both grade 1 and 2. Otherwise just return the unknown words for the given grade.This assumes that the new words contained in this document have been inserted into the `dictionary_unknownword` table.
+-- NOTE: This query assumes that there are only records for the current document-id in the dictionary_unknownword table.
 /*~ (if (= (:grade params) 0) */
 (SELECT unknown.*,
        COALESCE(l1.braille, g1.braille) AS uncontracted,
