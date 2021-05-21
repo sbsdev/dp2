@@ -134,7 +134,7 @@
         unknown-words (if (empty? new-words)
                         [] ; if there are no new words there are no unknown words
                         (do
-                          (db/delete-unknown-words {:document-id document-id})
+                          (db/delete-unknown-words)
                           (db/insert-unknown-words {:words new-words})
                           (->>
                            (db/get-all-unknown-words

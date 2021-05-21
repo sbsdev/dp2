@@ -200,9 +200,8 @@ AND document_id = :document_id
 -------------------
 
 -- :name delete-unknown-words :! :n
--- :doc empty the "temporary" table containing words for a given `document-id`
+-- :doc empty the "temporary" table containing words from a new document
 DELETE FROM dictionary_unknownword
-WHERE document_id = :document-id
 
 -- :name insert-unknown-words :! :n
 -- :doc insert a list of new `words` into a "temporary" table. This later used to join with the already known words to query the unknown words
