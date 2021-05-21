@@ -131,22 +131,23 @@
                    (get-names xml document-id)
                    (get-places xml document-id)
                    (get-homographs xml document-id)
-                   (get-plain xml document-id))
-        unknown-words (if (empty? new-words)
-                        [] ; if there are no new words there are no unknown words
-                        (conman/with-transaction [db/*db*]
-                          (db/delete-unknown-words)
-                          (db/insert-unknown-words {:words new-words})
-                          (->>
-                           (db/get-all-unknown-words
-                            {:document-id document-id :grade grade :limit limit :offset offset})
-                           (map words/islocal-to-boolean)
-                           (map words/complement-braille)
-                           (map words/complement-ellipsis-braille)
-                           (map words/complement-hyphenation))))]
-    (when (= offset 0)
-      (let [deleted (db/delete-non-existing-unknown-words-from-local-words {:document-id document-id})]
-        (log/infof "Deleted %s local words that were not in unknown words for book %s" deleted document-id)))
-    unknown-words))
+                   (get-plain xml document-id))]
+    (if (empty? new-words)
+      [] ; if there are no new words there are no unknown words
+      (conman/with-transaction [db/*db*]
+        (db/delete-unknown-words)
+        (db/insert-unknown-words {:words new-words})
+        (when (= offset 0)
+          (let [deleted (db/delete-non-existing-unknown-words-from-local-words
+                         {:document-id document-id})]
+            (log/infof "Deleted %s local words that were not in unknown words for book %s"
+                       deleted document-id)))
+        (->>
+         (db/get-all-unknown-words
+          {:document-id document-id :grade grade :limit limit :offset offset})
+         (map words/islocal-to-boolean)
+         (map words/complement-braille)
+         (map words/complement-ellipsis-braille)
+         (map words/complement-hyphenation))))))
 
 (prometheus/instrument! metrics/registry #'get-words)
