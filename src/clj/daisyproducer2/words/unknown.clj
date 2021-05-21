@@ -3,6 +3,7 @@
             [clojure.set :refer [union]]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
+            [conman.core :as conman]
             [daisyproducer2.db.core :as db]
             [daisyproducer2.metrics :as metrics]
             [daisyproducer2.words :as words]
@@ -133,7 +134,7 @@
                    (get-plain xml document-id))
         unknown-words (if (empty? new-words)
                         [] ; if there are no new words there are no unknown words
-                        (do
+                        (conman/with-transaction [db/*db*]
                           (db/delete-unknown-words)
                           (db/insert-unknown-words {:words new-words})
                           (->>
