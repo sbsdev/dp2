@@ -46,10 +46,11 @@ AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_i
 ------------------
 
 -- :name get-global-words :? :*
--- :doc retrieve all global words optionally filtered by `:types`
+-- :doc retrieve all global words where the column `braille` ("contracted" or "uncontracted") is not null optionally filtered by `types`
 SELECT untranslated, uncontracted, contracted, type, homograph_disambiguation
 FROM dictionary_globalword_new
---~ (when (:types params) "WHERE type IN (:v*:types)")
+WHERE :i:braille IS NOT NULL
+--~ (when (:types params) "AND type IN (:v*:types)")
 
 -- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for `untranslated`, a `limit` and an `offset`
