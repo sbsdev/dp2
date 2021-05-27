@@ -223,10 +223,10 @@
     (write-local-table document 2 {:place? true} (filter words/is-place? contracted-words))))
 
 (defn write-global-tables []
-  (write-global-table 1 {} (db/get-global-words {:grade 1}))
-  (write-global-table 2 {} (db/get-global-words {:grade 2 :types [0 1 3 5]}))
-  (write-global-table 2 {:name? true} (db/get-global-words {:grade 2 :types [1 2]}))
-  (write-global-table 2 {:place? true} (db/get-global-words {:grade 2 :types [3 4]})))
+  (write-global-table 1 {} (filter :uncontracted (db/get-global-words)))
+  (write-global-table 2 {} (filter :contracted (db/get-global-words {:types [0 1 3 5]})))
+  (write-global-table 2 {:name? true} (filter :contracted (db/get-global-words {:types [1 2]})))
+  (write-global-table 2 {:place? true} (filter :contracted (db/get-global-words {:types [3 4]}))))
 
 (defn export-local-tables [document-id]
   (log/infof "Exporting local tables for %s" document-id)

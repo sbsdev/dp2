@@ -46,53 +46,29 @@ AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_i
 ------------------
 
 -- :name get-global-words :? :*
--- :doc retrieve all global words of given `:grade` and optionally any of `:types`
-SELECT untranslated,
-/*~ (if (= (:grade params) 1) */
-       braille AS uncontracted,
-/*~*/
-       braille AS contracted,
-/*~ ) ~*/
-        type,
-	homograph_disambiguation
-FROM dictionary_globalword
-WHERE grade = :grade
---~ (when (:types params) "AND type IN (:v*:types)")
+-- :doc retrieve all global words optionally filtered by `:types`
+SELECT untranslated, uncontracted, contracted, type, homograph_disambiguation
+FROM dictionary_globalword_new
+--~ (when (:types params) "WHERE type IN (:v*:types)")
 
 -- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for `untranslated`, a `limit` and an `offset`
-(SELECT t1.untranslated, t2.braille as uncontracted, t1.braille as contracted, t1.type, t1.homograph_disambiguation
-FROM dictionary_globalword t1
-LEFT JOIN dictionary_globalword t2
-ON t1.untranslated = t2.untranslated
-AND t1.type = t2.type
-AND t1.homograph_disambiguation = t2.homograph_disambiguation
-AND t1.grade <> t2.grade
-WHERE t1.untranslated LIKE :untranslated
-AND t1.grade = 2)
-UNION DISTINCT
-(SELECT t1.untranslated, t1.braille as uncontracted, t2.braille as contracted, t1.type, t1.homograph_disambiguation
-FROM dictionary_globalword t1
-LEFT JOIN dictionary_globalword t2
-ON t1.untranslated = t2.untranslated
-AND t1.type = t2.type
-AND t1.homograph_disambiguation = t2.homograph_disambiguation
-AND t1.grade <> t2.grade
-WHERE t1.untranslated LIKE :untranslated 
-AND t1.grade = 1)
+SELECT untranslated, uncontracted, contracted, type, homograph_disambiguation
+FROM dictionary_globalword_new
+WHERE untranslated LIKE :untranslated
 ORDER BY untranslated
 LIMIT :limit OFFSET :offset
 
 -- :name insert-global-word :! :n
 -- :doc Insert or update a word in the global dictionary.
-INSERT INTO dictionary_globalword (untranslated, braille, type, grade, homograph_disambiguation)
-VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation)
+INSERT INTO dictionary_globalword_new (untranslated, uncontracted, contracted, type, grade, homograph_disambiguation)
+VALUES (:untranslated, :uncontracted, :contracted, :type, :grade, :homograph_disambiguation)
 ON DUPLICATE KEY UPDATE
 braille = VALUES(braille)
 
 -- :name delete-global-word :! :n
 -- :doc Delete a word in the global dictionary.
-DELETE FROM dictionary_globalword
+DELETE FROM dictionary_globalword_new
 WHERE untranslated = :untranslated
 AND type = :type
 AND homograph_disambiguation = :homograph_disambiguation

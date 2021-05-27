@@ -18,10 +18,7 @@
     (db/insert-hyphenation
      (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
     (hyphenations/export))
-  (->> word
-       words/separate-word
-       (map #(db/insert-global-word (words/to-db % dictionary-keys words/dictionary-mapping)))
-       (reduce +)))
+  (db/insert-global-word (words/to-db word dictionary-keys words/dictionary-mapping)))
 
 (defn delete-word [word]
   (log/debug "Delete global word" word)
