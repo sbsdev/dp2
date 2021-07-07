@@ -1,7 +1,7 @@
 (defproject ch.sbs/daisyproducer2 "0.8.11-SNAPSHOT"
 
   :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :url "https://github.com/sbsdev/daisyproducer2"
 
   :dependencies [[buddy/buddy-auth "2.2.0"]
                  [buddy/buddy-core "1.9.0"]
