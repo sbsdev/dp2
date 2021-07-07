@@ -206,7 +206,10 @@
        [:td [:abbr {:title spelling-string} (subs spelling-string 0 1)]])
      [:td [type-field uuid]]
      [:td homograph-disambiguation]
-     [:td [:abbr {:title document-title } (str (subs document-title 0 3) "...")]]
+     [:td
+      ;; for screen readers we just (additionally) show the whole document title
+      [:span.is-sr-only document-title]
+      [:abbr {:title document-title } (str (subs document-title 0 3) "...")]]
      [:td [fields/local-field :confirm uuid]]
      [:td {:width "8%"} [buttons uuid]]]))
 
