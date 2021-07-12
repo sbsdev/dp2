@@ -1,6 +1,6 @@
-DROP INDEX IF EXISTS dictionary_globalword_new_unique ON dictionary_globalword_new;
+DROP TABLE IF EXISTS dictionary_globalword;
 --;;
-DROP TABLE IF EXISTS dictionary_globalword_new;
+ALTER TABLE dictionary_globalword_old RENAME dictionary_globalword;
 
 
 
