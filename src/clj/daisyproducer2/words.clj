@@ -82,22 +82,6 @@
   {1 :uncontracted
    2 :contracted})
 
-(defn separate-word
-  "Separate a `word` into multiple individual word maps where the
-  original `:uncontracted` and `:contracted` keys are mapped to
-  `:grade` and `:braille` values in each of the new maps."
-  [word]
-  (->>
-   (map (fn [w grade]
-          (let [k (get grade-to-keyword grade)
-                braille (get w k)]
-            (-> w
-                (assoc :braille braille)
-                (assoc :grade grade)
-                (dissoc :uncontracted :contracted))))
-        (repeat word) [1 2])
-   (filter #(:braille %))))
-
 (def hyphenation-keys [:untranslated :hyphenated :spelling
                        ;; when deleting a hyphenation we also need the
                        ;; document-id to be able to check for
