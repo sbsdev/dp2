@@ -17,9 +17,7 @@
         spelling (:spelling document)
         params (cond-> {:id id :limit limit :offset offset}
                  (not (string/blank? search)) (assoc :search (db/search-to-sql search)))
-        words (if (= grade 0)
-                (db/get-local-words-aggregated params)
-                (db/get-local-words (assoc params :grade grade)))]
+        words (db/get-local-words params)]
     (->> words
          (map words/islocal-to-boolean)
          (map words/complement-hyphenation))))
@@ -34,11 +32,8 @@
      (words/to-db word words/hyphenation-keys words/hyphenation-mapping))
     (hyphenations/export))
   (let [insertions
-        (->> word
-             words/separate-word
-             (map #(db/insert-local-word
-                    (words/to-db % words/dictionary-keys words/dictionary-mapping)))
-             (reduce +))]
+        (db/insert-local-word
+         (words/to-db word words/dictionary-keys words/dictionary-mapping))]
     (whitelists/export-local-tables (:document-id word))
     insertions))
 
@@ -51,12 +46,8 @@
   [word]
   (log/debug "Delete local word" word)
   (let [deletions
-        (->> word
-             words/separate-word
-             (map #(db/delete-local-word
-                    (words/to-db % words/dictionary-keys words/dictionary-mapping)))
-             (reduce +))]
-
+        (db/delete-local-word
+         (words/to-db word words/dictionary-keys words/dictionary-mapping))]
     (when (:hyphenated word)
       (db/delete-hyphenation
        (words/to-db word words/hyphenation-keys words/hyphenation-mapping))

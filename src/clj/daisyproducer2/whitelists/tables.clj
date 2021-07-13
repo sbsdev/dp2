@@ -231,7 +231,7 @@
 (defn export-local-tables [document-id]
   (log/infof "Exporting local tables for %s" document-id)
   (let [document (db/get-document {:id document-id})]
-    (write-local-tables document (db/get-local-words-aggregated {:id document-id}))))
+    (write-local-tables document (db/get-local-words {:id document-id}))))
 
 (defn export-global-tables []
   (log/info "Exporting global tables")

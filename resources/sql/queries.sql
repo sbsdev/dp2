@@ -79,61 +79,11 @@ AND homograph_disambiguation = :homograph_disambiguation
 -----------------
 
 -- :name get-local-words :? :*
--- :doc retrieve local words for a given document `id` and grade `grade`. Optionally you can only get local words that match a `search` term. The words contain  the hyphenation if it exists.
-SELECT words.untranslated,
-       IF(:grade = 1, words.braille, NULL) AS uncontracted,
-       IF(:grade = 2, words.braille, NULL) AS contracted,
-       words.type, words.homograph_disambiguation, words.document_id, words.isLocal,
-       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = 644) AS spelling,
-       hyphenation.hyphenation AS hyphenated
-FROM dictionary_localword words
-LEFT JOIN hyphenation_words AS hyphenation
-ON words.untranslated = hyphenation.word
-AND hyphenation.spelling =
-  (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
-  FROM  documents_document
-  WHERE id = :id)
-WHERE words.document_id = :id
-AND words.grade = :grade
---~ (when (:search params) "AND words.untranslated LIKE :search")
-ORDER BY words.untranslated
-LIMIT :limit OFFSET :offset
-
--- :name get-local-words-aggregated :? :*
 -- :doc retrieve aggregated local words for a given document `id`. Optionally you can only get local words that match a `search` term. The words contain braille for both grades and the hyphenation if they exist. Optionally the results can be limited by `limit` and `offset`.
 SELECT words.*,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :id) AS spelling,
        hyphenation.hyphenation AS hyphenated
-FROM
-  (SELECT DISTINCT w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation, w.document_id, BIT_OR(w.isLocal) AS isLocal
-  FROM
-    ((SELECT t1.untranslated, t2.braille as uncontracted, t1.braille as contracted, t1.type, t1.homograph_disambiguation, t1.document_id, IFNULL(t1.isLocal OR t2.isLocal,FALSE) AS isLocal
-      FROM dictionary_localword t1
-      LEFT JOIN dictionary_localword t2
-      ON t1.untranslated = t2.untranslated
-      AND t1.type = t2.type
-      AND t1.homograph_disambiguation = t2.homograph_disambiguation
-      AND t1.document_id = t2.document_id
-      AND t1.grade <> t2.grade
-      WHERE t1.document_id = :id
---~ (when (:search params) "AND t1.untranslated LIKE :search")
-      AND t1.grade = 2)
-    UNION DISTINCT
-      (SELECT t1.untranslated, t1.braille as uncontracted, t2.braille as contracted, t1.type, t1.homograph_disambiguation, t1.document_id, IFNULL(t1.isLocal OR t2.isLocal,FALSE) AS isLocal
-      FROM dictionary_localword t1
-      LEFT JOIN dictionary_localword t2
-      ON t1.untranslated = t2.untranslated
-      AND t1.type = t2.type
-      AND t1.homograph_disambiguation = t2.homograph_disambiguation
-      AND t1.document_id = t2.document_id
-      AND t1.grade <> t2.grade
-      WHERE t1.document_id = :id
---~ (when (:search params) "AND t1.untranslated LIKE :search")
-      AND t1.grade = 1)
-    ORDER BY untranslated
-    ) AS w
-  GROUP BY w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation
-  ) AS words
+FROM dictionary_localword as words
 LEFT JOIN hyphenation_words AS hyphenation
 ON words.untranslated = hyphenation.word
 AND hyphenation.spelling =
@@ -152,14 +102,15 @@ AND untranslated = :untranslated
 
 -- :name insert-local-word :! :n
 -- :doc Insert or update a word in the local dictionary. Optionally specify `isconfirmed`.
-INSERT INTO dictionary_localword (untranslated, braille, type, grade, homograph_disambiguation, document_id, isLocal, isConfirmed)
+INSERT INTO dictionary_localword (untranslated, contracted, uncontracted, type, homograph_disambiguation, document_id, isLocal, isConfirmed)
 /*~ (if (:isconfirmed params) */
-VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal, :isconfirmed)
+VALUES (:untranslated, :contracted, :uncontracted, :type, :homograph_disambiguation, :document_id, :islocal, :isconfirmed)
 /*~*/
-VALUES (:untranslated, :braille, :type, :grade, :homograph_disambiguation, :document_id, :islocal, DEFAULT)
+VALUES (:untranslated, :contracted, :uncontracted, :type, :homograph_disambiguation, :document_id, :islocal, DEFAULT)
 /*~ ) ~*/
 ON DUPLICATE KEY UPDATE
-braille = VALUES(braille),
+contracted = VALUES(contracted),
+uncontracted = VALUES(uncontracted),
 --~ (when (:isconfirmed params) "isConfirmed = VALUES(isConfirmed),")
 isLocal = VALUES(isLocal)
 
@@ -168,7 +119,6 @@ isLocal = VALUES(isLocal)
 DELETE FROM dictionary_localword
 WHERE untranslated = :untranslated
 AND type = :type
-AND grade = :grade
 AND homograph_disambiguation = :homograph_disambiguation
 AND document_id = :document_id
 
@@ -197,17 +147,16 @@ AND l.document_id = :document-id
 -- :name get-all-unknown-words :? :*
 -- :doc given a `document-id` and a `:grade` retrieve all unknown words for it. If `:grade` is 0 then return words for both grade 1 and 2. Otherwise just return the unknown words for the given grade.This assumes that the new words contained in this document have been inserted into the `dictionary_unknownword` table.
 -- NOTE: This query assumes that there are only records for the current document-id in the dictionary_unknownword table.
-/*~ (if (= (:grade params) 0) */
 (SELECT unknown.*,
-       COALESCE(l1.braille, g1.braille) AS uncontracted,
-       COALESCE(l2.braille, g2.braille) AS contracted,
+       COALESCE(l.uncontracted, g.uncontracted) AS uncontracted,
+       COALESCE(l.contracted, g.contracted) AS contracted,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (0,1,3) AND l1.document_id = :document-id
-LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (0,1,3)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (0,1,3) AND l2.document_id = :document-id
-LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (0,1,3)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.type IN (0,1,3) AND l.document_id = :document-id
+     AND ((:grade = 0) OR (:grade = 1 AND l.uncontracted IS NOT NULL) OR (:grade = 2 AND l.contracted IS NOT NULL))
+LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.type IN (0,1,3)
+     AND ((:grade = 0) OR (:grade = 1 AND g.uncontracted IS NOT NULL) OR (:grade = 2 AND g.contracted IS NOT NULL))
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
@@ -215,18 +164,18 @@ LEFT JOIN hyphenation_words AS hyphenation
 	  FROM  documents_document
 	  WHERE id = :document-id)
 WHERE unknown.type = 0
-AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
+AND (g.untranslated IS NULL AND l.untranslated IS NULL))
 UNION
 (SELECT unknown.*,
-       COALESCE(l1.braille, g1.braille) AS uncontracted,
-       COALESCE(l2.braille, g2.braille) AS contracted,
+       COALESCE(l.uncontracted, g.uncontracted) AS uncontracted,
+       COALESCE(l.contracted, g.contracted) AS contracted,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (1,2) AND l1.document_id = :document-id
-LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (1,2)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (1,2) AND l2.document_id = :document-id
-LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (1,2)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.type IN (1,2) AND l.document_id = :document-id
+     AND ((:grade = 0) OR (:grade = 1 AND l.uncontracted IS NOT NULL) OR (:grade = 2 AND l.contracted IS NOT NULL))
+LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.type IN (1,2)
+     AND ((:grade = 0) OR (:grade = 1 AND g.uncontracted IS NOT NULL) OR (:grade = 2 AND g.contracted IS NOT NULL))
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
@@ -234,18 +183,18 @@ LEFT JOIN hyphenation_words AS hyphenation
 	  FROM  documents_document
 	  WHERE id = :document-id)
 WHERE unknown.type = 2
-AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
+AND (g.untranslated IS NULL AND l.untranslated IS NULL))
 UNION
 (SELECT unknown.*,
-       COALESCE(l1.braille, g1.braille) AS uncontracted,
-       COALESCE(l2.braille, g2.braille) AS contracted,
+       COALESCE(l.uncontracted, g.uncontracted) AS uncontracted,
+       COALESCE(l.contracted, g.contracted) AS contracted,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (3,4) AND l1.document_id = :document-id
-LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (3,4)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (3,4) AND l2.document_id = :document-id
-LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (3,4)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.type IN (3,4) AND l.document_id = :document-id
+     AND ((:grade = 0) OR (:grade = 1 AND l.uncontracted IS NOT NULL) OR (:grade = 2 AND l.contracted IS NOT NULL))
+LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.type IN (3,4)
+     AND ((:grade = 0) OR (:grade = 1 AND g.uncontracted IS NOT NULL) OR (:grade = 2 AND g.contracted IS NOT NULL))
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
@@ -253,18 +202,18 @@ LEFT JOIN hyphenation_words AS hyphenation
 	  FROM  documents_document
 	  WHERE id = :document-id)
 WHERE unknown.type = 4
-AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
+AND (g.untranslated IS NULL AND l.untranslated IS NULL))
 UNION
 (SELECT unknown.*,
-       COALESCE(l1.braille, g1.braille) AS uncontracted,
-       COALESCE(l2.braille, g2.braille) AS contracted,
+       COALESCE(l.uncontracted, g.uncontracted) AS uncontracted,
+       COALESCE(l.contracted, g.contracted) AS contracted,
        hyphenation.hyphenation AS hyphenated,
        (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
 FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l1 ON l1.untranslated = unknown.untranslated AND l1.grade = 1 AND l1.type IN (5) AND l1.document_id = :document-id
-LEFT JOIN dictionary_globalword g1 ON g1.untranslated = unknown.untranslated AND g1.grade = 1 AND g1.type IN (5)
-LEFT JOIN dictionary_localword l2 ON l2.untranslated = unknown.untranslated AND l2.grade = 2 AND l2.type IN (5) AND l2.document_id = :document-id
-LEFT JOIN dictionary_globalword g2 ON g2.untranslated = unknown.untranslated AND g2.grade = 2 AND g2.type IN (5)
+LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.type IN (5) AND l.document_id = :document-id
+     AND ((:grade = 0) OR (:grade = 1 AND l.uncontracted IS NOT NULL) OR (:grade = 2 AND l.contracted IS NOT NULL))
+LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.type IN (5)
+     AND ((:grade = 0) OR (:grade = 1 AND g.uncontracted IS NOT NULL) OR (:grade = 2 AND g.contracted IS NOT NULL))
 LEFT JOIN hyphenation_words AS hyphenation
      ON unknown.untranslated = hyphenation.word
      AND hyphenation.spelling =
@@ -272,76 +221,7 @@ LEFT JOIN hyphenation_words AS hyphenation
 	  FROM  documents_document
 	  WHERE id = :document-id)
 WHERE unknown.type = 5
-AND ((g2.id IS NULL AND l2.id IS NULL) OR (g1.id IS NULL AND l1.id IS NULL)))
-/*~*/
-(SELECT unknown.*,
-       IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
-       IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       hyphenation.hyphenation AS hyphenated,
-       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
-FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (0,1,3) AND l.document_id = :document-id
-LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (0,1,3)
-LEFT JOIN hyphenation_words AS hyphenation
-     ON unknown.untranslated = hyphenation.word
-     AND hyphenation.spelling =
-     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
-	  FROM  documents_document
-	  WHERE id = :document-id)
-WHERE unknown.type = 0
-AND (g.id IS NULL AND l.id IS NULL))
-UNION
-(SELECT unknown.*,
-       IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
-       IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       hyphenation.hyphenation AS hyphenated,
-       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
-FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (1,2) AND l.document_id = :document-id
-LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (1,2)
-LEFT JOIN hyphenation_words AS hyphenation
-     ON unknown.untranslated = hyphenation.word
-     AND hyphenation.spelling =
-     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
-	  FROM  documents_document
-	  WHERE id = :document-id)
-WHERE unknown.type = 2
-AND (g.id IS NULL AND l.id IS NULL))
-UNION
-(SELECT unknown.*,
-       IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
-       IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       hyphenation.hyphenation AS hyphenated,
-       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
-FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (3,4) AND l.document_id = :document-id
-LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (3,4)
-LEFT JOIN hyphenation_words AS hyphenation
-     ON unknown.untranslated = hyphenation.word
-     AND hyphenation.spelling =
-     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
-	  FROM  documents_document
-	  WHERE id = :document-id)
-WHERE unknown.type = 4
-AND (g.id IS NULL AND l.id IS NULL))
-UNION
-(SELECT unknown.*,
-       IF(:grade = 1, COALESCE(l.braille, g.braille), NULL) AS uncontracted,
-       IF(:grade = 2, COALESCE(l.braille, g.braille), NULL) AS contracted,
-       hyphenation.hyphenation AS hyphenated,
-       (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END FROM documents_document WHERE id = :document-id) AS spelling
-FROM dictionary_unknownword unknown
-LEFT JOIN dictionary_localword l ON l.untranslated = unknown.untranslated AND l.grade = :grade AND l.type IN (5) AND l.document_id = :document-id
-LEFT JOIN dictionary_globalword g ON g.untranslated = unknown.untranslated AND g.grade = :grade AND g.type IN (5)
-LEFT JOIN hyphenation_words AS hyphenation
-     ON unknown.untranslated = hyphenation.word
-     AND hyphenation.spelling =
-     	 (SELECT CASE language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END
-	  FROM  documents_document
-	  WHERE id = :document-id)
-WHERE unknown.type = 5
-AND (g.id IS NULL AND l.id IS NULL))
-/*~ ) ~*/
+AND (g.untranslated IS NULL AND l.untranslated IS NULL))
 ORDER BY untranslated
 LIMIT :limit OFFSET :offset
 
@@ -349,40 +229,13 @@ LIMIT :limit OFFSET :offset
 -- Confirmable words --
 -----------------------
 
--- :name get-confirmable-words-aggregated :? :*
+-- :name get-confirmable-words :? :*
 -- :doc retrieve local words that are ready for confirmation. The words contain braille for both grades and the hyphenation if they exist.
 SELECT words.*,
        (CASE doc.language WHEN "de" THEN 1 WHEN "de-1901" THEN 0 ELSE NULL END) AS spelling,
        doc.title AS document_title,
        hyphenation.hyphenation AS hyphenated
-FROM
-  (SELECT DISTINCT w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation, w.document_id, BIT_OR(w.isLocal) AS isLocal
-  FROM
-    ((SELECT t1.untranslated, t2.braille as uncontracted, t1.braille as contracted, t1.type, t1.homograph_disambiguation, t1.document_id, IFNULL(t1.isLocal OR t2.isLocal,FALSE) AS isLocal
-      FROM dictionary_localword t1
-      LEFT JOIN dictionary_localword t2
-      ON t1.untranslated = t2.untranslated
-      AND t1.type = t2.type
-      AND t1.homograph_disambiguation = t2.homograph_disambiguation
-      AND t1.document_id = t2.document_id
-      AND t1.grade <> t2.grade
-      WHERE t1.isConfirmed = FALSE
-      AND t1.grade = 2)
-    UNION DISTINCT
-      (SELECT t1.untranslated, t1.braille as uncontracted, t2.braille as contracted, t1.type, t1.homograph_disambiguation, t1.document_id, IFNULL(t1.isLocal OR t2.isLocal,FALSE) AS isLocal
-      FROM dictionary_localword t1
-      LEFT JOIN dictionary_localword t2
-      ON t1.untranslated = t2.untranslated
-      AND t1.type = t2.type
-      AND t1.homograph_disambiguation = t2.homograph_disambiguation
-      AND t1.document_id = t2.document_id
-      AND t1.grade <> t2.grade
-      WHERE t1.isConfirmed = FALSE
-      AND t1.grade = 1)
-    ORDER BY untranslated
-    ) AS w
-  GROUP BY w.untranslated, w.uncontracted, w.contracted, w.type, w.homograph_disambiguation
-  ) AS words
+FROM dictionary_localword as words
 JOIN documents_document doc ON words.document_id = doc.id
 LEFT JOIN hyphenation_words AS hyphenation
 ON words.untranslated = hyphenation.word

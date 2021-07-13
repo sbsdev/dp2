@@ -10,7 +10,7 @@
   (-> (db/find-global-words {:untranslated (db/search-to-sql untranslated)
                              :limit limit :offset offset})))
 
-(def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation])
+(def dictionary-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation])
 
 (defn put-word [word]
   (log/debug "Add global word" word)

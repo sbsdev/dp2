@@ -107,7 +107,7 @@
 (def hyphenation-mapping {:untranslated :word
                           :hyphenated :hyphenation})
 
-(def dictionary-keys [:untranslated :braille :type :grade :homograph-disambiguation
+(def dictionary-keys [:untranslated :uncontracted :contracted :type :homograph-disambiguation
                       :document-id :islocal :isconfirmed])
 
 (def dictionary-mapping {:homograph-disambiguation :homograph_disambiguation
