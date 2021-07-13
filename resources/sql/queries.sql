@@ -48,28 +48,29 @@ AND created_at = (SELECT MAX(created_at) FROM documents_version WHERE document_i
 -- :name get-global-words :? :*
 -- :doc retrieve all global words where the column `braille` ("contracted" or "uncontracted") is not null optionally filtered by `types`
 SELECT untranslated, uncontracted, contracted, type, homograph_disambiguation
-FROM dictionary_globalword_new
+FROM dictionary_globalword
 WHERE :i:braille IS NOT NULL
 --~ (when (:types params) "AND type IN (:v*:types)")
 
 -- :name find-global-words :? :*
 -- :doc retrieve all global words given a simple pattern for `untranslated`, a `limit` and an `offset`
 SELECT untranslated, uncontracted, contracted, type, homograph_disambiguation
-FROM dictionary_globalword_new
+FROM dictionary_globalword
 WHERE untranslated LIKE :untranslated
 ORDER BY untranslated
 LIMIT :limit OFFSET :offset
 
 -- :name insert-global-word :! :n
 -- :doc Insert or update a word in the global dictionary.
-INSERT INTO dictionary_globalword_new (untranslated, uncontracted, contracted, type, grade, homograph_disambiguation)
-VALUES (:untranslated, :uncontracted, :contracted, :type, :grade, :homograph_disambiguation)
+INSERT INTO dictionary_globalword (untranslated, uncontracted, contracted, type, homograph_disambiguation)
+VALUES (:untranslated, :uncontracted, :contracted, :type, :homograph_disambiguation)
 ON DUPLICATE KEY UPDATE
-braille = VALUES(braille)
+contracted = VALUES(contracted),
+uncontracted = VALUES(uncontracted)
 
 -- :name delete-global-word :! :n
 -- :doc Delete a word in the global dictionary.
-DELETE FROM dictionary_globalword_new
+DELETE FROM dictionary_globalword
 WHERE untranslated = :untranslated
 AND type = :type
 AND homograph_disambiguation = :homograph_disambiguation
