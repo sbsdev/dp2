@@ -89,7 +89,8 @@
    :nrepl-port 7002
    :css-dirs ["resources/public/css"]
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
-  
+
+  :test-selectors {:non-database (complement :database)}
 
   :profiles
   {:uberjar {:omit-source true
