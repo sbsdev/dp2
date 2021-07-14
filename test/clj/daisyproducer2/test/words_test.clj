@@ -1,4 +1,4 @@
-(ns daisyproducer2.test.words
+(ns daisyproducer2.test.words-test
   (:require
    [clojure.test :refer :all]
    [daisyproducer2.words.unknown :refer :all]
